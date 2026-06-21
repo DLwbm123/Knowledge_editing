@@ -1,0 +1,26 @@
+# Core scaffold utilities
+pillow
+huggingface_hub>=0.30.0,<1.0
+kaggle
+pyyaml
+
+# VLKEB/easyeditor runtime dependencies for real model runs
+torch
+transformers
+accelerate
+peft
+sentence-transformers
+datasets
+higher
+omegaconf
+hydra-core
+iopath
+fairscale
+icecream
+nltk
+einops
+openai
+tqdm
+numpy
+scipy
+pytest

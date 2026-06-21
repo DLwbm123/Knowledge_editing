@@ -1,0 +1,83 @@
+device: 0
+alg: ENGRAM
+alg_name: ENGRAM
+name: <MODEL_PATH>
+model_name: llava-med
+model_class: LlavaMedForEditing
+tokenizer_class: LlamaTokenizer
+tokenizer_name: <MODEL_PATH>
+inner_params: []
+
+llava_med_vision_tower: <VISION_TOWER_PATH>
+llava_med_model_name: llava-med-v1.5-mistral-7b
+llava_med_loader_source: third_party/LLaVA-Med
+llava_med_conversation_template: mistral_instruct
+llava_med_dtype: float16
+coco_image: <IMAGE_ROOT>
+rephrase_image: <IMAGE_ROOT>
+
+edit_mode: erase
+alpha: 0.0
+beta: 1.0
+token_scope: answer
+engram_mask_fallback: all
+target_variants: [edit, rephrase, image_rephrase]
+reference_variants: [locality_multimodal, locality_text]
+module_patterns:
+  - "llava_model\\.model\\.layers\\.\\d+\\.self_attn\\.(q_proj|k_proj)$"
+  - "llava_model\\.model\\.layers\\.\\d+\\.mlp\\.gate_proj$"
+  - "(mm_projector)(\\.|$)"
+exclude_module_patterns:
+  - "lm_head$"
+  - "down_proj$"
+prioritize_module_selection: true
+module_priority_patterns:
+  - "(mm_projector)(\\.|$)"
+  - "gate_proj$"
+  - "q_proj$"
+  - "k_proj$"
+engram_layers: null
+engram_max_modules: 4
+
+covariance_device: cpu
+solve_device: cpu
+covariance_dtype: float32
+max_cov_dim: 4097
+solve_per_module: true
+skip_if_dim_larger_than: 4097
+clear_cuda_cache: true
+absorb_bias: true
+normalize_covariance: false
+jitter: 0.0
+solver: pinv
+rcond: 1.0e-6
+svd_rank: null
+energy_threshold: null
+store_projector: true
+norm_ratio_warn_threshold: 0.05
+skip_if_norm_ratio_larger_than: 0.25
+
+bank_dir: outputs/engram_bank_smoke_alpha0
+engram_bank_path: outputs/engram_bank_smoke_alpha0
+edit_id: null
+concept_id: null
+modality: image_text
+sequential_edit: false
+min_reference_examples: 1
+skip_if_insufficient_reference: false
+retain_pool_path: null
+
+candidate_delta_source: none
+base_state_dict_path: null
+candidate_state_dict_path: null
+lora_adapter_path: null
+projector_for_delta: new_target
+
+batch_size: 1
+max_length: 30
+results_dir: ./results
+eval_only: true
+half: false
+save: false
+verbose: true
+debug: false

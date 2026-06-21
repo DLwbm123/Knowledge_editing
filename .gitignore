@@ -1,0 +1,56 @@
+.DS_Store
+._*
+
+# Python/runtime caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# IDE/local machine state
+.idea/
+.vscode/
+
+# Large local artifacts kept outside source control
+downloads
+hugging_cache
+outputs
+downloads/
+hugging_cache/
+outputs/
+data/
+datasets/
+logs/
+swanlog/
+wandb/
+checkpoints/
+checkpoint*/
+ckpt/
+models/
+cache/
+
+# Model/checkpoint binaries
+*.bin
+*.ckpt
+*.gguf
+*.h5
+*.onnx
+*.pt
+*.pth
+*.safetensors
+
+# Generated packages and paper/reference binaries
+*.zip
+*.zip.*
+*.zip*
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.pdf
+
+# Local patch/export snapshots
+Knowledge_editing_engram_patch/
+Knowledge_editing_*_for_gpt_*/
+Knowledge_editing_*_patch*/
