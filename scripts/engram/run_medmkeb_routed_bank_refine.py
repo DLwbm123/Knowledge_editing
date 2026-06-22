@@ -703,6 +703,9 @@ def _score(payload: Dict[str, Any]) -> Dict[str, Any]:
     metrics = payload["routing_metrics"]
     rollback = payload["rollback_check"]
     config = payload["config"]
+    config_id = str(config["config_id"])
+    route_policy = str(config["route_policy"])
+    is_oracle = config_id.startswith("R_oracle") or route_policy.startswith("oracle")
     new = final.get("mean_new_answer_nll_decrease")
     ref = final.get("mean_ref_abs")
     positive = int(final.get("positive_new_answer_edits") or 0)
@@ -718,9 +721,10 @@ def _score(payload: Dict[str, Any]) -> Dict[str, Any]:
     breakthrough = strong and float(new) >= 0.80 and damage <= 5 and float(self_hit) >= 0.80 and float(ref_false) <= 0.20 and future is not None and float(future) <= 0.30
     status = "breakthrough" if breakthrough else ("strong_pass" if strong else ("basic_pass" if basic else "fail"))
     return {
-        "config_id": config["config_id"],
+        "config_id": config_id,
+        "is_oracle": is_oracle,
         "bank_config_id": config["bank_config_id"],
-        "route_policy": config["route_policy"],
+        "route_policy": route_policy,
         "prototype_type": config.get("prototype_type"),
         "threshold": config.get("threshold"),
         "margin": config.get("margin"),
@@ -753,7 +757,7 @@ def _score(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _choose_best(scores: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    learned = [row for row in scores if str(row.get("config_id", "")).startswith("R_") and row.get("config_id") != "R_oracle_self_high"]
+    learned = [row for row in scores if str(row.get("config_id", "")).startswith("R_") and not row.get("is_oracle")]
     if not learned:
         return None
     return sorted(
