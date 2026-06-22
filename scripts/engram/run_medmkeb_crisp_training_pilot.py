@@ -395,6 +395,45 @@ def _write_payload_files(run_dir: Path, payload: Dict[str, Any], config: Dict[st
         _json_dump(run_dir / "constraint_loss_trace.json", {"status": "not_applicable", "rows": []})
 
 
+def _tensor_summary(value: Any) -> Dict[str, Any]:
+    detached = value.detach().float().cpu()
+    return {
+        "shape": list(detached.shape),
+        "dtype": str(value.dtype).replace("torch.", ""),
+        "norm": float(detached.norm().item()),
+        "max_abs": float(detached.abs().max().item()) if detached.numel() else 0.0,
+    }
+
+
+def _summarize_patch_specs(patch_specs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    summarized: List[Dict[str, Any]] = []
+    for spec in patch_specs:
+        dense = {
+            name: _tensor_summary(tensor)
+            for name, tensor in (spec.get("dense_deltas") or {}).items()
+        }
+        lora = {}
+        for name, factor in (spec.get("lora_factors") or {}).items():
+            lora[name] = {
+                key: _tensor_summary(tensor)
+                for key, tensor in factor.items()
+                if hasattr(tensor, "detach")
+            }
+            if "scale" in factor:
+                lora[name]["scale"] = float(factor["scale"])
+        summarized.append(
+            {
+                "record_id": spec.get("record_id"),
+                "beta": spec.get("beta"),
+                "dense_deltas": dense,
+                "lora_factors": lora,
+                "dense_delta_module_count": len(dense),
+                "lora_factor_module_count": len(lora),
+            }
+        )
+    return summarized
+
+
 def _load_anchor_payloads(out_dir: Path, configs: List[Dict[str, Any]]) -> Tuple[Dict[str, Dict[str, Any]], List[Dict[str, Any]]]:
     sources = {
         "Anchor_C_high_strength": (
@@ -515,7 +554,7 @@ def _score_payload(payload: Dict[str, Any], *, anchor_reused: bool = False) -> D
         and match == 1.0
         and nan == 0
     )
-    if payload.get("status") in {"blocked_preflight", "skipped_feasibility", "missing_anchor"}:
+    if payload.get("status") in {"blocked_preflight", "skipped_feasibility", "skipped_oom_risk", "runtime_error", "missing_anchor"}:
         status = str(payload.get("status"))
     elif anchor_reused:
         status = "anchor_reused"
@@ -1186,7 +1225,7 @@ def _run_one_training_config(
         "final_summary": final[0] if final else {},
         "final_rollback_check": rollback,
         "train_rows": train_rows,
-        "patch_specs": patch_specs,
+        "patch_specs": _summarize_patch_specs(patch_specs),
     }
     _write_payload_files(run_dir, payload, config)
     _json_dump(run_dir / "projection_trace.json", {"status": "complete", "rows": projection_rows})
@@ -1194,6 +1233,42 @@ def _run_one_training_config(
     _json_dump(run_dir / "cache_trace.json", {"status": "complete", "rows": cache_trace_rows})
     _json_dump(run_dir / "train_trace.json", train_rows)
     return payload, patch_specs
+
+
+def _existing_projector_bank_matches(bank_cls: Any, bank_dir: Path, records: List[Dict[str, Any]]) -> Dict[str, Any]:
+    if not bank_dir.exists():
+        return {"status": "missing", "bank_dir": str(bank_dir)}
+    try:
+        bank = bank_cls(bank_dir)
+        edit_ids, matching = bank.match_edit_ids_to_records(records, allow_positional_matching=False)
+    except Exception as exc:
+        return {"status": "invalid", "bank_dir": str(bank_dir), "reason": f"{type(exc).__name__}: {exc}"}
+    if matching.get("mode") != "record_id" or len(edit_ids) != len(records):
+        return {
+            "status": "invalid",
+            "bank_dir": str(bank_dir),
+            "reason": "existing bank does not match selected records by record_id",
+            "matching": matching,
+        }
+    return {
+        "status": "complete",
+        "reused": True,
+        "bank_dir": str(bank_dir),
+        "edit_ids": edit_ids,
+        "edit_record_matching": matching,
+    }
+
+
+def _skip_config_feasibility_reason(config: Dict[str, Any], args: argparse.Namespace) -> Optional[str]:
+    if bool(args.run_infeasible_t2):
+        return None
+    if config.get("method") == METHOD_T2:
+        return (
+            "skipped_feasibility: T2 requires per-edit reference+previous+hard-locality "
+            "q/k K-FAC cache recomputation and eigenspace construction. This bounded pilot "
+            "runs T1 and T3, and leaves T2 for a capped-cache diagnostic run."
+        )
+    return None
 
 
 def _choose_best(scored: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
@@ -1214,6 +1289,7 @@ def _choose_best(scored: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
 
 def _write_analysis(out_dir: Path, scored: List[Dict[str, Any]], best: Optional[Dict[str, Any]]) -> None:
     t_rows = [row for row in scored if not row.get("anchor_reused")]
+    basic = [row for row in t_rows if row.get("basic_pass")]
     strong = [row for row in t_rows if row.get("strong_pass")]
     breakthrough = [row for row in t_rows if row.get("breakthrough")]
     lines = [
@@ -1241,6 +1317,8 @@ def _write_analysis(out_dir: Path, scored: List[Dict[str, Any]], best: Optional[
         lines.append("- At least one variant met the breakthrough criterion. Validate the best variant on 50 MedMKEB model-known edits or external Med-VQA.")
     elif strong:
         lines.append("- At least one variant met the strong criterion but not breakthrough.")
+    elif basic:
+        lines.append("- At least one variant met only the basic criterion. Treat this as partial improvement, not a strength-locality breakthrough.")
     else:
         lines.append("- No variant met the strong or breakthrough criterion. If all attempted variants failed, stop Crisp/CURE for now and move to an ENGRAM-routed edit bank.")
     if best:
@@ -1327,6 +1405,7 @@ def _write_final_report(
     runtime_status: str,
 ) -> None:
     new_rows = [row for row in scored if not row.get("anchor_reused")]
+    basic = [row for row in new_rows if row.get("basic_pass")]
     breakthrough = [row for row in new_rows if row.get("breakthrough")]
     strong = [row for row in new_rows if row.get("strong_pass")]
     improved = [
@@ -1343,6 +1422,8 @@ def _write_final_report(
         decision = "A. Crisp/CURE training achieves a breakthrough. Next: validate the best variant on 50 MedMKEB model-known edits or external Med-VQA."
     elif strong or improved:
         decision = "B. Crisp/CURE training improves but does not break the trade-off. Keep it as partial; consider routed edit bank."
+    elif basic:
+        decision = "B. Crisp/CURE training reaches only a basic partial gate. Do not scale it as a breakthrough; compare against the bounded and low-drift anchors and prioritize an ENGRAM-routed edit bank."
     else:
         decision = "C. Crisp/CURE training does not improve over ENGRAM-projected LoRA rescue. Stop Crisp/CURE for now; move to ENGRAM-routed edit bank."
     lines = [
@@ -1631,6 +1712,7 @@ def _run_gpu(args: argparse.Namespace) -> int:
     torch = heavy["torch"]
     MultimodalEditor = heavy["MultimodalEditor"]
     EngramMultimodalHparams = heavy["EngramMultimodalHparams"]
+    EngramBank = heavy["EngramBank"]
     select_linear_layers = heavy["select_linear_layers"]
     _extract_projector_bank = heavy["_extract_projector_bank"]
 
@@ -1655,7 +1737,11 @@ def _run_gpu(args: argparse.Namespace) -> int:
     if set(selected) != set(QK_GATE_MODULES):
         raise RuntimeError({"reason": "selected module mismatch", "selected": selected, "expected": QK_GATE_MODULES})
     _json_dump(out_dir / "audit" / "selected_modules_qk_gate_sampled_depths.json", {"status": "pass", "selected_modules": selected})
-    _extract_projector_bank(editor, hparams, Path(args.selected_records), records, bootstrap_bank)
+    bank_status = _existing_projector_bank_matches(EngramBank, bootstrap_bank, records)
+    if bank_status.get("status") != "complete":
+        bank_status = _extract_projector_bank(editor, hparams, Path(args.selected_records), records, bootstrap_bank)
+        bank_status["reused"] = False
+    _json_dump(out_dir / "audit" / "runtime_projector_bank_status.json", bank_status)
 
     payloads: Dict[str, Dict[str, Any]] = dict(anchor_payloads)
     scored: List[Dict[str, Any]] = list(anchor_scores)
@@ -1665,6 +1751,27 @@ def _run_gpu(args: argparse.Namespace) -> int:
             continue
         run_dir = out_dir / "runs" / str(config["config_id"])
         run_dir.mkdir(parents=True, exist_ok=True)
+        skip_reason = _skip_config_feasibility_reason(config, args)
+        if skip_reason:
+            payload = {
+                "status": "skipped_feasibility",
+                "reason": skip_reason,
+                "config": config,
+                "selected_modules": _module_names_for_scope(str(config["module_scope"])),
+                "per_record_step_rows": [],
+                "summary_rows": [],
+                "final_summary": {},
+                "final_rollback_check": {},
+                "train_rows": [],
+                "patch_specs": [],
+            }
+            _write_payload_files(run_dir, payload, config)
+            _json_dump(run_dir / "skip_reason.json", {"status": "skipped_feasibility", "reason": skip_reason})
+            score = _score_payload(payload)
+            scored.append(score)
+            payloads[str(config["config_id"])] = payload
+            _json_dump(run_dir / "score.json", score)
+            continue
         run_hparams = EngramMultimodalHparams.from_hparams(str(args.hparams))
         _configure_hparams_for_scope(
             hparams=run_hparams,
@@ -1675,22 +1782,38 @@ def _run_gpu(args: argparse.Namespace) -> int:
             lora_steps=int(config["lora_steps"]),
             lora_ref_loss_weight=float(config.get("lora_ref_loss_weight", 0.0)),
         )
-        payload, _specs = _run_one_training_config(
-            model=editor.model,
-            records=records,
-            image_root=Path(args.image_root),
-            baselines=baselines,
-            config=config,
-            projector_bank_dir=bootstrap_bank,
-            hparams=run_hparams,
-            run_dir=run_dir,
-            rollback_tolerance=float(args.rollback_tolerance),
-            locality_threshold=float(args.locality_damage_threshold),
-            max_new_tokens=int(args.max_new_tokens),
-            crisp_max_dim=int(args.crisp_max_dim),
-            max_reference_cache_records=args.max_reference_cache_records,
-            max_previous_cache_records=args.max_previous_cache_records,
-        )
+        try:
+            payload, _specs = _run_one_training_config(
+                model=editor.model,
+                records=records,
+                image_root=Path(args.image_root),
+                baselines=baselines,
+                config=config,
+                projector_bank_dir=bootstrap_bank,
+                hparams=run_hparams,
+                run_dir=run_dir,
+                rollback_tolerance=float(args.rollback_tolerance),
+                locality_threshold=float(args.locality_damage_threshold),
+                max_new_tokens=int(args.max_new_tokens),
+                crisp_max_dim=int(args.crisp_max_dim),
+                max_reference_cache_records=args.max_reference_cache_records,
+                max_previous_cache_records=args.max_previous_cache_records,
+            )
+        except RuntimeError as exc:
+            payload = {
+                "status": "runtime_error",
+                "reason": f"{type(exc).__name__}: {exc}",
+                "config": config,
+                "selected_modules": _module_names_for_scope(str(config["module_scope"])),
+                "per_record_step_rows": [],
+                "summary_rows": [],
+                "final_summary": {},
+                "final_rollback_check": {},
+                "train_rows": [],
+                "patch_specs": [],
+            }
+            _write_payload_files(run_dir, payload, config)
+            _json_dump(run_dir / "runtime_error.json", {"status": "runtime_error", "reason": payload["reason"]})
         payloads[str(config["config_id"])] = payload
         score = _score_payload(payload)
         scored.append(score)
@@ -1743,6 +1866,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--crisp-max-dim", type=int, default=4097)
     parser.add_argument("--max-reference-cache-records", type=int, default=None)
     parser.add_argument("--max-previous-cache-records", type=int, default=None)
+    parser.add_argument(
+        "--run-infeasible-t2",
+        action="store_true",
+        help="Run the full per-edit previous-aware T2 K-FAC configs instead of recording them as skipped_feasibility.",
+    )
     return parser
 
 
