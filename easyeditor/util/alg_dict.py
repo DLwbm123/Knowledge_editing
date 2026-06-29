@@ -13,6 +13,7 @@ from ..models.liveedit import LiveEditMultimodalRewriteExecutor
 from ..models.dsca import DSCAMultimodalRewriteExecutor
 from ..models.engram import EngramMultimodalRewriteExecutor
 from ..models.same_edit.same_edit_main import SAMEEditMultimodalRewriteExecutor
+from ..models.time_edit import TIMEEditMultimodalRewriteExecutor
 
 ALG_DICT = {
     'ROME': apply_rome_to_model,
@@ -43,6 +44,10 @@ ALG_MULTIMODAL_DICT = {
     'SAME_EDIT': SAMEEditMultimodalRewriteExecutor().apply_to_model,
     'same_edit': SAMEEditMultimodalRewriteExecutor().apply_to_model,
     'SAME-EDIT': SAMEEditMultimodalRewriteExecutor().apply_to_model,
+    'TIME': TIMEEditMultimodalRewriteExecutor().apply_to_model,
+    'TIME_EDIT': TIMEEditMultimodalRewriteExecutor().apply_to_model,
+    'time': TIMEEditMultimodalRewriteExecutor().apply_to_model,
+    'time_edit': TIMEEditMultimodalRewriteExecutor().apply_to_model,
 }
 
 DS_DICT = {

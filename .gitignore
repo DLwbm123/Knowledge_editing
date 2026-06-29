@@ -26,7 +26,9 @@ wandb/
 checkpoints/
 checkpoint*/
 ckpt/
-models/
+/models/
+KE/src/models/
+external/CrispEdit/easyeditor/models/
 cache/
 
 # Model/checkpoint binaries

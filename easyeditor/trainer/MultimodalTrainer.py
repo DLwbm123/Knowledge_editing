@@ -54,6 +54,8 @@ class MultimodalTrainer(BaseTrainer):
             return self.model.edit_step(batch, training, optimizer=getattr(self, "opt", None))
         if normalized_alg_name(self.config) in {"SAME_EDIT", "SAME-EDIT", "SAMEEDIT"}:
             return self.model.edit_step(batch, training, optimizer=getattr(self, "opt", None))
+        if normalized_alg_name(self.config) in {"TIME", "TIME_EDIT"}:
+            return self.model.edit_step(batch, training, optimizer=getattr(self, "opt", None))
         if normalized_alg_name(self.config) == "LIVEEDIT":
             return self.model.edit_step(batch, training)
 
