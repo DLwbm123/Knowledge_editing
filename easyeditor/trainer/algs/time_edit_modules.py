@@ -353,6 +353,7 @@ class TIMECPResidual(nn.Module):
         disable_selection: bool = False,
         disable_score_mixing: bool = False,
         topk: int = 0,
+        routing_mode: str = "threshold",
         layer_norm: bool = True,
     ) -> None:
         super().__init__()
@@ -360,7 +361,17 @@ class TIMECPResidual(nn.Module):
         self.disable_selection = bool(disable_selection)
         self.disable_score_mixing = bool(disable_score_mixing)
         self.topk = int(topk or 0)
+        self.routing_mode = str(routing_mode or "threshold").lower()
         self.layer_norm = nn.LayerNorm(repository.hidden_size, elementwise_affine=False) if layer_norm else nn.Identity()
+
+    def _topk_mask(self, scores: torch.Tensor, candidate: Optional[torch.Tensor] = None) -> torch.Tensor:
+        k = min(max(1, int(self.topk or 1)), scores.shape[-1])
+        masked = scores if candidate is None else scores.masked_fill(~candidate, float("-inf"))
+        top_values, top_indices = torch.topk(masked, k=k, dim=-1)
+        top_valid = torch.isfinite(top_values)
+        selected = torch.zeros_like(scores, dtype=torch.bool)
+        selected.scatter_(-1, top_indices, top_valid)
+        return selected
 
     def _selection(self, scores: torch.Tensor, force_expert_ids: Optional[Iterable[int]]) -> torch.Tensor:
         if self.repository.num_experts == 0:
@@ -368,15 +379,19 @@ class TIMECPResidual(nn.Module):
         if self.disable_selection:
             selected = torch.ones_like(scores, dtype=torch.bool)
         else:
-            selected = scores > float(self.repository.gamma)
-        if self.topk > 0 and selected.any():
-            k = min(int(self.topk), scores.shape[-1])
-            masked = scores.masked_fill(~selected, float("-inf"))
-            top_values, top_indices = torch.topk(masked, k=k, dim=-1)
-            top_valid = torch.isfinite(top_values)
-            limited = torch.zeros_like(selected)
-            limited.scatter_(-1, top_indices, top_valid)
-            selected = limited
+            mode = str(self.routing_mode or "threshold").lower()
+            if mode == "threshold":
+                selected = scores > float(self.repository.gamma)
+            elif mode == "topk":
+                selected = self._topk_mask(scores)
+            elif mode == "threshold_topk":
+                thresholded = scores > float(self.repository.gamma)
+                selected = self._topk_mask(scores, thresholded) if self.topk > 0 else thresholded
+            elif mode == "force_current":
+                selected = torch.zeros_like(scores, dtype=torch.bool)
+                selected[..., self.repository.num_experts - 1] = True
+            else:
+                raise ValueError(f"Unsupported TIME routing_mode: {self.routing_mode}")
         if force_expert_ids:
             for idx in force_expert_ids:
                 idx = int(idx)
@@ -520,4 +535,3 @@ def time_memory_estimate(hidden_size: int, rank: int, s1: int, s2: int, dtype_by
         "lora_bytes_per_expert": float(lora_params * dtype_bytes),
         "time_vs_lora_param_ratio": float(time_params / max(1, lora_params)),
     }
-

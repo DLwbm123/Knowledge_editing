@@ -91,6 +91,7 @@ class TIMEEditMultimodalHparams(HyperParams):
     time_disable_score_mixing: bool = False
     time_disable_align_loss: bool = False
     time_topk: int = 0
+    time_routing_mode: str = "threshold"
     time_force_current_during_training: bool = True
     time_edit_iters: int = 30
     time_save_state: bool = True
@@ -115,4 +116,3 @@ class TIMEEditMultimodalHparams(HyperParams):
         config.setdefault("alg_name", "TIME")
         config.setdefault("inner_params", [])
         return cls(**config)
-

@@ -77,6 +77,7 @@ class TIMEEdit(EditableModel):
             disable_selection=bool(_cfg(self.config, "time_disable_selection", False)),
             disable_score_mixing=bool(_cfg(self.config, "time_disable_score_mixing", False)),
             topk=int(_cfg(self.config, "time_topk", 0) or 0),
+            routing_mode=str(_cfg(self.config, "time_routing_mode", "threshold")),
         )
         self._optimizer_anchor = nn.Parameter(torch.zeros(1))
         self._time_context: Optional[TIMEInterventionContext] = None
@@ -239,8 +240,14 @@ class TIMEEdit(EditableModel):
             "pooled_scores": row_scores,
             "pooled_weights": row_weights,
             "residual_norm": float(debug.residual.detach().float().norm().cpu()),
+            "target_layer_hidden_delta_norm": float(debug.residual.detach().float().norm().cpu()),
+            "target_layer_hidden_changed": bool(torch.count_nonzero(debug.residual).item() > 0),
             "token_scope": str(_cfg(self.config, "time_token_scope", "all")),
             "scale_mode": self.repository.scale_mode,
+            "gamma": float(self.repository.gamma),
+            "topk": int(self.time_residual.topk),
+            "routing_mode": str(self.time_residual.routing_mode),
+            "force_expert_ids": list(context.force_expert_ids),
         }
 
     @staticmethod
@@ -270,6 +277,7 @@ class TIMEEdit(EditableModel):
         debug_events: Optional[List[Dict[str, Any]]] = None,
     ) -> Any:
         force_ids = []
+        force_current = force_current or str(_cfg(self.config, "time_routing_mode", "threshold")).lower() == "force_current"
         if force_current and self.current_expert_index is not None:
             force_ids = [int(self.current_expert_index)]
         context = TIMEInterventionContext(batch=batch, force_expert_ids=force_ids, call_label=call_label, debug_events=debug_events)
@@ -402,6 +410,8 @@ class TIMEEdit(EditableModel):
             "time/selected_expert_set_size": float(routing.get("selected_expert_set_size", 0) or 0),
             "time/nan_inf_grad_count": float(nonfinite),
             "time/trainable_params": float(sum(param.numel() for param in self.outer_parameters() if param.requires_grad)),
+            "time/force_current_train": float(force_current),
+            "time/routing_mode_is_force_current": float(str(self.time_residual.routing_mode) == "force_current"),
         }
         self._last_info = info
         return l_total, l_rel, l_loc, torch.tensor(0.0, device=l_total.device), info
@@ -442,6 +452,11 @@ class TIMEEdit(EditableModel):
             "pooled_scores": scores,
             "pooled_weights": weights,
             "residual_norm": float(debug.residual.detach().float().norm().cpu()),
+            "target_layer_hidden_delta_norm": float(debug.residual.detach().float().norm().cpu()),
+            "target_layer_hidden_changed": bool(torch.count_nonzero(debug.residual).item() > 0),
+            "gamma": float(self.repository.gamma),
+            "topk": int(self.time_residual.topk),
+            "routing_mode": str(self.time_residual.routing_mode),
         }
 
     def state_dict(self, destination=None, prefix="", keep_vars=False):

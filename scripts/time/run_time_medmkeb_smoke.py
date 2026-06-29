@@ -11,6 +11,8 @@ import math
 import random
 import sys
 import time
+from contextlib import contextmanager
+from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -61,6 +63,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--time-disable-score-mixing", action="store_true")
     parser.add_argument("--time-disable-align-loss", action="store_true")
     parser.add_argument("--time-topk", type=int, default=0)
+    parser.add_argument("--time-routing-mode", default="threshold", choices=["threshold", "topk", "threshold_topk", "force_current"])
+    parser.add_argument("--time-force-current-train", dest="time_force_current_train", action="store_true", default=None)
+    parser.add_argument("--time-gamma-sweep", default="")
+    parser.add_argument("--time-scale-init-grid", default="")
     parser.add_argument("--time-token-scope", default="all", choices=["all", "last", "answer_mask"])
     parser.add_argument("--skip-generation", action="store_true")
     parser.add_argument("--out-dir", "--output-dir", dest="out_dir", required=True, type=Path)
@@ -153,6 +159,9 @@ def configure(args: argparse.Namespace, dataset_path: Path) -> TIMEEditMultimoda
     config.time_disable_score_mixing = bool(args.time_disable_score_mixing)
     config.time_disable_align_loss = bool(args.time_disable_align_loss)
     config.time_topk = int(args.time_topk)
+    config.time_routing_mode = str(args.time_routing_mode)
+    if args.time_force_current_train is not None:
+        config.time_force_current_during_training = bool(args.time_force_current_train)
     config.time_token_scope = str(args.time_token_scope)
     if args.image_root is not None:
         config.coco_image = str(args.image_root)
@@ -220,6 +229,11 @@ def evaluate_sample(
         "selected_expert_set_size": routing.get("selected_expert_set_size"),
         "routing_top1_correct": bool(expected_expert is not None and routing.get("top_expert_id") == expected_expert),
         "residual_norm": routing.get("residual_norm"),
+        "target_layer_hidden_delta_norm": routing.get("target_layer_hidden_delta_norm"),
+        "target_layer_hidden_changed": routing.get("target_layer_hidden_changed"),
+        "routing_mode": routing.get("routing_mode"),
+        "gamma": routing.get("gamma"),
+        "topk": routing.get("topk"),
         "elapsed_sec": elapsed,
         "generation_skipped": True,
     }
@@ -375,8 +389,9 @@ def write_report(
         f"- Activation: {config.time_activation}.",
         f"- Scale mode: {config.time_scale_mode}, alpha={config.time_alpha}.",
         f"- Token scope: {config.time_token_scope}.",
-        f"- Routing threshold/top-k: gamma={config.time_gamma}, topk={config.time_topk}.",
+        f"- Routing mode/threshold/top-k: mode={config.time_routing_mode}, gamma={config.time_gamma}, topk={config.time_topk}.",
         f"- Mixing: {'average selected experts' if config.time_disable_score_mixing else 'softmax over selected intrinsic scores'} with tau={config.time_tau}.",
+        f"- Train-time force-current expert: {config.time_force_current_during_training}.",
         "",
         "## Run",
         f"- Dataset: `{dataset_path}`.",
@@ -415,43 +430,31 @@ def write_report(
     (out_dir / "TIME_MEDMKEB_REPRO_REPORT.md").write_text("\n".join(lines))
 
 
-def main() -> None:
-    args = parse_args()
-    if args.mode in {"nonseq", "sequential"} and args.max_edits < 5:
-        args.max_edits = 5
-    if args.mode == "one":
-        args.max_edits = 1
-    set_seeds(args.seed)
-    ensure_offline_env()
-    args.out_dir.mkdir(parents=True, exist_ok=True)
-    routing_debug_path = args.out_dir / "routing_debug.jsonl"
+def run_smoke(
+    args: argparse.Namespace,
+    config: TIMEEditMultimodalHparams,
+    dataset_path: Path,
+    records: List[Dict[str, Any]],
+    samples: List[Dict[str, Any]],
+    alg: TIMEEdit,
+    out_dir: Path,
+    print_summary: bool = True,
+) -> Dict[str, Any]:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    routing_debug_path = out_dir / "routing_debug.jsonl"
     if routing_debug_path.exists():
         routing_debug_path.unlink()
-
-    dataset_path = resolve_dataset_path(args.dataset, Path.cwd(), args.dataset_path)
-    records = load_records(dataset_path, args.sample_index, args.max_edits)
-    config = configure(args, dataset_path)
-    image_root = Path(config.coco_image).expanduser()
-    device = torch_device(config.device)
-    if device.type == "cuda" and device.index is not None:
-        torch.cuda.set_device(device)
-
     write_json(
-        args.out_dir / "time_hparams.json",
+        out_dir / "time_hparams.json",
         {
             "args": vars(args),
             "config": dict(config.__dict__),
             "scale_mode": config.time_scale_mode,
-            "H_s1_s2_logged_after_model_load": True,
+            "hidden_size": alg.repository.hidden_size,
+            "s1": alg.repository.s1,
+            "s2": alg.repository.s2,
         },
     )
-
-    model = get_model(config).to(device).eval()
-    alg = TIMEEdit(model, config, lambda: None).to(device)
-    samples = [make_sample(model, record, image_root) for record in records]
-    hparams_payload = json.loads((args.out_dir / "time_hparams.json").read_text())
-    hparams_payload.update({"hidden_size": alg.repository.hidden_size, "s1": alg.repository.s1, "s2": alg.repository.s2})
-    write_json(args.out_dir / "time_hparams.json", hparams_payload)
 
     loss_rows: List[Dict[str, Any]] = []
     train_records: List[Dict[str, Any]] = []
@@ -506,20 +509,382 @@ def main() -> None:
             final_rows.append(row)
         eval_rows = final_rows
 
-    write_loss_trace(args.out_dir / "loss_trace.csv", loss_rows)
-    summary = summarize_evals(args.mode, eval_rows, train_records, alg, args.out_dir)
+    write_loss_trace(out_dir / "loss_trace.csv", loss_rows)
+    summary = summarize_evals(args.mode, eval_rows, train_records, alg, out_dir)
     summary.update({"hidden_size": alg.repository.hidden_size, "s1": alg.repository.s1, "s2": alg.repository.s2})
     if args.mode == "one":
-        summary_path = args.out_dir / "one_edit_summary.json"
+        summary_path = out_dir / "one_edit_summary.json"
     elif args.mode == "nonseq":
-        summary_path = args.out_dir / "five_edit_nonseq_summary.json"
+        summary_path = out_dir / "five_edit_nonseq_summary.json"
     else:
-        summary_path = args.out_dir / "five_edit_seq_summary.json"
+        summary_path = out_dir / "five_edit_seq_summary.json"
     write_json(summary_path, summary)
-    write_report(args.out_dir, args, config, dataset_path, summary)
-    print(json.dumps(to_jsonable(summary), indent=2, sort_keys=True))
+    write_report(out_dir, args, config, dataset_path, summary)
+    if print_summary:
+        print(json.dumps(to_jsonable(summary), indent=2, sort_keys=True))
+    return summary
 
-    del alg
+
+@contextmanager
+def temporary_time_routing(
+    alg: TIMEEdit,
+    routing_mode: Optional[str] = None,
+    gamma: Optional[float] = None,
+    topk: Optional[int] = None,
+):
+    old_gamma = alg.repository.gamma
+    old_mode = alg.time_residual.routing_mode
+    old_topk = alg.time_residual.topk
+    old_config_gamma = getattr(alg.config, "time_gamma", None)
+    old_config_mode = getattr(alg.config, "time_routing_mode", None)
+    old_config_topk = getattr(alg.config, "time_topk", None)
+    try:
+        if gamma is not None:
+            alg.repository.gamma = float(gamma)
+            setattr(alg.config, "time_gamma", float(gamma))
+        if routing_mode is not None:
+            alg.time_residual.routing_mode = str(routing_mode)
+            setattr(alg.config, "time_routing_mode", str(routing_mode))
+        if topk is not None:
+            alg.time_residual.topk = int(topk)
+            setattr(alg.config, "time_topk", int(topk))
+        yield
+    finally:
+        alg.repository.gamma = old_gamma
+        alg.time_residual.routing_mode = old_mode
+        alg.time_residual.topk = old_topk
+        if old_config_gamma is not None:
+            setattr(alg.config, "time_gamma", old_config_gamma)
+        if old_config_mode is not None:
+            setattr(alg.config, "time_routing_mode", old_config_mode)
+        if old_config_topk is not None:
+            setattr(alg.config, "time_topk", old_config_topk)
+
+
+def parse_float_csv(text: str) -> List[float]:
+    return [float(part.strip()) for part in str(text or "").split(",") if part.strip()]
+
+
+def run_gamma_sweep(
+    args: argparse.Namespace,
+    alg: TIMEEdit,
+    records: List[Dict[str, Any]],
+    samples: List[Dict[str, Any]],
+    out_dir: Path,
+) -> List[Dict[str, Any]]:
+    gammas = parse_float_csv(args.time_gamma_sweep)
+    rows: List[Dict[str, Any]] = []
+    routing_debug_path = out_dir / "routing_debug.jsonl"
+    for gamma in gammas:
+        with temporary_time_routing(alg, routing_mode="threshold", gamma=gamma, topk=0):
+            row = evaluate_sample(
+                alg,
+                samples[0],
+                records[0],
+                0,
+                phase=f"gamma_sweep_{gamma:g}",
+                expected_expert=0,
+                routing_debug_path=routing_debug_path,
+            )
+        row["sweep_gamma"] = gamma
+        rows.append(row)
+    if rows:
+        write_loss_trace(out_dir / "time_gamma_sweep.csv", rows)
+        write_json(out_dir / "time_gamma_sweep.json", {"rows": rows})
+    return rows
+
+
+def parse_scale_init_grid(text: str) -> Tuple[List[float], List[float]]:
+    values = {"init_std": [], "alpha": []}
+    for item in str(text or "").split(";"):
+        if not item.strip():
+            continue
+        key, raw_values = item.split("=", 1)
+        key = key.strip()
+        if key not in values:
+            raise ValueError(f"Unsupported TIME scale/init grid key: {key}")
+        values[key] = parse_float_csv(raw_values)
+    if not values["init_std"] or not values["alpha"]:
+        raise ValueError("--time-scale-init-grid must include init_std=... and alpha=...")
+    return values["init_std"], values["alpha"]
+
+
+def format_float_for_path(value: float) -> str:
+    return f"{float(value):g}".replace("-", "neg").replace(".", "p")
+
+
+def run_scale_init_grid(
+    args: argparse.Namespace,
+    base_config: TIMEEditMultimodalHparams,
+    dataset_path: Path,
+    records: List[Dict[str, Any]],
+    samples: List[Dict[str, Any]],
+    model: Any,
+    device: torch.device,
+) -> List[Dict[str, Any]]:
+    init_values, alpha_values = parse_scale_init_grid(args.time_scale_init_grid)
+    rows: List[Dict[str, Any]] = []
+    for init_std in init_values:
+        for alpha in alpha_values:
+            combo_args = deepcopy(args)
+            combo_args.init_std = float(init_std)
+            combo_args.alpha = float(alpha)
+            combo_args.time_routing_mode = "force_current"
+            combo_args.time_topk = int(args.time_topk or 1)
+            combo_config = deepcopy(base_config)
+            combo_config.time_init_std = float(init_std)
+            combo_config.time_alpha = float(alpha)
+            combo_config.time_routing_mode = "force_current"
+            combo_config.time_topk = int(combo_args.time_topk)
+            combo_config.time_force_current_during_training = True
+            subdir = args.out_dir / f"init_std_{format_float_for_path(init_std)}_alpha_{format_float_for_path(alpha)}"
+            alg = TIMEEdit(model, combo_config, lambda: None).to(device)
+            try:
+                summary = run_smoke(combo_args, combo_config, dataset_path, records, samples, alg, subdir, print_summary=False)
+                force_row = (summary.get("eval_rows") or [{}])[0]
+                with temporary_time_routing(alg, routing_mode="topk", gamma=float(args.gamma), topk=1):
+                    topk_row = evaluate_sample(
+                        alg,
+                        samples[0],
+                        records[0],
+                        0,
+                        phase="grid_topk_eval",
+                        expected_expert=0,
+                        routing_debug_path=subdir / "routing_debug.jsonl",
+                    )
+                with temporary_time_routing(alg, routing_mode="threshold", gamma=0.5, topk=0):
+                    threshold_row = evaluate_sample(
+                        alg,
+                        samples[0],
+                        records[0],
+                        0,
+                        phase="grid_threshold_gamma_0_5_eval",
+                        expected_expert=0,
+                        routing_debug_path=subdir / "routing_debug.jsonl",
+                    )
+                rows.append(
+                    {
+                        "init_std": float(init_std),
+                        "alpha": float(alpha),
+                        "scale_mode": args.scale_mode,
+                        "final_target_nll_delta": force_row.get("target_nll_delta"),
+                        "final_target_rank_delta": force_row.get("target_rank_delta"),
+                        "final_score": force_row.get("top_score"),
+                        "force_current_residual_norm": force_row.get("residual_norm"),
+                        "topk_residual_norm": topk_row.get("residual_norm"),
+                        "topk_target_nll_delta": topk_row.get("target_nll_delta"),
+                        "threshold_gamma_0_5_selected": bool((threshold_row.get("selected_expert_set_size") or 0) > 0),
+                        "threshold_gamma_0_5_selected_expert_ids": threshold_row.get("selected_expert_ids"),
+                        "threshold_gamma_0_5_top_score": threshold_row.get("top_score"),
+                        "threshold_gamma_0_5_residual_norm": threshold_row.get("residual_norm"),
+                        "subdir": str(subdir),
+                    }
+                )
+            finally:
+                alg.remove_hook()
+                del alg
+                gc.collect()
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+    write_loss_trace(args.out_dir / "time_scale_init_grid.csv", rows)
+    write_json(args.out_dir / "time_scale_init_grid.json", {"rows": rows})
+    return rows
+
+
+def _read_json(path: Path) -> Dict[str, Any]:
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text(errors="replace"))
+
+
+def _read_csv_rows(path: Path) -> List[Dict[str, Any]]:
+    if not path.exists():
+        return []
+    with path.open(newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
+def _float_or_none(value: Any) -> Optional[float]:
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _first_eval(summary: Dict[str, Any]) -> Dict[str, Any]:
+    rows = summary.get("eval_rows") or []
+    return rows[0] if rows else {}
+
+
+def _result_lines(title: str, row: Dict[str, Any]) -> List[str]:
+    if not row:
+        return [f"## {title}", "- Not run or not available.", ""]
+    return [
+        f"## {title}",
+        f"- Target NLL before/after: {row.get('base_target_nll')} -> {row.get('target_nll')}.",
+        f"- Target NLL delta: {row.get('target_nll_delta')}.",
+        f"- Target rank delta: {row.get('target_rank_delta')}.",
+        f"- Residual norm: {row.get('residual_norm')}.",
+        f"- Target-layer hidden delta norm: {row.get('target_layer_hidden_delta_norm')}.",
+        f"- Top score: {row.get('top_score')}.",
+        f"- Selected expert ids: {row.get('selected_expert_ids')}.",
+        f"- Locality/reference delta: {row.get('reference_delta')}.",
+        "",
+    ]
+
+
+def calibrated_report_dir(out_dir: Path) -> Path:
+    if out_dir.name == "one_edit_calibrated":
+        return out_dir
+    if out_dir.name.startswith("one_edit_"):
+        return out_dir.parent / "one_edit_calibrated"
+    return out_dir / "one_edit_calibrated"
+
+
+def write_calibrated_report(out_dir: Path) -> Path:
+    report_dir = calibrated_report_dir(out_dir)
+    base_dir = report_dir.parent
+    report_dir.mkdir(parents=True, exist_ok=True)
+    force_summary = _read_json(base_dir / "one_edit_calibrated_force" / "one_edit_summary.json")
+    topk_summary = _read_json(base_dir / "one_edit_calibrated_topk" / "one_edit_summary.json")
+    gamma_rows = _read_csv_rows(base_dir / "one_edit_calibrated_force" / "time_gamma_sweep.csv")
+    grid_rows = _read_csv_rows(base_dir / "one_edit_scale_init_grid" / "time_scale_init_grid.csv")
+    force_row = _first_eval(force_summary)
+    topk_row = _first_eval(topk_summary)
+
+    selected_gamma_rows = [row for row in gamma_rows if (_float_or_none(row.get("selected_expert_set_size")) or 0.0) > 0.0]
+    selected_gammas = [_float_or_none(row.get("sweep_gamma")) for row in selected_gamma_rows]
+    selected_gammas = [value for value in selected_gammas if value is not None]
+    threshold_05_rows = [row for row in gamma_rows if _float_or_none(row.get("sweep_gamma")) == 0.5]
+    threshold_05_selected = any((_float_or_none(row.get("selected_expert_set_size")) or 0.0) > 0.0 for row in threshold_05_rows)
+
+    force_residual = _float_or_none(force_row.get("residual_norm"))
+    force_delta = _float_or_none(force_row.get("target_nll_delta"))
+    force_rank_delta = _float_or_none(force_row.get("target_rank_delta"))
+    topk_residual = _float_or_none(topk_row.get("residual_norm"))
+    topk_delta = _float_or_none(topk_row.get("target_nll_delta"))
+    topk_rank_delta = _float_or_none(topk_row.get("target_rank_delta"))
+    force_pass = (force_residual or 0.0) > 0.0 and ((force_delta or 0.0) > 0.0 or (force_rank_delta or 0.0) > 0.0)
+    topk_pass = (topk_residual or 0.0) > 0.0 and ((topk_delta or 0.0) > 0.0 or (topk_rank_delta or 0.0) > 0.0)
+    if force_residual is not None and force_residual <= 0.0:
+        diagnosis = "hook_execution_bug"
+    elif (force_pass or topk_pass) and not threshold_05_selected:
+        diagnosis = "threshold_calibration_issue"
+    elif (force_residual or 0.0) > 0.0 and not (force_pass or topk_pass):
+        diagnosis = "scale_factor_issue"
+    else:
+        diagnosis = "mixed"
+
+    lines = [
+        "# TIME Calibrated 1-Edit Diagnostic Report",
+        "",
+        "## Files Changed",
+        "- `easyeditor/trainer/algs/time_edit.py`",
+        "- `easyeditor/trainer/algs/time_edit_modules.py`",
+        "- `easyeditor/models/time_edit/time_edit_hparams.py`",
+        "- `scripts/time/run_time_medmkeb_smoke.py`",
+        "",
+        "## Diagnostic Switches",
+        "- `--time-force-current-train`: added and logged; it forces the current expert into the selected set only during training.",
+        "- `--time-routing-mode`: added with `threshold`, `topk`, `threshold_topk`, and `force_current`.",
+        "- `--time-gamma-sweep`: added for post-training threshold sweeps without retraining.",
+        "- `--time-scale-init-grid`: added for the bounded init/alpha diagnostic grid.",
+        "",
+    ]
+    lines.extend(_result_lines("Force-Current Result", force_row))
+    lines.extend(_result_lines("Topk=1 Result", topk_row))
+    lines.extend(
+        [
+            "## Gamma Sweep Summary",
+            f"- Sweep rows: {len(gamma_rows)}.",
+            f"- Smallest gamma that selects expert: {min(selected_gammas) if selected_gammas else None}.",
+            f"- Largest gamma that still selects expert: {max(selected_gammas) if selected_gammas else None}.",
+            f"- Paper gamma 0.5 selects expert: {threshold_05_selected}.",
+            "",
+        ]
+    )
+    if selected_gamma_rows:
+        lines.append("| gamma | selected ids | residual norm | target NLL | target NLL delta | rank delta | top score |")
+        lines.append("|---:|---|---:|---:|---:|---:|---:|")
+        for row in selected_gamma_rows:
+            lines.append(
+                "| {gamma} | {ids} | {residual} | {nll} | {delta} | {rank_delta} | {score} |".format(
+                    gamma=row.get("sweep_gamma"),
+                    ids=row.get("selected_expert_ids"),
+                    residual=row.get("residual_norm"),
+                    nll=row.get("target_nll"),
+                    delta=row.get("target_nll_delta"),
+                    rank_delta=row.get("target_rank_delta"),
+                    score=row.get("top_score"),
+                )
+            )
+        lines.append("")
+    if grid_rows:
+        lines.extend(["## Scale/Init Grid Summary", ""])
+        lines.append("| init_std | alpha | force residual | topk residual | NLL delta | topk NLL delta | threshold 0.5 selected | top score |")
+        lines.append("|---:|---:|---:|---:|---:|---:|---|---:|")
+        for row in grid_rows:
+            lines.append(
+                "| {init_std} | {alpha} | {force_residual} | {topk_residual} | {delta} | {topk_delta} | {selected} | {score} |".format(
+                    init_std=row.get("init_std"),
+                    alpha=row.get("alpha"),
+                    force_residual=row.get("force_current_residual_norm"),
+                    topk_residual=row.get("topk_residual_norm"),
+                    delta=row.get("final_target_nll_delta"),
+                    topk_delta=row.get("topk_target_nll_delta"),
+                    selected=row.get("threshold_gamma_0_5_selected"),
+                    score=row.get("final_score"),
+                )
+            )
+        lines.append("")
+    else:
+        lines.extend(["## Scale/Init Grid Summary", "- Not run or not available.", ""])
+    lines.extend(["## Diagnosis", f"- Label: `{diagnosis}`.", ""])
+    path = report_dir / "TIME_CALIBRATED_1EDIT_REPORT.md"
+    path.write_text("\n".join(lines))
+    return path
+
+
+def main() -> None:
+    args = parse_args()
+    if args.mode in {"nonseq", "sequential"} and args.max_edits < 5:
+        args.max_edits = 5
+    if args.mode == "one":
+        args.max_edits = 1
+    set_seeds(args.seed)
+    ensure_offline_env()
+
+    dataset_path = resolve_dataset_path(args.dataset, Path.cwd(), args.dataset_path)
+    records = load_records(dataset_path, args.sample_index, args.max_edits)
+    config = configure(args, dataset_path)
+    image_root = Path(config.coco_image).expanduser()
+    device = torch_device(config.device)
+    if device.type == "cuda" and device.index is not None:
+        torch.cuda.set_device(device)
+
+    model = get_model(config).to(device).eval()
+    samples = [make_sample(model, record, image_root) for record in records]
+    if args.time_scale_init_grid:
+        grid_rows = run_scale_init_grid(args, config, dataset_path, records, samples, model, device)
+        report_path = write_calibrated_report(args.out_dir)
+        print(json.dumps(to_jsonable({"grid_rows": grid_rows, "calibrated_report": str(report_path)}), indent=2, sort_keys=True))
+    else:
+        alg = TIMEEdit(model, config, lambda: None).to(device)
+        try:
+            summary = run_smoke(args, config, dataset_path, records, samples, alg, args.out_dir, print_summary=False)
+            gamma_rows = run_gamma_sweep(args, alg, records, samples, args.out_dir) if args.time_gamma_sweep else []
+            report_path = write_calibrated_report(args.out_dir)
+            payload = dict(summary)
+            if gamma_rows:
+                payload["gamma_sweep_rows"] = gamma_rows
+            payload["calibrated_report"] = str(report_path)
+            print(json.dumps(to_jsonable(payload), indent=2, sort_keys=True))
+        finally:
+            alg.remove_hook()
+            del alg
+
     del model
     gc.collect()
     if torch.cuda.is_available():
