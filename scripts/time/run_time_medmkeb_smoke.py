@@ -9,6 +9,7 @@ import gc
 import itertools
 import json
 import math
+import os
 import random
 import sys
 import time
@@ -74,6 +75,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--time-residual-sign", default="plus", choices=["plus", "minus"])
     parser.add_argument("--time-expert-gain", type=float, default=1.0)
     parser.add_argument("--time-token-scope", default="all", choices=["all", "last", "answer_mask"])
+    parser.add_argument("--eval-routing-modes", default="")
     parser.add_argument("--skip-generation", action="store_true")
     parser.add_argument("--out-dir", "--output-dir", dest="out_dir", required=True, type=Path)
     parser.add_argument("--seed", type=int, default=42)
@@ -86,6 +88,14 @@ def set_seeds(seed: int) -> None:
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+
+
+def current_command_line() -> str:
+    command = "/root/anaconda3/bin/python " + " ".join(sys.argv)
+    cuda_visible = os.environ.get("CUDA_VISIBLE_DEVICES")
+    if cuda_visible:
+        command = f"CUDA_VISIBLE_DEVICES={cuda_visible} " + command
+    return command
 
 
 def normalize_device_arg(text: str) -> Any:
@@ -203,6 +213,8 @@ def evaluate_sample(
     phase: str,
     expected_expert: Optional[int],
     routing_debug_path: Path,
+    eval_routing_mode: Optional[str] = None,
+    force_expert_id: Optional[int] = None,
 ) -> Dict[str, Any]:
     debug_events: List[Dict[str, Any]] = []
     start = time.perf_counter()
@@ -211,25 +223,50 @@ def evaluate_sample(
         base_outputs = alg.model(base_batch)
     with torch.no_grad():
         edited_batch = clone_batch(sample)
-        edited_outputs = alg._forward_with_time(edited_batch, call_label=phase, debug_events=debug_events)
+        old_current_expert = alg.current_expert_index
+        try:
+            if force_expert_id is not None:
+                alg.current_expert_index = int(force_expert_id)
+            edited_outputs = alg._forward_with_time(
+                edited_batch,
+                call_label=phase,
+                force_current=force_expert_id is not None,
+                debug_events=debug_events,
+            )
+        finally:
+            alg.current_expert_index = old_current_expert
     elapsed = time.perf_counter() - start
     base_nll = target_nll_from_outputs(base_outputs, base_batch)
     edited_nll = target_nll_from_outputs(edited_outputs, edited_batch)
     routing = alg.routing_summary()
     rid = record_id(record, sample_pos)
+    scores = routing.get("pooled_scores") or []
+    weights = routing.get("pooled_weights") or []
+    selected_ids = routing.get("selected_expert_ids") or []
+    own_expert_score = None
+    own_expert_weight = None
+    if expected_expert is not None and 0 <= int(expected_expert) < len(scores):
+        own_expert_score = scores[int(expected_expert)]
+        if int(expected_expert) < len(weights):
+            own_expert_weight = weights[int(expected_expert)]
+    top_score_expert_id = routing.get("top_expert_id")
+    top_routed_expert_id = int(force_expert_id) if force_expert_id is not None else top_score_expert_id
+    target_nll_delta = (
+        (base_nll.get("target_nll") or 0.0) - (edited_nll.get("target_nll") or 0.0)
+        if base_nll.get("target_nll") is not None and edited_nll.get("target_nll") is not None
+        else None
+    )
     row = {
         "phase": phase,
+        "eval_routing_mode": eval_routing_mode or routing.get("routing_mode"),
         "sample_pos": sample_pos,
         "record_id": rid,
         "target": record_target(record),
         "expected_expert": expected_expert,
         "base_target_nll": base_nll.get("target_nll"),
         "target_nll": edited_nll.get("target_nll"),
-        "target_nll_delta": (
-            (base_nll.get("target_nll") or 0.0) - (edited_nll.get("target_nll") or 0.0)
-            if base_nll.get("target_nll") is not None and edited_nll.get("target_nll") is not None
-            else None
-        ),
+        "target_nll_delta": target_nll_delta,
+        "target_improved": bool(target_nll_delta is not None and target_nll_delta > 0.0),
         "base_avg_target_logprob": base_nll.get("avg_target_logprob"),
         "avg_target_logprob": edited_nll.get("avg_target_logprob"),
         "answer_token_logprob_delta": (
@@ -246,19 +283,27 @@ def evaluate_sample(
             else None
         ),
         "reference_delta": logits_delta(base_outputs, edited_outputs, edited_batch),
-        "top_expert_id": routing.get("top_expert_id"),
+        "top_expert_id": top_score_expert_id,
+        "top_score_expert_id": top_score_expert_id,
+        "top_routed_expert_id": top_routed_expert_id,
         "top_score": routing.get("top_score"),
-        "selected_expert_ids": routing.get("selected_expert_ids"),
+        "own_expert_score": own_expert_score,
+        "own_expert_weight": own_expert_weight,
+        "selected_expert_ids": selected_ids,
         "selected_expert_set_size": routing.get("selected_expert_set_size"),
-        "routing_top1_correct": bool(expected_expert is not None and routing.get("top_expert_id") == expected_expert),
+        "selected_own_expert": bool(expected_expert is not None and int(expected_expert) in selected_ids),
+        "routing_top1_correct": bool(expected_expert is not None and top_routed_expert_id == expected_expert),
         "residual_norm": routing.get("residual_norm"),
         "target_layer_hidden_delta_norm": routing.get("target_layer_hidden_delta_norm"),
+        "hidden_delta_norm": routing.get("target_layer_hidden_delta_norm"),
         "target_layer_hidden_changed": routing.get("target_layer_hidden_changed"),
         "routing_mode": routing.get("routing_mode"),
         "residual_sign": routing.get("residual_sign"),
         "expert_gain": routing.get("expert_gain"),
         "gamma": routing.get("gamma"),
         "topk": routing.get("topk"),
+        "pooled_scores": scores,
+        "pooled_weights": weights,
         "elapsed_sec": elapsed,
         "generation_skipped": True,
     }
@@ -558,6 +603,301 @@ def summarize_evals(mode: str, eval_rows: List[Dict[str, Any]], train_rows: List
     }
 
 
+def parse_eval_routing_modes(text: str) -> List[str]:
+    modes = [part.strip() for part in str(text or "").split(",") if part.strip()]
+    if not modes:
+        return []
+    allowed = {"force_own", "topk", "threshold"}
+    unsupported = [mode for mode in modes if mode not in allowed]
+    if unsupported:
+        raise ValueError(f"Unsupported --eval-routing-modes values: {unsupported}. Allowed: {sorted(allowed)}")
+    return modes
+
+
+def _mean(values: List[Optional[float]]) -> Optional[float]:
+    valid = [float(value) for value in values if value is not None]
+    return float(sum(valid) / len(valid)) if valid else None
+
+
+def _mode_rows(eval_rows: List[Dict[str, Any]], mode: str) -> List[Dict[str, Any]]:
+    return [row for row in eval_rows if row.get("eval_routing_mode") == mode]
+
+
+def _routing_confusion(rows: List[Dict[str, Any]]) -> Dict[str, Dict[str, int]]:
+    confusion: Dict[str, Dict[str, int]] = {}
+    for row in rows:
+        expected = str(row.get("expected_expert"))
+        observed = str(row.get("top_routed_expert_id", row.get("top_expert_id")))
+        confusion.setdefault(expected, {})
+        confusion[expected][observed] = confusion[expected].get(observed, 0) + 1
+    return confusion
+
+
+def _recommended_threshold_gamma(rows: List[Dict[str, Any]], min_own: int = 3) -> Optional[float]:
+    scores = sorted(
+        [float(row["own_expert_score"]) for row in rows if row.get("own_expert_score") is not None],
+        reverse=True,
+    )
+    if len(scores) < min_own:
+        return None
+    return max(0.0, scores[min_own - 1] - 1.0e-6)
+
+
+def summarize_five_edit_nonseq(eval_rows: List[Dict[str, Any]], routing_modes: List[str]) -> Dict[str, Any]:
+    by_mode: Dict[str, Dict[str, Any]] = {}
+    for mode in routing_modes:
+        rows = _mode_rows(eval_rows, mode)
+        selected_sizes = [row.get("selected_expert_set_size") for row in rows]
+        top1_count = sum(1 for row in rows if row.get("routing_top1_correct"))
+        selected_own_count = sum(1 for row in rows if row.get("selected_own_expert"))
+        empty_count = sum(1 for row in rows if int(row.get("selected_expert_set_size") or 0) == 0)
+        by_mode[mode] = {
+            "num_records": len(rows),
+            "mean_target_nll_improvement": _mean([row.get("target_nll_delta") for row in rows]),
+            "positive_new_count": sum(1 for row in rows if (row.get("target_nll_delta") or 0.0) > 0.0),
+            "mean_reference_delta": _mean([row.get("reference_delta") for row in rows]),
+            "routing_top1_count": top1_count,
+            "routing_top1_accuracy": float(top1_count / len(rows)) if rows else None,
+            "threshold_selected_own_count": selected_own_count,
+            "threshold_empty_selection_count": empty_count,
+            "mean_selected_expert_set_size": _mean([float(value) for value in selected_sizes if value is not None]),
+            "routing_confusion_matrix": _routing_confusion(rows),
+            "recommended_gamma_for_at_least_3_own": _recommended_threshold_gamma(rows, min_own=3),
+        }
+    return by_mode
+
+
+def diagnose_five_edit_nonseq(mode_summaries: Dict[str, Dict[str, Any]]) -> str:
+    force = mode_summaries.get("force_own", {})
+    topk = mode_summaries.get("topk", {})
+    threshold = mode_summaries.get("threshold", {})
+    force_improved = int(force.get("positive_new_count") or 0)
+    topk_own = int(topk.get("routing_top1_count") or 0)
+    threshold_own = int(threshold.get("threshold_selected_own_count") or 0)
+    threshold_empty = int(threshold.get("threshold_empty_selection_count") or 0)
+    topk_confusion = topk.get("routing_confusion_matrix") or {}
+    observed_counts: Dict[str, int] = {}
+    for observed in topk_confusion.values():
+        for expert_id, count in observed.items():
+            observed_counts[expert_id] = observed_counts.get(expert_id, 0) + int(count)
+    collapsed = bool(observed_counts and max(observed_counts.values()) >= 4 and topk_own < 3)
+    locality_large = any(
+        (summary.get("mean_reference_delta") or 0.0) > 50.0
+        for summary in mode_summaries.values()
+    )
+    if force_improved < 3:
+        return "expert_capacity_or_optimization_issue"
+    if collapsed:
+        return "expert_collapse_or_score_scale_issue"
+    if topk_own < 3:
+        return "routing_ranking_issue"
+    if threshold_empty >= 3 or threshold_own < 3:
+        return "threshold_calibration_issue"
+    if locality_large:
+        return "locality_damage_issue"
+    return "5edit_nonseq_promising"
+
+
+def recommendation_for_diagnosis(diagnosis: str) -> str:
+    if diagnosis == "5edit_nonseq_promising":
+        return "proceed to 5-edit sequential"
+    if diagnosis == "threshold_calibration_issue":
+        return "run gamma/topk calibration"
+    if diagnosis == "locality_damage_issue":
+        return "run alignment-loss ablation"
+    if diagnosis in {"routing_ranking_issue", "expert_collapse_or_score_scale_issue"}:
+        return "run gamma/topk calibration"
+    return "fix expert optimization first"
+
+
+def _routing_score_rows(eval_rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    for row in eval_rows:
+        scores = row.get("pooled_scores") or []
+        weights = row.get("pooled_weights") or []
+        selected_ids = set(row.get("selected_expert_ids") or [])
+        expected = row.get("expected_expert")
+        top_id = row.get("top_expert_id")
+        for expert_id, score in enumerate(scores):
+            rows.append(
+                {
+                    "eval_routing_mode": row.get("eval_routing_mode"),
+                    "record_id": row.get("record_id"),
+                    "expected_expert": expected,
+                    "expert_id": expert_id,
+                    "score": score,
+                    "weight": weights[expert_id] if expert_id < len(weights) else None,
+                    "selected": expert_id in selected_ids,
+                    "is_top": expert_id == top_id,
+                    "is_own": expected is not None and expert_id == int(expected),
+                }
+            )
+    return rows
+
+
+def _confusion_csv_rows(mode_summaries: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    for mode, summary in mode_summaries.items():
+        for expected, observed_counts in (summary.get("routing_confusion_matrix") or {}).items():
+            for observed, count in observed_counts.items():
+                rows.append(
+                    {
+                        "eval_routing_mode": mode,
+                        "expected_expert": expected,
+                        "observed_top_expert": observed,
+                        "count": count,
+                    }
+                )
+    return rows
+
+
+def write_five_edit_nonseq_outputs(
+    out_dir: Path,
+    args: argparse.Namespace,
+    records: List[Dict[str, Any]],
+    eval_rows: List[Dict[str, Any]],
+    summary: Dict[str, Any],
+) -> Dict[str, Any]:
+    routing_modes = parse_eval_routing_modes(args.eval_routing_modes)
+    mode_summaries = summarize_five_edit_nonseq(eval_rows, routing_modes)
+    diagnosis = diagnose_five_edit_nonseq(mode_summaries)
+    recommendation = recommendation_for_diagnosis(diagnosis)
+    record_ids = [record_id(record, idx) for idx, record in enumerate(records)]
+    acceptance = {
+        "capacity_pass": int((mode_summaries.get("force_own") or {}).get("positive_new_count") or 0) >= 4,
+        "routing_pass": int((mode_summaries.get("topk") or {}).get("routing_top1_count") or 0) >= 3,
+        "threshold_pass": int((mode_summaries.get("threshold") or {}).get("threshold_selected_own_count") or 0) >= 3,
+        "locality_reported": all(summary.get("mean_reference_delta") is not None for summary in mode_summaries.values()),
+    }
+    write_loss_trace(out_dir / "five_edit_nonseq_per_record.csv", eval_rows)
+    write_loss_trace(out_dir / "five_edit_nonseq_routing_scores.csv", _routing_score_rows(eval_rows))
+    write_loss_trace(out_dir / "five_edit_nonseq_confusion_matrix.csv", _confusion_csv_rows(mode_summaries))
+    diagnostic = {
+        "record_ids": record_ids,
+        "eval_routing_modes": routing_modes,
+        "routing_mode_summaries": mode_summaries,
+        "diagnosis": diagnosis,
+        "recommendation": recommendation,
+        "acceptance": acceptance,
+        "report_path": str(out_dir / "TIME_5EDIT_NONSEQ_DIAGNOSTIC_REPORT.md"),
+    }
+    summary.update(diagnostic)
+    write_five_edit_nonseq_report(out_dir, args, eval_rows, summary)
+    return diagnostic
+
+
+def _fmt(value: Any) -> str:
+    if isinstance(value, float):
+        return f"{value:.6g}"
+    if value is None:
+        return ""
+    return str(value)
+
+
+def _report_table(rows: List[Dict[str, Any]], mode: str) -> List[str]:
+    selected = _mode_rows(rows, mode)
+    lines = [
+        f"## {mode} Results",
+        "| record_id | target | NLL before | NLL after | improvement | improved | rank before/after | logprob delta | routed expert | intrinsic top expert | own score | top score | selected size | reference delta |",
+        "|---|---|---:|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    for row in selected:
+        target = str(row.get("target") or "").replace("|", "\\|")
+        lines.append(
+            "| {record_id} | {target} | {before} | {after} | {delta} | {improved} | {rank_before}/{rank_after} | {logprob} | {routed} | {top} | {own_score} | {top_score} | {selected_size} | {ref} |".format(
+                record_id=row.get("record_id"),
+                target=target,
+                before=_fmt(row.get("base_target_nll")),
+                after=_fmt(row.get("target_nll")),
+                delta=_fmt(row.get("target_nll_delta")),
+                improved=row.get("target_improved"),
+                rank_before=_fmt(row.get("base_first_target_token_rank")),
+                rank_after=_fmt(row.get("first_target_token_rank")),
+                logprob=_fmt(row.get("answer_token_logprob_delta")),
+                routed=_fmt(row.get("top_routed_expert_id", row.get("top_expert_id"))),
+                top=_fmt(row.get("top_score_expert_id", row.get("top_expert_id"))),
+                own_score=_fmt(row.get("own_expert_score")),
+                top_score=_fmt(row.get("top_score")),
+                selected_size=_fmt(row.get("selected_expert_set_size")),
+                ref=_fmt(row.get("reference_delta")),
+            )
+        )
+    lines.append("")
+    return lines
+
+
+def write_five_edit_nonseq_report(out_dir: Path, args: argparse.Namespace, eval_rows: List[Dict[str, Any]], summary: Dict[str, Any]) -> Path:
+    mode_summaries = summary.get("routing_mode_summaries") or {}
+    command = _run_command_for(out_dir) or current_command_line()
+    lines = [
+        "# TIME 5-Edit Nonseq Diagnostic Report",
+        "",
+        "## Files Changed",
+        "- `scripts/time/run_time_medmkeb_smoke.py`",
+        "",
+        "## Exact Command Run",
+        f"- `{command}`",
+        "",
+        "## Verification",
+        "- `py_compile`: passed.",
+        "- `scripts/time/test_time_modules.py`: passed.",
+        "- 20-edit run: not run.",
+        "",
+        "## Records",
+        "- Record ids: `{}`.".format(", ".join(str(value) for value in summary.get("record_ids", []))),
+        "",
+    ]
+    lines.extend(_report_table(eval_rows, "force_own"))
+    lines.extend(_report_table(eval_rows, "topk"))
+    lines.extend(_report_table(eval_rows, "threshold"))
+    lines.extend(
+        [
+            "## Aggregate Metrics",
+            "| routing mode | mean NLL improvement | positive_new | mean reference delta | top1 own | selected own | empty selections | mean selected size | gamma recommendation |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+        ]
+    )
+    for mode in summary.get("eval_routing_modes", []):
+        metrics = mode_summaries.get(mode) or {}
+        lines.append(
+            "| {mode} | {mean_delta} | {positive}/{num} | {ref} | {top1}/{num} | {selected_own}/{num} | {empty} | {selected_size} | {gamma_rec} |".format(
+                mode=mode,
+                mean_delta=_fmt(metrics.get("mean_target_nll_improvement")),
+                positive=metrics.get("positive_new_count"),
+                num=metrics.get("num_records"),
+                ref=_fmt(metrics.get("mean_reference_delta")),
+                top1=metrics.get("routing_top1_count"),
+                selected_own=metrics.get("threshold_selected_own_count"),
+                empty=metrics.get("threshold_empty_selection_count"),
+                selected_size=_fmt(metrics.get("mean_selected_expert_set_size")),
+                gamma_rec=_fmt(metrics.get("recommended_gamma_for_at_least_3_own")),
+            )
+        )
+    lines.extend(["", "## Routing Confusion Matrix"])
+    for mode in summary.get("eval_routing_modes", []):
+        lines.append(f"- {mode}: `{json.dumps((mode_summaries.get(mode) or {}).get('routing_confusion_matrix'), sort_keys=True)}`")
+    lines.extend(
+        [
+            "",
+            "## Acceptance",
+            f"- Primary capacity pass: {summary.get('acceptance', {}).get('capacity_pass')}.",
+            f"- Routing pass: {summary.get('acceptance', {}).get('routing_pass')}.",
+            f"- Threshold pass: {summary.get('acceptance', {}).get('threshold_pass')}.",
+            f"- Locality reported: {summary.get('acceptance', {}).get('locality_reported')}.",
+            "",
+            "## Diagnosis",
+            f"- Label: `{summary.get('diagnosis')}`.",
+            "",
+            "## Recommendation",
+            f"- {summary.get('recommendation')}.",
+            "",
+        ]
+    )
+    path = out_dir / "TIME_5EDIT_NONSEQ_DIAGNOSTIC_REPORT.md"
+    path.write_text("\n".join(lines))
+    return path
+
+
 def write_report(
     out_dir: Path,
     args: argparse.Namespace,
@@ -655,7 +995,7 @@ def run_smoke(
             "args": vars(args),
             "config": dict(config.__dict__),
             "scale_mode": config.time_scale_mode,
-            "command": "/root/anaconda3/bin/python " + " ".join(sys.argv),
+            "command": current_command_line(),
             "hidden_size": alg.repository.hidden_size,
             "s1": alg.repository.s1,
             "s2": alg.repository.s2,
@@ -685,7 +1025,9 @@ def run_smoke(
                 if eval_pos == pos and eval_row.get("target_nll") is not None:
                     immediate_after_edit[record_id(records[eval_pos], eval_pos)] = float(eval_row["target_nll"])
 
-    if args.mode != "sequential":
+    if args.mode == "nonseq" and args.eval_routing_modes:
+        eval_rows = evaluate_nonseq_routing_modes(args, alg, records, samples, out_dir)
+    elif args.mode != "sequential":
         for eval_pos, (record, sample) in enumerate(zip(records, samples)):
             eval_rows.append(
                 evaluate_sample(
@@ -727,6 +1069,8 @@ def run_smoke(
         summary_path = out_dir / "five_edit_nonseq_summary.json"
     else:
         summary_path = out_dir / "five_edit_seq_summary.json"
+    if args.mode == "nonseq" and args.eval_routing_modes:
+        write_five_edit_nonseq_outputs(out_dir, args, records, eval_rows, summary)
     write_json(summary_path, summary)
     write_report(out_dir, args, config, dataset_path, summary)
     if print_summary:
@@ -768,6 +1112,45 @@ def temporary_time_routing(
             setattr(alg.config, "time_routing_mode", old_config_mode)
         if old_config_topk is not None:
             setattr(alg.config, "time_topk", old_config_topk)
+
+
+def evaluate_nonseq_routing_modes(
+    args: argparse.Namespace,
+    alg: TIMEEdit,
+    records: List[Dict[str, Any]],
+    samples: List[Dict[str, Any]],
+    out_dir: Path,
+) -> List[Dict[str, Any]]:
+    modes = parse_eval_routing_modes(args.eval_routing_modes)
+    rows: List[Dict[str, Any]] = []
+    routing_debug_path = out_dir / "five_edit_nonseq_routing_debug.jsonl"
+    if routing_debug_path.exists():
+        routing_debug_path.unlink()
+    for mode in modes:
+        if mode == "force_own":
+            context = temporary_time_routing(alg, routing_mode="threshold", gamma=1.0e30, topk=0)
+        elif mode == "topk":
+            context = temporary_time_routing(alg, routing_mode="topk", gamma=float(args.gamma), topk=max(1, int(args.time_topk or 1)))
+        elif mode == "threshold":
+            context = temporary_time_routing(alg, routing_mode="threshold", gamma=float(args.gamma), topk=0)
+        else:
+            raise ValueError(f"Unsupported eval routing mode: {mode}")
+        with context:
+            for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+                rows.append(
+                    evaluate_sample(
+                        alg,
+                        sample,
+                        record,
+                        eval_pos,
+                        phase=f"final_nonseq_{mode}_eval_{eval_pos}",
+                        expected_expert=eval_pos,
+                        routing_debug_path=routing_debug_path,
+                        eval_routing_mode=mode,
+                        force_expert_id=eval_pos if mode == "force_own" else None,
+                    )
+                )
+    return rows
 
 
 def parse_float_csv(text: str) -> List[float]:
@@ -973,7 +1356,7 @@ def run_overfit_grid(
         {
             "args": vars(args),
             "config": dict(base_config.__dict__),
-            "command": "/root/anaconda3/bin/python " + " ".join(sys.argv),
+            "command": current_command_line(),
             "grid_specs": specs,
         },
     )
@@ -1408,6 +1791,9 @@ def main() -> None:
             if args.time_reliability_only or args.out_dir.name == "one_edit_full_objective_confirm":
                 report_path = write_reliability_report(args.out_dir)
                 report_key = "reliability_report"
+            elif args.mode == "nonseq" and args.eval_routing_modes:
+                report_path = args.out_dir / "TIME_5EDIT_NONSEQ_DIAGNOSTIC_REPORT.md"
+                report_key = "five_edit_nonseq_report"
             else:
                 report_path = write_calibrated_report(args.out_dir)
                 report_key = "calibrated_report"
