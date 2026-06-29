@@ -78,6 +78,8 @@ class TIMEEdit(EditableModel):
             disable_score_mixing=bool(_cfg(self.config, "time_disable_score_mixing", False)),
             topk=int(_cfg(self.config, "time_topk", 0) or 0),
             routing_mode=str(_cfg(self.config, "time_routing_mode", "threshold")),
+            residual_sign=str(_cfg(self.config, "time_residual_sign", "plus")),
+            expert_gain=float(_cfg(self.config, "time_expert_gain", 1.0)),
         )
         self._optimizer_anchor = nn.Parameter(torch.zeros(1))
         self._time_context: Optional[TIMEInterventionContext] = None
@@ -247,6 +249,8 @@ class TIMEEdit(EditableModel):
             "gamma": float(self.repository.gamma),
             "topk": int(self.time_residual.topk),
             "routing_mode": str(self.time_residual.routing_mode),
+            "residual_sign": str(self.time_residual.residual_sign),
+            "expert_gain": float(self.time_residual.expert_gain),
             "force_expert_ids": list(context.force_expert_ids),
         }
 
@@ -412,6 +416,9 @@ class TIMEEdit(EditableModel):
             "time/trainable_params": float(sum(param.numel() for param in self.outer_parameters() if param.requires_grad)),
             "time/force_current_train": float(force_current),
             "time/routing_mode_is_force_current": float(str(self.time_residual.routing_mode) == "force_current"),
+            "time/residual_sign_is_minus": float(str(self.time_residual.residual_sign) == "minus"),
+            "time/expert_gain": float(self.time_residual.expert_gain),
+            "time/reliability_only": float(bool(_cfg(self.config, "time_reliability_only", False))),
         }
         self._last_info = info
         return l_total, l_rel, l_loc, torch.tensor(0.0, device=l_total.device), info
@@ -457,6 +464,8 @@ class TIMEEdit(EditableModel):
             "gamma": float(self.repository.gamma),
             "topk": int(self.time_residual.topk),
             "routing_mode": str(self.time_residual.routing_mode),
+            "residual_sign": str(self.time_residual.residual_sign),
+            "expert_gain": float(self.time_residual.expert_gain),
         }
 
     def state_dict(self, destination=None, prefix="", keep_vars=False):

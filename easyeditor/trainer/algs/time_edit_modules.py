@@ -354,6 +354,8 @@ class TIMECPResidual(nn.Module):
         disable_score_mixing: bool = False,
         topk: int = 0,
         routing_mode: str = "threshold",
+        residual_sign: str = "plus",
+        expert_gain: float = 1.0,
         layer_norm: bool = True,
     ) -> None:
         super().__init__()
@@ -362,6 +364,10 @@ class TIMECPResidual(nn.Module):
         self.disable_score_mixing = bool(disable_score_mixing)
         self.topk = int(topk or 0)
         self.routing_mode = str(routing_mode or "threshold").lower()
+        self.residual_sign = str(residual_sign or "plus").lower()
+        self.expert_gain = float(expert_gain)
+        if self.residual_sign not in {"plus", "minus"}:
+            raise ValueError(f"Unsupported TIME residual_sign: {self.residual_sign}")
         self.layer_norm = nn.LayerNorm(repository.hidden_size, elementwise_affine=False) if layer_norm else nn.Identity()
 
     def _topk_mask(self, scores: torch.Tensor, candidate: Optional[torch.Tensor] = None) -> torch.Tensor:
@@ -453,6 +459,9 @@ class TIMECPResidual(nn.Module):
         residual = torch.einsum("blm,blmh->blh", weights.to(dtype=torch.float32), expert_residual)
         if token_mask is not None:
             residual = residual * token_mask.unsqueeze(-1).to(dtype=residual.dtype)
+        residual = residual * float(self.expert_gain)
+        if self.residual_sign == "minus":
+            residual = -residual
         residual = residual.to(dtype=original_dtype)
 
         top_scores, top_expert_ids = scores.max(dim=-1)

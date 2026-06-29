@@ -93,6 +93,9 @@ class TIMEEditMultimodalHparams(HyperParams):
     time_topk: int = 0
     time_routing_mode: str = "threshold"
     time_force_current_during_training: bool = True
+    time_residual_sign: str = "plus"
+    time_expert_gain: float = 1.0
+    time_reliability_only: bool = False
     time_edit_iters: int = 30
     time_save_state: bool = True
     time_state_dir: Optional[str] = None
