@@ -104,7 +104,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--time-calibration-mode",
         default="none",
-        choices=["none", "self_ratio", "zscore_neg", "neg_margin", "self_minus_neg_mean"],
+        choices=["none", "self_ratio", "zscore_neg", "zscore_neg_mean", "neg_margin", "self_minus_neg_mean"],
     )
     parser.add_argument("--time-calibration-beta", type=float, default=0.0)
     parser.add_argument("--time-score-pool", default="mean", choices=["mean", "max", "last", "answer_mean"])
@@ -146,6 +146,13 @@ def normalize_device_arg(text: str) -> Any:
         suffix = text.split(":", 1)[1]
         return int(suffix) if suffix.isdigit() else text
     return int(text) if text.isdigit() else text
+
+
+def normalize_time_calibration_mode(text: str) -> str:
+    mode = str(text or "none")
+    if mode == "zscore_neg_mean":
+        return "zscore_neg"
+    return mode
 
 
 def load_records(dataset_path: Path, sample_index: int, max_edits: int) -> List[Dict[str, Any]]:
@@ -261,7 +268,7 @@ def configure(args: argparse.Namespace, dataset_path: Path) -> TIMEEditMultimoda
     config.time_relative_threshold = None if args.time_relative_threshold is None else float(args.time_relative_threshold)
     config.time_mixing_mode = "average" if args.time_disable_score_mixing else str(args.time_mixing_mode)
     config.time_max_selected_experts = args.time_max_selected_experts
-    config.time_calibration_mode = str(args.time_calibration_mode)
+    config.time_calibration_mode = normalize_time_calibration_mode(args.time_calibration_mode)
     config.time_calibration_beta = float(args.time_calibration_beta)
     config.time_score_pool = str(args.time_score_pool) if args.time_post_retrain_calibration else "token"
     config.time_anti_collapse_loss = bool(args.time_anti_collapse_loss)
@@ -862,7 +869,7 @@ def parse_eval_routing_modes(text: str) -> List[str]:
     modes = [part.strip() for part in str(text or "").split(",") if part.strip()]
     if not modes:
         return []
-    allowed = {"force_own", "topk", "threshold", "relative"}
+    allowed = {"force_own", "calibrated", "topk", "threshold", "relative"}
     unsupported = [mode for mode in modes if mode not in allowed]
     if unsupported:
         raise ValueError(f"Unsupported --eval-routing-modes values: {unsupported}. Allowed: {sorted(allowed)}")
@@ -1242,7 +1249,8 @@ def run_smoke(
     print_summary: bool = True,
 ) -> Dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
-    routing_debug_path = out_dir / "routing_debug.jsonl"
+    sequential_eval_modes = parse_eval_routing_modes(args.eval_routing_modes) if args.mode == "sequential" and args.eval_routing_modes else []
+    routing_debug_path = out_dir / ("time_sequential_routing_debug.jsonl" if sequential_eval_modes else "routing_debug.jsonl")
     if routing_debug_path.exists():
         routing_debug_path.unlink()
     write_json(
@@ -1264,7 +1272,11 @@ def run_smoke(
     score_matrix_rows: List[Dict[str, Any]] = []
     train_records: List[Dict[str, Any]] = []
     eval_rows: List[Dict[str, Any]] = []
+    sequential_all_rows: List[Dict[str, Any]] = []
     immediate_after_edit: Dict[str, float] = {}
+    sequential_immediate_by_mode_record: Dict[Tuple[str, str], Dict[str, Optional[float]]] = {}
+    sequential_retention_summary: Optional[Dict[str, Any]] = None
+    base_eval_cache = build_base_eval_cache(alg, samples) if sequential_eval_modes else None
 
     for pos, (record, sample) in enumerate(zip(records, samples)):
         train_records.append(
@@ -1284,19 +1296,34 @@ def run_smoke(
         if args.mode == "nonseq" and args.time_anti_collapse_loss:
             score_matrix_rows.extend(collect_score_matrix_rows(alg, records, samples, pos, out_dir))
         if args.mode == "sequential":
-            for eval_pos in range(pos + 1):
-                eval_row = evaluate_sample(
-                    alg,
-                    samples[eval_pos],
-                    records[eval_pos],
-                    eval_pos,
-                    phase=f"after_edit_{pos}_eval_{eval_pos}",
-                    expected_expert=eval_pos,
-                    routing_debug_path=routing_debug_path,
+            if sequential_eval_modes:
+                eval_rows.extend(
+                    evaluate_sequential_routing_modes(
+                        args,
+                        alg,
+                        records,
+                        samples,
+                        pos + 1,
+                        sequential_eval_modes,
+                        routing_debug_path,
+                        base_eval_cache,
+                        sequential_immediate_by_mode_record,
+                    )
                 )
-                eval_rows.append(eval_row)
-                if eval_pos == pos and eval_row.get("target_nll") is not None:
-                    immediate_after_edit[record_id(records[eval_pos], eval_pos)] = float(eval_row["target_nll"])
+            else:
+                for eval_pos in range(pos + 1):
+                    eval_row = evaluate_sample(
+                        alg,
+                        samples[eval_pos],
+                        records[eval_pos],
+                        eval_pos,
+                        phase=f"after_edit_{pos}_eval_{eval_pos}",
+                        expected_expert=eval_pos,
+                        routing_debug_path=routing_debug_path,
+                    )
+                    eval_rows.append(eval_row)
+                    if eval_pos == pos and eval_row.get("target_nll") is not None:
+                        immediate_after_edit[record_id(records[eval_pos], eval_pos)] = float(eval_row["target_nll"])
 
     self_score_metadata = compute_self_score_metadata(alg, records, samples, out_dir) if args.mode == "nonseq" else {}
 
@@ -1317,23 +1344,33 @@ def run_smoke(
             )
     else:
         final_rows: List[Dict[str, Any]] = []
-        for eval_pos, (record, sample) in enumerate(zip(records, samples)):
-            row = evaluate_sample(
-                alg,
-                sample,
-                record,
-                eval_pos,
-                phase=f"final_sequential_eval_{eval_pos}",
-                expected_expert=eval_pos,
-                routing_debug_path=routing_debug_path,
-            )
-            rid = record_id(record, eval_pos)
-            if rid in immediate_after_edit and row.get("target_nll") is not None:
-                row["retention_target_nll_delta_vs_immediate"] = immediate_after_edit[rid] - float(row["target_nll"])
-            final_rows.append(row)
+        if sequential_eval_modes:
+            sequential_all_rows = list(eval_rows)
+            final_rows = _sequential_final_rows(eval_rows, len(records), "calibrated")
+            if not final_rows:
+                final_rows = _sequential_final_rows(eval_rows, len(records), "force_own")
+            if not final_rows:
+                final_rows = _sequential_final_rows(eval_rows, len(records))
+        else:
+            for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+                row = evaluate_sample(
+                    alg,
+                    sample,
+                    record,
+                    eval_pos,
+                    phase=f"final_sequential_eval_{eval_pos}",
+                    expected_expert=eval_pos,
+                    routing_debug_path=routing_debug_path,
+                )
+                rid = record_id(record, eval_pos)
+                if rid in immediate_after_edit and row.get("target_nll") is not None:
+                    row["retention_target_nll_delta_vs_immediate"] = immediate_after_edit[rid] - float(row["target_nll"])
+                final_rows.append(row)
         eval_rows = final_rows
 
     write_loss_trace(out_dir / "loss_trace.csv", loss_rows)
+    if sequential_eval_modes:
+        sequential_retention_summary = write_time_sequential_outputs(out_dir, args, records, sequential_all_rows, loss_rows)
     if args.mode == "nonseq":
         write_loss_trace(out_dir / "time_score_norm_retrain_loss_trace.csv", loss_rows)
     if anti_collapse_rows:
@@ -1353,6 +1390,11 @@ def run_smoke(
         "align_score_norm": str(config.time_align_score_norm),
         "anti_collapse_score_norm": str(config.time_anti_collapse_score_norm),
     })
+    if sequential_retention_summary is not None:
+        summary["sequential_retention_summary"] = sequential_retention_summary
+        summary["sequential_after_each_edit_rows"] = len(sequential_all_rows)
+        report_path = write_time_sequential_calibrated_report(out_dir, args, summary, sequential_retention_summary)
+        summary["sequential_calibrated_report"] = str(report_path)
     if args.mode == "one":
         summary_path = out_dir / "one_edit_summary.json"
     elif args.mode == "nonseq":
@@ -1516,6 +1558,470 @@ def evaluate_nonseq_routing_modes(
                     )
                 )
     return rows
+
+
+def _sequential_eval_context(args: argparse.Namespace, alg: TIMEEdit, mode: str, calibration_stats: Dict[str, List[float]]):
+    score_norm = str(args.time_score_norm or "factor_z")
+    score_pool = str(args.time_score_pool or "mean")
+    mixing_mode = "average" if args.time_disable_score_mixing else str(args.time_mixing_mode)
+    relative_threshold = float(args.time_relative_threshold if args.time_relative_threshold is not None else 0.9)
+    calibration_mode = normalize_time_calibration_mode(args.time_calibration_mode)
+    if mode == "force_own":
+        return temporary_time_routing(
+            alg,
+            routing_mode="threshold",
+            gamma=1.0e30,
+            topk=0,
+            score_norm=score_norm,
+            relative_threshold=None,
+            mixing_mode=mixing_mode,
+            calibration_mode="none",
+            max_selected_experts=None,
+            score_pool=score_pool,
+            calibration_stats={},
+        )
+    if mode == "calibrated":
+        return temporary_time_routing(
+            alg,
+            routing_mode="relative_threshold",
+            gamma=float(args.gamma),
+            topk=0,
+            score_norm=score_norm,
+            relative_threshold=relative_threshold,
+            mixing_mode=mixing_mode,
+            calibration_mode=calibration_mode,
+            calibration_beta=float(args.time_calibration_beta),
+            max_selected_experts=args.time_max_selected_experts,
+            score_pool=score_pool,
+            calibration_stats=calibration_stats,
+        )
+    if mode == "topk":
+        return temporary_time_routing(
+            alg,
+            routing_mode="topk",
+            gamma=float(args.gamma),
+            topk=max(1, int(args.time_topk or 1)),
+            score_norm=score_norm,
+            relative_threshold=None,
+            mixing_mode=mixing_mode,
+            calibration_mode="none",
+            max_selected_experts=None,
+            score_pool=score_pool,
+            calibration_stats={},
+        )
+    if mode == "threshold":
+        return temporary_time_routing(
+            alg,
+            routing_mode="threshold",
+            gamma=float(args.gamma),
+            topk=0,
+            score_norm=score_norm,
+            relative_threshold=None,
+            mixing_mode=mixing_mode,
+            calibration_mode="none",
+            max_selected_experts=None,
+            score_pool=score_pool,
+            calibration_stats={},
+        )
+    if mode == "relative":
+        return temporary_time_routing(
+            alg,
+            routing_mode="relative_threshold",
+            gamma=float(args.gamma),
+            topk=0,
+            score_norm=score_norm,
+            relative_threshold=relative_threshold,
+            mixing_mode=mixing_mode,
+            calibration_mode="none",
+            max_selected_experts=None,
+            score_pool=score_pool,
+            calibration_stats={},
+        )
+    raise ValueError(f"Unsupported eval routing mode: {mode}")
+
+
+def _sequential_calibration_stats(rows: List[Dict[str, Any]], num_experts: int) -> Dict[str, List[float]]:
+    matrix: List[List[float]] = []
+    for row in rows:
+        scores = []
+        for value in row.get("pooled_scores") or []:
+            try:
+                scores.append(float(value))
+            except (TypeError, ValueError):
+                scores.append(0.0)
+        matrix.append(scores)
+    width = max([num_experts] + [len(row) for row in matrix])
+    mu_neg: List[float] = []
+    std_neg: List[float] = []
+    for expert_index in range(width):
+        neg = [row[expert_index] for query_index, row in enumerate(matrix) if query_index != expert_index and expert_index < len(row)]
+        neg_mean = float(sum(neg) / len(neg)) if neg else 0.0
+        neg_std = math.sqrt(sum((value - neg_mean) ** 2 for value in neg) / len(neg)) if neg else 0.0
+        mu_neg.append(neg_mean)
+        std_neg.append(max(float(neg_std), 1.0e-8))
+    return {"mu_neg": mu_neg, "std_neg": std_neg, "self_score": [1.0] * width}
+
+
+def _enrich_sequential_row(
+    row: Dict[str, Any],
+    edit_step: int,
+    query_record_index: int,
+    mode: str,
+    immediate_by_mode_record: Dict[Tuple[str, str], Dict[str, Optional[float]]],
+) -> Dict[str, Any]:
+    rid = str(row.get("record_id"))
+    retained = _float_or_none(row.get("target_nll_delta"))
+    current_nll = _float_or_none(row.get("target_nll"))
+    if query_record_index == edit_step - 1:
+        immediate_by_mode_record[(mode, rid)] = {
+            "target_nll": current_nll,
+            "improvement": retained,
+        }
+    immediate = immediate_by_mode_record.get((mode, rid), {})
+    immediate_nll = _float_or_none(immediate.get("target_nll"))
+    immediate_improvement = _float_or_none(immediate.get("improvement"))
+    retention_ratio = None
+    if immediate_improvement is not None and immediate_improvement > 0.0 and retained is not None:
+        retention_ratio = float(retained / immediate_improvement)
+    row.update(
+        {
+            "edit_step": edit_step,
+            "after_edit_index": edit_step - 1,
+            "query_record_index": query_record_index,
+            "own_expert_index": row.get("expected_expert"),
+            "target_nll_before": row.get("base_target_nll"),
+            "target_nll_immediately_after_own_edit": immediate_nll,
+            "target_nll_current": row.get("target_nll"),
+            "immediate_improvement": immediate_improvement,
+            "retained_improvement": retained,
+            "retention_ratio": retention_ratio,
+            "improved": bool(retained is not None and retained > 0.0),
+            "forgotten": bool(immediate_improvement is not None and immediate_improvement > 0.0 and (retained is None or retained <= 0.0)),
+            "forgetting_nll_increase_vs_immediate": (
+                float(current_nll - immediate_nll) if current_nll is not None and immediate_nll is not None else None
+            ),
+            "first_target_token_rank_before": row.get("base_first_target_token_rank"),
+            "first_target_token_rank_current": row.get("first_target_token_rank"),
+            "own_top1": bool(row.get("routing_top1_correct")),
+            "own_selected": bool(row.get("selected_own_expert")),
+            "top_expert_score": row.get("top_score"),
+            "locality_reference_delta": row.get("reference_delta"),
+        }
+    )
+    return row
+
+
+def evaluate_sequential_routing_modes(
+    args: argparse.Namespace,
+    alg: TIMEEdit,
+    records: List[Dict[str, Any]],
+    samples: List[Dict[str, Any]],
+    edit_step: int,
+    modes: List[str],
+    routing_debug_path: Path,
+    base_cache: Optional[List[Dict[str, Any]]],
+    immediate_by_mode_record: Dict[Tuple[str, str], Dict[str, Optional[float]]],
+) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    force_rows: List[Dict[str, Any]] = []
+    ordered_modes = list(modes)
+    if "calibrated" in ordered_modes:
+        ordered_modes = [mode for mode in ordered_modes if mode != "force_own"]
+        ordered_modes.insert(0, "force_own")
+    calibration_stats: Dict[str, List[float]] = {}
+    for mode in ordered_modes:
+        if mode == "calibrated":
+            calibration_stats = _sequential_calibration_stats(force_rows, alg.repository.num_experts)
+        with _sequential_eval_context(args, alg, mode, calibration_stats):
+            mode_rows: List[Dict[str, Any]] = []
+            for eval_pos, (record, sample) in enumerate(zip(records[:edit_step], samples[:edit_step])):
+                row = evaluate_sample(
+                    alg,
+                    sample,
+                    record,
+                    eval_pos,
+                    phase=f"after_edit_{edit_step - 1}_{mode}_eval_{eval_pos}",
+                    expected_expert=eval_pos,
+                    routing_debug_path=routing_debug_path,
+                    eval_routing_mode=mode,
+                    force_expert_id=eval_pos if mode == "force_own" else None,
+                    extra_fields={
+                        "sequential_calibrated_gate": True,
+                        "calibration_stats_source": "seen_prefix_force_own_scores" if mode == "calibrated" else None,
+                        "calibration_mu_neg": calibration_stats.get("mu_neg") if mode == "calibrated" else None,
+                        "calibration_std_neg": calibration_stats.get("std_neg") if mode == "calibrated" else None,
+                    },
+                    base_cache=base_cache[eval_pos] if base_cache is not None else None,
+                )
+                _enrich_sequential_row(row, edit_step, eval_pos, mode, immediate_by_mode_record)
+                mode_rows.append(row)
+                if mode in modes:
+                    rows.append(row)
+            if mode == "force_own":
+                force_rows = mode_rows
+    return rows
+
+
+def _sequential_final_rows(rows: List[Dict[str, Any]], num_records: int, mode: Optional[str] = None) -> List[Dict[str, Any]]:
+    final_rows = [row for row in rows if int(row.get("edit_step") or 0) == num_records]
+    if mode is not None:
+        final_rows = [row for row in final_rows if row.get("eval_routing_mode") == mode]
+    return final_rows
+
+
+def _sequential_routing_score_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    score_rows: List[Dict[str, Any]] = []
+    for row in rows:
+        pooled_scores = row.get("pooled_scores") or []
+        raw_scores = row.get("raw_pooled_scores") or []
+        weights = row.get("pooled_weights") or []
+        selected = set(row.get("selected_expert_ids") or [])
+        variants = row.get("score_variant_pooled_scores") or {}
+        width = max([len(pooled_scores), len(raw_scores), len(weights)] + [len(values) for values in variants.values()])
+        for expert_index in range(width):
+            out = {
+                "edit_step": row.get("edit_step"),
+                "after_edit_index": row.get("after_edit_index"),
+                "eval_routing_mode": row.get("eval_routing_mode"),
+                "query_record_index": row.get("query_record_index"),
+                "record_id": row.get("record_id"),
+                "expert_index": expert_index,
+                "own_expert": expert_index == row.get("expected_expert"),
+                "selected_expert": expert_index in selected,
+                "score": pooled_scores[expert_index] if expert_index < len(pooled_scores) else None,
+                "raw_score": raw_scores[expert_index] if expert_index < len(raw_scores) else None,
+                "weight": weights[expert_index] if expert_index < len(weights) else None,
+                "top_score_expert_id": row.get("top_score_expert_id"),
+                "top_routed_expert_id": row.get("top_routed_expert_id"),
+            }
+            for variant_name in SCORE_NORM_MODES:
+                values = variants.get(variant_name) or []
+                out[f"{variant_name}_score"] = values[expert_index] if expert_index < len(values) else None
+            score_rows.append(out)
+    return score_rows
+
+
+def summarize_time_sequential_retention(
+    rows: List[Dict[str, Any]],
+    records: List[Dict[str, Any]],
+    modes: List[str],
+    args: argparse.Namespace,
+) -> Dict[str, Any]:
+    final_step = len(records)
+    summary: Dict[str, Any] = {
+        "num_edits": final_step,
+        "eval_routing_modes": modes,
+        "calibrated_config": {
+            "score_norm": str(args.time_score_norm),
+            "calibration_mode_requested": str(args.time_calibration_mode),
+            "calibration_mode_internal": normalize_time_calibration_mode(args.time_calibration_mode),
+            "score_pool": str(args.time_score_pool),
+            "routing_mode": "relative_threshold",
+            "relative_threshold": float(args.time_relative_threshold if args.time_relative_threshold is not None else 0.9),
+            "max_selected_experts": args.time_max_selected_experts,
+            "mixing_mode": str(args.time_mixing_mode),
+        },
+        "retention_definition": "retained_improvement = base_target_nll - current_target_nll; forgotten means positive immediate improvement became non-positive at final evaluation.",
+        "by_mode": {},
+    }
+    for mode in modes:
+        mode_rows = _sequential_final_rows(rows, final_step, mode)
+        selected_sizes = [row.get("selected_expert_set_size") for row in mode_rows]
+        retention_drops = [
+            float(row.get("immediate_improvement")) - float(row.get("retained_improvement"))
+            for row in mode_rows
+            if row.get("immediate_improvement") is not None and row.get("retained_improvement") is not None
+        ]
+        top_routed_counts: Dict[str, int] = {}
+        top_score_counts: Dict[str, int] = {}
+        for row in mode_rows:
+            if row.get("top_routed_expert_id") is not None:
+                key = str(row.get("top_routed_expert_id"))
+                top_routed_counts[key] = top_routed_counts.get(key, 0) + 1
+            if row.get("top_score_expert_id") is not None:
+                key = str(row.get("top_score_expert_id"))
+                top_score_counts[key] = top_score_counts.get(key, 0) + 1
+        retained_positive = sum(1 for row in mode_rows if (_float_or_none(row.get("retained_improvement")) or 0.0) > 0.0)
+        mode_summary = {
+            "num_records": len(mode_rows),
+            "positive_new_count": retained_positive,
+            "immediate_positive_count": sum(1 for row in mode_rows if (_float_or_none(row.get("immediate_improvement")) or 0.0) > 0.0),
+            "forgotten_count": sum(1 for row in mode_rows if row.get("forgotten")),
+            "own_top1_count": sum(1 for row in mode_rows if row.get("own_top1")),
+            "own_in_selected_set_count": sum(1 for row in mode_rows if row.get("own_selected")),
+            "empty_selection_count": sum(1 for row in mode_rows if int(row.get("selected_expert_set_size") or 0) == 0),
+            "mean_immediate_improvement": _mean([row.get("immediate_improvement") for row in mode_rows]),
+            "mean_retained_improvement": _mean([row.get("retained_improvement") for row in mode_rows]),
+            "mean_final_nll_improvement": _mean([row.get("retained_improvement") for row in mode_rows]),
+            "mean_retention_ratio": _mean([row.get("retention_ratio") for row in mode_rows]),
+            "worst_retention_drop": max(retention_drops, default=None),
+            "mean_locality_reference_delta": _mean([row.get("locality_reference_delta") for row in mode_rows]),
+            "locality_reference_delta": _mean([row.get("locality_reference_delta") for row in mode_rows]),
+            "mean_selected_set_size": _mean(selected_sizes),
+            "max_selected_set_size": max([float(value) for value in selected_sizes if value is not None], default=None),
+            "top_routed_expert_counts": top_routed_counts,
+            "top_score_expert_counts": top_score_counts,
+            "max_top_routed_expert_count": max(top_routed_counts.values()) if top_routed_counts else 0,
+            "max_top_score_count": max(top_score_counts.values()) if top_score_counts else 0,
+            "max_top_expert_count": max(top_score_counts.values()) if top_score_counts else 0,
+            "confusion_matrix": _routing_confusion(mode_rows),
+        }
+        mode_summary["retained_positive_count"] = retained_positive
+        max_selected = mode_summary["max_selected_set_size"]
+        max_selected_pass = max_selected is not None and float(max_selected) <= 3.0
+        mode_summary["capacity_pass"] = bool(mode == "force_own" and retained_positive >= 4)
+        mode_summary["sparse_routing_pass"] = bool(
+            mode != "force_own"
+            and retained_positive >= 4
+            and int(mode_summary["own_in_selected_set_count"]) >= 4
+            and (mode_summary["mean_selected_set_size"] is not None and float(mode_summary["mean_selected_set_size"]) <= 2.0)
+            and max_selected_pass
+            and int(mode_summary["empty_selection_count"]) <= 1
+            and int(mode_summary["max_top_score_count"]) <= 3
+        )
+        mode_summary["sparse_routing_acceptance"] = {
+            "positive_new_ge_4_of_5": retained_positive >= 4,
+            "own_selected_ge_4_of_5": int(mode_summary["own_in_selected_set_count"]) >= 4,
+            "mean_selected_set_size_le_2": (
+                mode_summary["mean_selected_set_size"] is not None and float(mode_summary["mean_selected_set_size"]) <= 2.0
+            ),
+            "max_selected_set_size_le_3": max_selected_pass,
+            "empty_selection_count_le_1": int(mode_summary["empty_selection_count"]) <= 1,
+            "max_top_expert_count_le_3": int(mode_summary["max_top_score_count"]) <= 3,
+        }
+        mode_summary["retention_pass"] = bool(retained_positive >= 4 and int(mode_summary["forgotten_count"]) <= 1)
+        summary["by_mode"][mode] = mode_summary
+    force_pass = bool((summary["by_mode"].get("force_own") or {}).get("capacity_pass"))
+    calibrated = summary["by_mode"].get("calibrated") or {}
+    summary["gate"] = {
+        "force_own_capacity_pass": force_pass,
+        "calibrated_sparse_pass": bool(calibrated.get("sparse_routing_pass")) if calibrated else None,
+        "calibrated_retention_pass": bool(calibrated.get("retention_pass")) if calibrated else None,
+        "overall_pass": bool(force_pass and (calibrated.get("sparse_routing_pass") if calibrated else True) and (calibrated.get("retention_pass") if calibrated else True)),
+    }
+    return summary
+
+
+def write_time_sequential_outputs(
+    out_dir: Path,
+    args: argparse.Namespace,
+    records: List[Dict[str, Any]],
+    sequential_rows: List[Dict[str, Any]],
+    loss_rows: List[Dict[str, Any]],
+) -> Dict[str, Any]:
+    modes = parse_eval_routing_modes(args.eval_routing_modes)
+    final_rows = _sequential_final_rows(sequential_rows, len(records))
+    score_rows = _sequential_routing_score_rows(sequential_rows)
+    confusion = {
+        "after_each_edit": {},
+        "final": {},
+    }
+    for step in range(1, len(records) + 1):
+        step_rows = [row for row in sequential_rows if int(row.get("edit_step") or 0) == step]
+        confusion["after_each_edit"][str(step)] = {
+            mode: _routing_confusion([row for row in step_rows if row.get("eval_routing_mode") == mode])
+            for mode in modes
+        }
+    for mode in modes:
+        confusion["final"][mode] = _routing_confusion([row for row in final_rows if row.get("eval_routing_mode") == mode])
+    retention_summary = summarize_time_sequential_retention(sequential_rows, records, modes, args)
+    write_loss_trace(out_dir / "time_sequential_loss_trace.csv", loss_rows)
+    write_loss_trace(out_dir / "time_sequential_after_each_edit.csv", sequential_rows)
+    write_loss_trace(out_dir / "time_sequential_per_record.csv", final_rows)
+    write_loss_trace(out_dir / "time_sequential_routing_scores.csv", score_rows)
+    write_json(out_dir / "time_sequential_confusion_matrices.json", confusion)
+    write_json(out_dir / "time_sequential_retention_summary.json", retention_summary)
+    return retention_summary
+
+
+def write_time_sequential_calibrated_report(
+    out_dir: Path,
+    args: argparse.Namespace,
+    summary: Dict[str, Any],
+    retention_summary: Dict[str, Any],
+) -> Path:
+    by_mode = retention_summary.get("by_mode") or {}
+    gate = retention_summary.get("gate") or {}
+    config = retention_summary.get("calibrated_config") or {}
+    lines = [
+        "# TIME 5-Edit Sequential Calibrated Gate",
+        "",
+        "## Scope",
+        "- Mode: sequential.",
+        f"- Max edits: {retention_summary.get('num_edits')}.",
+        f"- Eval routing modes: `{', '.join(retention_summary.get('eval_routing_modes') or [])}`.",
+        "- This run is bounded to the requested 5-edit gate; no 20-edit run or larger sweep is included.",
+        "",
+        "## Calibrated Routing Config",
+        f"- Score norm: `{config.get('score_norm')}`.",
+        f"- Calibration mode: requested `{config.get('calibration_mode_requested')}`, internal `{config.get('calibration_mode_internal')}`.",
+        f"- Score pool: `{config.get('score_pool')}`.",
+        f"- Routing mode: `{config.get('routing_mode')}`.",
+        f"- Relative threshold: {config.get('relative_threshold')}.",
+        f"- Max selected experts: {config.get('max_selected_experts')}.",
+        f"- Mixing mode: `{config.get('mixing_mode')}`.",
+        "",
+        "## Gate",
+        f"- Force-own capacity pass: {gate.get('force_own_capacity_pass')}.",
+        f"- Calibrated sparse-routing pass: {gate.get('calibrated_sparse_pass')}.",
+        f"- Calibrated retention pass: {gate.get('calibrated_retention_pass')}.",
+        f"- Overall pass: {gate.get('overall_pass')}.",
+        "",
+        "## Final Metrics By Mode",
+    ]
+    for mode, row in by_mode.items():
+        lines.extend(
+            [
+                f"### {mode}",
+                f"- Positive retained improvements: {row.get('positive_new_count')} / {row.get('num_records')}.",
+                f"- Forgotten count: {row.get('forgotten_count')}.",
+                f"- Own top-1 count: {row.get('own_top1_count')} / {row.get('num_records')}.",
+                f"- Own in selected set: {row.get('own_in_selected_set_count')} / {row.get('num_records')}.",
+                f"- Empty selections: {row.get('empty_selection_count')}.",
+                f"- Mean retained improvement: {row.get('mean_retained_improvement')}.",
+                f"- Mean retention ratio: {row.get('mean_retention_ratio')}.",
+                f"- Worst retention drop: {row.get('worst_retention_drop')}.",
+                f"- Mean locality/reference delta: {row.get('mean_locality_reference_delta')}.",
+                f"- Mean selected set size: {row.get('mean_selected_set_size')}.",
+                f"- Max selected set size: {row.get('max_selected_set_size')}.",
+                f"- Max top-expert count: {row.get('max_top_expert_count')}.",
+                f"- Top score expert counts: `{json.dumps(row.get('top_score_expert_counts'), sort_keys=True)}`.",
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            "## GPU",
+            f"- CUDA_VISIBLE_DEVICES: `{os.environ.get('CUDA_VISIBLE_DEVICES') or ''}`.",
+            "```text",
+            _gpu_status_text(),
+            "```",
+            "",
+            "## Output Files",
+            "- `expert_repository.pt`",
+            "- `loss_trace.csv`",
+            "- `time_sequential_loss_trace.csv`",
+            "- `time_sequential_after_each_edit.csv`",
+            "- `time_sequential_per_record.csv`",
+            "- `time_sequential_routing_scores.csv`",
+            "- `time_sequential_confusion_matrices.json`",
+            "- `time_sequential_routing_debug.jsonl`",
+            "- `time_sequential_retention_summary.json`",
+            "- `five_edit_seq_summary.json`",
+            "- `TIME_5EDIT_SEQUENTIAL_CALIBRATED_REPORT.md`",
+            "",
+            "## Repository",
+            f"- Experts saved: {summary.get('num_experts')}.",
+            f"- Repository path: `{summary.get('expert_repository')}`.",
+            "",
+            "## Command",
+            f"- `{current_command_line()}`",
+            "",
+        ]
+    )
+    path = out_dir / "TIME_5EDIT_SEQUENTIAL_CALIBRATED_REPORT.md"
+    path.write_text("\n".join(lines))
+    return path
 
 
 SCORE_NORM_MODES = ["none", "factor", "factor_z", "self_score", "factor_self_score"]
@@ -4126,6 +4632,9 @@ def main() -> None:
             elif args.mode == "nonseq" and args.eval_routing_modes:
                 report_path = args.out_dir / "TIME_5EDIT_NONSEQ_DIAGNOSTIC_REPORT.md"
                 report_key = "five_edit_nonseq_report"
+            elif args.mode == "sequential" and args.eval_routing_modes:
+                report_path = args.out_dir / "TIME_5EDIT_SEQUENTIAL_CALIBRATED_REPORT.md"
+                report_key = "five_edit_sequential_report"
             else:
                 report_path = write_calibrated_report(args.out_dir)
                 report_key = "calibrated_report"
