@@ -137,6 +137,34 @@ def test_routing_synthetic() -> None:
         raise AssertionError(f"Synthetic aligned expert should route top-1 to expert 1, got {top}.")
 
 
+def test_score_variants_and_relative_threshold() -> None:
+    repo = make_repo(hidden_size=16, rank=1, num_experts=2)
+    repo.activation = "identity"
+    for expert in repo.experts:
+        for param in expert.parameters():
+            param.data.zero_()
+    repo.experts[0].U_in.data[0, 0] = 2.0
+    repo.experts[0].V_in.data[0, 0] = 2.0
+    repo.experts[0].U_out.data[0, 0] = 1.0
+    repo.experts[0].V_out.data[0, 0] = 1.0
+    repo.experts[1].U_in.data[0, 0] = 1.0
+    repo.experts[1].V_in.data[0, 0] = 1.0
+    repo.experts[1].U_out.data[0, 0] = 1.0
+    repo.experts[1].V_out.data[0, 0] = 1.0
+
+    x = torch.zeros(1, 1, 16)
+    x[0, 0, 0] = 1.0
+    module = TIMECPResidual(repo, routing_mode="relative_threshold", relative_threshold=0.5, layer_norm=False)
+    _residual, debug = module(x, return_debug=True)
+    if set(debug.score_variants) != {"none", "factor", "factor_z", "self_score", "factor_self_score"}:
+        raise AssertionError(f"Unexpected score variants: {sorted(debug.score_variants)}")
+    if not torch.isfinite(debug.score_variants["factor_z"]).all():
+        raise AssertionError("factor_z scores must be finite.")
+    selected = debug.selected[0, 0].tolist()
+    if selected != [True, False]:
+        raise AssertionError(f"Relative threshold should keep only the dominant expert, got {selected}.")
+
+
 def test_gradient_isolation() -> None:
     torch.manual_seed(3)
     base = torch.nn.Linear(16, 16)
@@ -184,6 +212,7 @@ def main() -> None:
         test_identity_cases,
         test_save_load,
         test_routing_synthetic,
+        test_score_variants_and_relative_threshold,
         test_gradient_isolation,
         test_no_dense_tensor_saved,
     ]

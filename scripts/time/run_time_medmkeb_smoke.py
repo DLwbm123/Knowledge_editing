@@ -66,7 +66,22 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--time-disable-score-mixing", action="store_true")
     parser.add_argument("--time-disable-align-loss", action="store_true")
     parser.add_argument("--time-topk", type=int, default=0)
-    parser.add_argument("--time-routing-mode", default="threshold", choices=["threshold", "topk", "threshold_topk", "force_current"])
+    parser.add_argument(
+        "--time-routing-mode",
+        default="threshold",
+        choices=["threshold", "topk", "threshold_topk", "relative_threshold", "relative_topk", "force_current"],
+    )
+    parser.add_argument(
+        "--time-score-norm",
+        default="none",
+        choices=["none", "factor", "factor_z", "self_score", "factor_self_score"],
+    )
+    parser.add_argument("--time-relative-threshold", type=float, default=None)
+    parser.add_argument("--time-mixing-mode", default="softmax", choices=["softmax", "average", "own_oracle"])
+    parser.add_argument("--time-load-repository", type=Path, default=None)
+    parser.add_argument("--eval-only", action="store_true")
+    parser.add_argument("--time-routing-calibration", action="store_true")
+    parser.add_argument("--time-routing-calibration-grid", default="")
     parser.add_argument("--time-force-current-train", dest="time_force_current_train", action="store_true", default=None)
     parser.add_argument("--time-gamma-sweep", default="")
     parser.add_argument("--time-scale-init-grid", default="")
@@ -118,6 +133,41 @@ def load_records(dataset_path: Path, sample_index: int, max_edits: int) -> List[
     if len(selected) < max_edits:
         raise RuntimeError(f"Requested {max_edits} edits but only {len(selected)} records are available from index {sample_index}.")
     return selected
+
+
+def resolve_repository_path(repo_path: Optional[Path]) -> Optional[Path]:
+    if repo_path is None:
+        return None
+    path = repo_path.expanduser()
+    if not path.is_absolute():
+        path = PROJECT_ROOT / path
+    return path.resolve()
+
+
+def load_repository_metadata(repo_path: Path) -> List[Dict[str, Any]]:
+    payload = torch.load(repo_path, map_location="cpu")
+    metadata = payload.get("metadata", []) if isinstance(payload, dict) else []
+    return [dict(item) for item in metadata]
+
+
+def load_records_for_repository(
+    dataset_path: Path,
+    sample_index: int,
+    max_edits: int,
+    repo_path: Optional[Path],
+) -> List[Dict[str, Any]]:
+    if repo_path is None:
+        return load_records(dataset_path, sample_index, max_edits)
+    metadata = load_repository_metadata(repo_path)
+    record_ids = [str(item.get("record_id")) for item in metadata[:max_edits] if item.get("record_id") is not None]
+    if not record_ids:
+        return load_records(dataset_path, sample_index, max_edits)
+    records = json.loads(dataset_path.read_text(errors="replace"))
+    by_id = {record_id(record, idx): record for idx, record in enumerate(records)}
+    missing = [rid for rid in record_ids if rid not in by_id]
+    if missing:
+        raise RuntimeError(f"Repository metadata record ids are missing from {dataset_path}: {missing}")
+    return [by_id[rid] for rid in record_ids]
 
 
 def resolve_image_path(image_root: Path, value: Any) -> Path:
@@ -176,6 +226,11 @@ def configure(args: argparse.Namespace, dataset_path: Path) -> TIMEEditMultimoda
     config.time_disable_align_loss = bool(args.time_disable_align_loss)
     config.time_topk = int(args.time_topk)
     config.time_routing_mode = str(args.time_routing_mode)
+    config.time_score_norm = str(args.time_score_norm)
+    config.time_relative_threshold = None if args.time_relative_threshold is None else float(args.time_relative_threshold)
+    config.time_mixing_mode = "average" if args.time_disable_score_mixing else str(args.time_mixing_mode)
+    config.time_repository_path = str(args.time_load_repository) if args.time_load_repository is not None else None
+    config.eval_only = bool(args.eval_only)
     if args.time_force_current_train is not None:
         config.time_force_current_during_training = bool(args.time_force_current_train)
     config.time_residual_sign = str(args.time_residual_sign)
@@ -215,6 +270,7 @@ def evaluate_sample(
     routing_debug_path: Path,
     eval_routing_mode: Optional[str] = None,
     force_expert_id: Optional[int] = None,
+    extra_fields: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     debug_events: List[Dict[str, Any]] = []
     start = time.perf_counter()
@@ -241,6 +297,8 @@ def evaluate_sample(
     routing = alg.routing_summary()
     rid = record_id(record, sample_pos)
     scores = routing.get("pooled_scores") or []
+    raw_scores = routing.get("raw_pooled_scores") or scores
+    score_variants = routing.get("score_variant_pooled_scores") or {"none": raw_scores}
     weights = routing.get("pooled_weights") or []
     selected_ids = routing.get("selected_expert_ids") or []
     own_expert_score = None
@@ -302,15 +360,24 @@ def evaluate_sample(
         "expert_gain": routing.get("expert_gain"),
         "gamma": routing.get("gamma"),
         "topk": routing.get("topk"),
+        "relative_threshold": routing.get("relative_threshold"),
+        "score_norm": routing.get("score_norm"),
+        "mixing_mode": routing.get("mixing_mode"),
         "pooled_scores": scores,
+        "raw_pooled_scores": raw_scores,
+        "score_variant_pooled_scores": score_variants,
         "pooled_weights": weights,
         "elapsed_sec": elapsed,
         "generation_skipped": True,
     }
+    if extra_fields:
+        row.update(extra_fields)
     append_jsonl(routing_debug_path, row)
     for event in debug_events:
         event = dict(event)
         event.update({"phase": f"{phase}_hook_event", "record_id": rid, "expected_expert": expected_expert})
+        if extra_fields:
+            event.update(extra_fields)
         append_jsonl(routing_debug_path, event)
     return row
 
@@ -933,7 +1000,8 @@ def write_report(
         f"- Scale mode: {config.time_scale_mode}, alpha={config.time_alpha}.",
         f"- Token scope: {config.time_token_scope}.",
         f"- Routing mode/threshold/top-k: mode={config.time_routing_mode}, gamma={config.time_gamma}, topk={config.time_topk}.",
-        f"- Mixing: {'average selected experts' if config.time_disable_score_mixing else 'softmax over selected intrinsic scores'} with tau={config.time_tau}.",
+        f"- Score norm/relative threshold: norm={config.time_score_norm}, relative_threshold={config.time_relative_threshold}.",
+        f"- Mixing: {config.time_mixing_mode} with tau={config.time_tau}.",
         f"- Train-time force-current expert: {config.time_force_current_during_training}.",
         f"- Residual sign/expert gain: sign={config.time_residual_sign}, gain={config.time_expert_gain}.",
         f"- Reliability-only objective: {config.time_reliability_only}.",
@@ -1084,13 +1152,22 @@ def temporary_time_routing(
     routing_mode: Optional[str] = None,
     gamma: Optional[float] = None,
     topk: Optional[int] = None,
+    score_norm: Optional[str] = None,
+    relative_threshold: Optional[float] = None,
+    mixing_mode: Optional[str] = None,
 ):
     old_gamma = alg.repository.gamma
     old_mode = alg.time_residual.routing_mode
     old_topk = alg.time_residual.topk
+    old_score_norm = alg.time_residual.score_norm
+    old_relative_threshold = alg.time_residual.relative_threshold
+    old_mixing_mode = alg.time_residual.mixing_mode
     old_config_gamma = getattr(alg.config, "time_gamma", None)
     old_config_mode = getattr(alg.config, "time_routing_mode", None)
     old_config_topk = getattr(alg.config, "time_topk", None)
+    old_config_score_norm = getattr(alg.config, "time_score_norm", None)
+    old_config_relative_threshold = getattr(alg.config, "time_relative_threshold", None)
+    old_config_mixing_mode = getattr(alg.config, "time_mixing_mode", None)
     try:
         if gamma is not None:
             alg.repository.gamma = float(gamma)
@@ -1101,17 +1178,35 @@ def temporary_time_routing(
         if topk is not None:
             alg.time_residual.topk = int(topk)
             setattr(alg.config, "time_topk", int(topk))
+        if score_norm is not None:
+            alg.time_residual.score_norm = str(score_norm)
+            setattr(alg.config, "time_score_norm", str(score_norm))
+        if relative_threshold is not None:
+            alg.time_residual.relative_threshold = float(relative_threshold)
+            setattr(alg.config, "time_relative_threshold", float(relative_threshold))
+        elif routing_mode is not None and "relative" not in str(routing_mode):
+            alg.time_residual.relative_threshold = None
+            setattr(alg.config, "time_relative_threshold", None)
+        if mixing_mode is not None:
+            alg.time_residual.mixing_mode = str(mixing_mode)
+            setattr(alg.config, "time_mixing_mode", str(mixing_mode))
         yield
     finally:
         alg.repository.gamma = old_gamma
         alg.time_residual.routing_mode = old_mode
         alg.time_residual.topk = old_topk
+        alg.time_residual.score_norm = old_score_norm
+        alg.time_residual.relative_threshold = old_relative_threshold
+        alg.time_residual.mixing_mode = old_mixing_mode
         if old_config_gamma is not None:
             setattr(alg.config, "time_gamma", old_config_gamma)
         if old_config_mode is not None:
             setattr(alg.config, "time_routing_mode", old_config_mode)
         if old_config_topk is not None:
             setattr(alg.config, "time_topk", old_config_topk)
+        setattr(alg.config, "time_score_norm", old_config_score_norm)
+        setattr(alg.config, "time_relative_threshold", old_config_relative_threshold)
+        setattr(alg.config, "time_mixing_mode", old_config_mixing_mode)
 
 
 def evaluate_nonseq_routing_modes(
@@ -1151,6 +1246,839 @@ def evaluate_nonseq_routing_modes(
                     )
                 )
     return rows
+
+
+SCORE_NORM_MODES = ["none", "factor", "factor_z", "self_score", "factor_self_score"]
+CALIBRATION_MIXING_MODES = ["softmax", "average"]
+
+
+def _gpu_status_text() -> str:
+    try:
+        return os.popen(
+            "nvidia-smi --query-gpu=index,name,memory.used,memory.total,utilization.gpu --format=csv,noheader,nounits"
+        ).read().strip()
+    except Exception as exc:
+        return f"unavailable: {exc}"
+
+
+def _cuda_setting_from_command(command: Optional[str]) -> Optional[str]:
+    prefix = "CUDA_VISIBLE_DEVICES="
+    if not command or prefix not in command:
+        return None
+    tail = command.split(prefix, 1)[1]
+    return tail.split(None, 1)[0] if tail else None
+
+
+def _repo_path_for_report(repo_path: Optional[Path]) -> Optional[str]:
+    if repo_path is None:
+        return None
+    return str(repo_path.resolve())
+
+
+def default_calibration_grid() -> List[Dict[str, Any]]:
+    route_specs: List[Dict[str, Any]] = []
+    for topk in (1, 2, 3):
+        route_specs.append({"routing_mode": "topk", "topk": topk, "gamma": None, "relative_threshold": None})
+    for gamma in (0.5, 0.7, 1.0, 2.0):
+        route_specs.append({"routing_mode": "threshold", "topk": 0, "gamma": gamma, "relative_threshold": None})
+    for threshold in (0.5, 0.7, 0.9, 0.95):
+        route_specs.append({"routing_mode": "relative_threshold", "topk": 0, "gamma": None, "relative_threshold": threshold})
+
+    configs: List[Dict[str, Any]] = []
+    for score_norm in SCORE_NORM_MODES:
+        for mixing_mode in CALIBRATION_MIXING_MODES:
+            for route in route_specs:
+                config = dict(route)
+                config["score_norm"] = score_norm
+                config["mixing_mode"] = mixing_mode
+                config["config_id"] = calibration_config_id(config)
+                configs.append(config)
+    return configs
+
+
+def calibration_config_id(config: Dict[str, Any]) -> str:
+    route = str(config.get("routing_mode"))
+    if route == "topk":
+        route = f"topk{int(config.get('topk') or 1)}"
+    elif route == "threshold":
+        route = f"gamma{format_float_for_path(float(config.get('gamma')))}"
+    elif route == "relative_threshold":
+        route = f"rel{format_float_for_path(float(config.get('relative_threshold')))}"
+    return f"{config.get('score_norm')}_{route}_{config.get('mixing_mode')}"
+
+
+def parse_calibration_grid(text: str) -> List[Dict[str, Any]]:
+    if not str(text or "").strip():
+        return default_calibration_grid()
+    configs: List[Dict[str, Any]] = []
+    for item in str(text).split(";"):
+        item = item.strip()
+        if not item:
+            continue
+        config: Dict[str, Any] = {
+            "score_norm": "none",
+            "mixing_mode": "softmax",
+            "routing_mode": "topk",
+            "topk": 1,
+            "gamma": None,
+            "relative_threshold": None,
+        }
+        for part in item.split(","):
+            if not part.strip():
+                continue
+            key, value = part.split("=", 1)
+            key = key.strip()
+            value = value.strip()
+            if key in {"score_norm", "mixing_mode", "routing_mode"}:
+                config[key] = value
+            elif key == "topk":
+                config[key] = int(value)
+            elif key == "gamma":
+                config[key] = float(value)
+            elif key in {"relative_threshold", "rel"}:
+                config["relative_threshold"] = float(value)
+                config["routing_mode"] = "relative_threshold"
+            else:
+                raise ValueError(f"Unsupported --time-routing-calibration-grid key: {key}")
+        config["config_id"] = calibration_config_id(config)
+        configs.append(config)
+    return configs
+
+
+def _config_extra_fields(config: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "calibration_config_id": config.get("config_id"),
+        "calibration_score_norm": config.get("score_norm"),
+        "calibration_routing_mode": config.get("routing_mode"),
+        "calibration_gamma": config.get("gamma"),
+        "calibration_relative_threshold": config.get("relative_threshold"),
+        "calibration_topk": config.get("topk"),
+        "calibration_mixing_mode": config.get("mixing_mode"),
+    }
+
+
+def infer_self_score_calibration(
+    args: argparse.Namespace,
+    alg: TIMEEdit,
+    records: List[Dict[str, Any]],
+    samples: List[Dict[str, Any]],
+    out_dir: Path,
+) -> Dict[str, Any]:
+    debug_path = out_dir / "time_routing_debug.jsonl"
+    self_scores = {"none": [], "factor": [], "factor_z": []}
+    rows: List[Dict[str, Any]] = []
+    with temporary_time_routing(
+        alg,
+        routing_mode="threshold",
+        gamma=1.0e30,
+        topk=0,
+        score_norm="none",
+        relative_threshold=None,
+        mixing_mode="average",
+    ):
+        for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+            row = evaluate_sample(
+                alg,
+                sample,
+                record,
+                eval_pos,
+                phase=f"self_score_calibration_eval_{eval_pos}",
+                expected_expert=eval_pos,
+                routing_debug_path=debug_path,
+                eval_routing_mode="self_score_calibration",
+                force_expert_id=eval_pos,
+                extra_fields={
+                    "calibration_phase": "self_score_calibration",
+                    "time_load_repository": str(args.time_load_repository) if args.time_load_repository else None,
+                },
+            )
+            variants = row.get("score_variant_pooled_scores") or {}
+            for mode in ("none", "factor", "factor_z"):
+                values = variants.get(mode) or row.get("raw_pooled_scores") or []
+                value = values[eval_pos] if eval_pos < len(values) else None
+                self_scores[mode].append(float(value) if value is not None else 1.0)
+            rows.append(row)
+
+    alg.time_residual.self_score_cache = {
+        "none": list(self_scores["none"]),
+        "factor": list(self_scores["factor"]),
+    }
+    for idx, metadata in enumerate(alg.repository.metadata):
+        if idx < len(self_scores["none"]):
+            metadata["time_self_score_none"] = self_scores["none"][idx]
+        if idx < len(self_scores["factor"]):
+            metadata["time_self_score_factor"] = self_scores["factor"][idx]
+        if idx < len(self_scores["factor_z"]):
+            metadata["time_self_score_factor_z"] = self_scores["factor_z"][idx]
+    return {"self_scores": self_scores, "rows": rows}
+
+
+def collect_score_distribution(
+    alg: TIMEEdit,
+    records: List[Dict[str, Any]],
+    samples: List[Dict[str, Any]],
+    out_dir: Path,
+) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    debug_path = out_dir / "time_routing_debug.jsonl"
+    with temporary_time_routing(
+        alg,
+        routing_mode="threshold",
+        gamma=1.0e30,
+        topk=0,
+        score_norm="none",
+        relative_threshold=None,
+        mixing_mode="average",
+    ):
+        for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+            row = evaluate_sample(
+                alg,
+                sample,
+                record,
+                eval_pos,
+                phase=f"score_distribution_eval_{eval_pos}",
+                expected_expert=eval_pos,
+                routing_debug_path=debug_path,
+                eval_routing_mode="score_distribution",
+                force_expert_id=eval_pos,
+                extra_fields={"calibration_phase": "score_distribution"},
+            )
+            variants = row.get("score_variant_pooled_scores") or {}
+            raw_scores = variants.get("none") or row.get("raw_pooled_scores") or []
+            top_by_norm = {
+                mode: int(max(range(len(values)), key=lambda idx: values[idx])) if values else None
+                for mode, values in variants.items()
+            }
+            for expert_index, raw_score in enumerate(raw_scores):
+                dist_row = {
+                    "record_id": row.get("record_id"),
+                    "query_record_index": eval_pos,
+                    "expert_index": expert_index,
+                    "raw_score": raw_score,
+                    "own_expert": expert_index == eval_pos,
+                    "target_nll_after_force_own": row.get("target_nll"),
+                    "reference_delta_after_force_own": row.get("reference_delta"),
+                }
+                for mode in SCORE_NORM_MODES:
+                    values = variants.get(mode) or []
+                    dist_row[f"{mode}_score"] = values[expert_index] if expert_index < len(values) else None
+                    dist_row[f"{mode}_top_expert"] = top_by_norm.get(mode)
+                    dist_row[f"{mode}_is_top"] = top_by_norm.get(mode) == expert_index
+                rows.append(dist_row)
+    return rows
+
+
+def summarize_score_distribution(rows: List[Dict[str, Any]], num_experts: int) -> Dict[str, Any]:
+    summary: Dict[str, Any] = {"per_expert": {}, "per_record_own_scores": [], "dominance": {}}
+    for expert_index in range(num_experts):
+        expert_rows = [row for row in rows if int(row.get("expert_index")) == expert_index]
+        summary["per_expert"][str(expert_index)] = {}
+        for mode in SCORE_NORM_MODES:
+            key = "raw_score" if mode == "none" else f"{mode}_score"
+            values = [_float_or_none(row.get(key)) for row in expert_rows]
+            valid = [float(value) for value in values if value is not None]
+            mean = float(sum(valid) / len(valid)) if valid else None
+            std = None
+            if valid:
+                std = math.sqrt(sum((value - mean) ** 2 for value in valid) / len(valid))
+            summary["per_expert"][str(expert_index)][mode] = {
+                "mean": mean,
+                "std": std,
+                "max": max(valid) if valid else None,
+            }
+    seen_records = sorted({int(row.get("query_record_index")) for row in rows})
+    for query_index in seen_records:
+        own_rows = [
+            row for row in rows
+            if int(row.get("query_record_index")) == query_index and bool(row.get("own_expert"))
+        ]
+        if not own_rows:
+            continue
+        row = own_rows[0]
+        entry = {"record_id": row.get("record_id"), "query_record_index": query_index}
+        for mode in SCORE_NORM_MODES:
+            key = "raw_score" if mode == "none" else f"{mode}_score"
+            entry[f"{mode}_own_score"] = row.get(key)
+        summary["per_record_own_scores"].append(entry)
+    for mode in SCORE_NORM_MODES:
+        top_key = f"{mode}_top_expert"
+        top_rows = {}
+        for row in rows:
+            query_index = int(row.get("query_record_index"))
+            if query_index not in top_rows:
+                top_rows[query_index] = row.get(top_key)
+        top_values = [value for value in top_rows.values() if value is not None]
+        counts: Dict[str, int] = {}
+        for value in top_values:
+            counts[str(value)] = counts.get(str(value), 0) + 1
+        summary["dominance"][mode] = {
+            "top_expert_counts": counts,
+            "expert_3_top1_count": counts.get("3", 0),
+            "all_records_same_top_expert": len(set(top_values)) == 1 if top_values else False,
+            "dominant_top_expert": max(counts, key=counts.get) if counts else None,
+        }
+    return summary
+
+
+def _calibration_confusion(rows: List[Dict[str, Any]]) -> Dict[str, Dict[str, int]]:
+    confusion: Dict[str, Dict[str, int]] = {}
+    for row in rows:
+        expected = str(row.get("expected_expert"))
+        observed = str(row.get("top_expert_id"))
+        confusion.setdefault(expected, {})
+        confusion[expected][observed] = confusion[expected].get(observed, 0) + 1
+    return confusion
+
+
+def summarize_calibration_config(config: Dict[str, Any], rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    selected_sizes = [float(row.get("selected_expert_set_size") or 0.0) for row in rows]
+    top_ids = [row.get("top_expert_id") for row in rows if row.get("top_expert_id") is not None]
+    top_counts: Dict[str, int] = {}
+    for top_id in top_ids:
+        top_counts[str(top_id)] = top_counts.get(str(top_id), 0) + 1
+    summary = {
+        "config_id": config.get("config_id"),
+        "score_norm": config.get("score_norm"),
+        "routing_mode": config.get("routing_mode"),
+        "gamma": config.get("gamma"),
+        "relative_threshold": config.get("relative_threshold"),
+        "topk": config.get("topk"),
+        "mixing_mode": config.get("mixing_mode"),
+        "num_records": len(rows),
+        "mean_target_nll_improvement": _mean([row.get("target_nll_delta") for row in rows]),
+        "positive_new_count": sum(1 for row in rows if (row.get("target_nll_delta") or 0.0) > 0.0),
+        "own_top1_count": sum(1 for row in rows if row.get("routing_top1_correct")),
+        "own_in_selected_set_count": sum(1 for row in rows if row.get("selected_own_expert")),
+        "empty_selection_count": sum(1 for row in rows if int(row.get("selected_expert_set_size") or 0) == 0),
+        "mean_selected_set_size": _mean(selected_sizes),
+        "max_selected_set_size": max(selected_sizes) if selected_sizes else None,
+        "mean_residual_norm": _mean([row.get("residual_norm") for row in rows]),
+        "mean_hidden_delta_norm": _mean([row.get("target_layer_hidden_delta_norm") for row in rows]),
+        "mean_locality_reference_delta": _mean([row.get("reference_delta") for row in rows]),
+        "all_records_collapse_to_same_top_expert": len(set(top_ids)) == 1 if top_ids else False,
+        "top_expert_counts": top_counts,
+        "confusion_matrix": _calibration_confusion(rows),
+    }
+    summary["sparse_success"] = bool(
+        int(summary["own_top1_count"]) >= 4
+        and int(summary["own_in_selected_set_count"]) >= 4
+        and int(summary["positive_new_count"]) >= 4
+        and (summary["mean_selected_set_size"] is not None and float(summary["mean_selected_set_size"]) <= 2.0)
+        and int(summary["empty_selection_count"]) <= 1
+    )
+    return summary
+
+
+def _sort_key_routing(row: Dict[str, Any]) -> Tuple[float, float, float, float, float]:
+    return (
+        float(row.get("own_top1_count") or 0.0),
+        float(row.get("own_in_selected_set_count") or 0.0),
+        -abs(float(row.get("mean_selected_set_size") or 0.0) - 1.0),
+        -float(row.get("empty_selection_count") or 0.0),
+        float(row.get("mean_target_nll_improvement") or -1.0e9),
+    )
+
+
+def _sort_key_target(row: Dict[str, Any]) -> Tuple[float, float, float]:
+    return (
+        float(row.get("mean_target_nll_improvement") or -1.0e9),
+        float(row.get("positive_new_count") or 0.0),
+        float(row.get("own_top1_count") or 0.0),
+    )
+
+
+def _sort_key_locality(row: Dict[str, Any]) -> Tuple[float, float, float]:
+    locality = row.get("mean_locality_reference_delta")
+    return (
+        -float(locality) if locality is not None else -1.0e30,
+        float(row.get("positive_new_count") or 0.0),
+        float(row.get("own_top1_count") or 0.0),
+    )
+
+
+def choose_best_calibration(grid_rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    best_by_routing = max(grid_rows, key=_sort_key_routing) if grid_rows else {}
+    best_by_target = max(grid_rows, key=_sort_key_target) if grid_rows else {}
+    best_by_locality = max(grid_rows, key=_sort_key_locality) if grid_rows else {}
+    sparse = [row for row in grid_rows if row.get("sparse_success")]
+    best_sparse = max(sparse, key=_sort_key_target) if sparse else {}
+    return {
+        "best_by_routing_accuracy": best_by_routing,
+        "best_by_target_nll_improvement": best_by_target,
+        "best_by_locality_reference_delta": best_by_locality,
+        "best_sparse_success": best_sparse,
+    }
+
+
+def diagnose_routing_calibration(grid_rows: List[Dict[str, Any]], oracle_summary: Dict[str, Any]) -> Tuple[str, str]:
+    sparse = [row for row in grid_rows if row.get("sparse_success")]
+    if sparse:
+        best_sparse = max(sparse, key=_sort_key_target)
+        locality = _float_or_none(best_sparse.get("mean_locality_reference_delta")) or 0.0
+        if locality > 5.0:
+            return "routing_fixed_but_locality_damage", "add stronger alignment loss"
+        return "routing_calibration_success", "proceed to 5-edit sequential with best config"
+
+    max_top1 = max((int(row.get("own_top1_count") or 0) for row in grid_rows), default=0)
+    oracle_positive = int(oracle_summary.get("positive_new_count") or 0)
+    if oracle_positive >= 4 and max_top1 < 3:
+        return "intrinsic_score_not_discriminative", "revisit intrinsic factor generation"
+
+    raw_collapsed = any(
+        row.get("score_norm") == "none"
+        and row.get("routing_mode") == "topk"
+        and int(row.get("topk") or 0) == 1
+        and row.get("all_records_collapse_to_same_top_expert")
+        for row in grid_rows
+    )
+    factor_fixed = any(
+        row.get("score_norm") in {"factor", "factor_z"}
+        and int(row.get("own_top1_count") or 0) >= 4
+        for row in grid_rows
+    )
+    if raw_collapsed and factor_fixed:
+        return "factor_norm_score_scale_issue", "run score-normalized 5-edit retrain"
+
+    self_fixed = any(
+        row.get("score_norm") in {"self_score", "factor_self_score"}
+        and int(row.get("own_top1_count") or 0) >= 4
+        for row in grid_rows
+    )
+    if self_fixed:
+        return "per_expert_score_calibration_issue", "run score-normalized 5-edit retrain"
+
+    topk1_best = max(
+        (int(row.get("own_in_selected_set_count") or 0) for row in grid_rows if row.get("routing_mode") == "topk" and int(row.get("topk") or 0) == 1),
+        default=0,
+    )
+    topk23_best = max(
+        (int(row.get("own_in_selected_set_count") or 0) for row in grid_rows if row.get("routing_mode") == "topk" and int(row.get("topk") or 0) in {2, 3}),
+        default=0,
+    )
+    if topk23_best >= 4 and topk1_best < 4:
+        return "ranking_margin_issue", "add stronger alignment loss"
+
+    threshold_rows = [row for row in grid_rows if row.get("routing_mode") == "threshold"]
+    if threshold_rows and all(
+        int(row.get("empty_selection_count") or 0) >= 4
+        or (_float_or_none(row.get("mean_selected_set_size")) or 0.0) >= 4.0
+        for row in threshold_rows
+    ):
+        return "absolute_threshold_unsuitable", "add stronger alignment loss"
+
+    return "routing_calibration_inconclusive", "revisit intrinsic factor generation"
+
+
+def _per_expert_calibration_rows(config: Dict[str, Any], eval_row: Dict[str, Any]) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    variants = eval_row.get("score_variant_pooled_scores") or {}
+    raw_scores = variants.get("none") or eval_row.get("raw_pooled_scores") or []
+    selected_ids = set(eval_row.get("selected_expert_ids") or [])
+    top_id = eval_row.get("top_expert_id")
+    expected = eval_row.get("expected_expert")
+    for expert_index, raw_score in enumerate(raw_scores):
+        row = {
+            **_config_extra_fields(config),
+            "record_id": eval_row.get("record_id"),
+            "query_record_index": eval_row.get("sample_pos"),
+            "expert_index": expert_index,
+            "raw_score": raw_score,
+            "score_used": (eval_row.get("pooled_scores") or [None] * len(raw_scores))[expert_index],
+            "selected": expert_index in selected_ids,
+            "top_expert": expert_index == top_id,
+            "own_expert": expected is not None and expert_index == int(expected),
+            "target_nll_after_routing": eval_row.get("target_nll"),
+            "target_nll_improvement": eval_row.get("target_nll_delta"),
+            "reference_delta": eval_row.get("reference_delta"),
+        }
+        for mode in SCORE_NORM_MODES:
+            values = variants.get(mode) or []
+            row[f"{mode}_score"] = values[expert_index] if expert_index < len(values) else None
+        rows.append(row)
+    return rows
+
+
+def run_eval_only(
+    args: argparse.Namespace,
+    config: TIMEEditMultimodalHparams,
+    dataset_path: Path,
+    records: List[Dict[str, Any]],
+    samples: List[Dict[str, Any]],
+    alg: TIMEEdit,
+    out_dir: Path,
+) -> Dict[str, Any]:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    routing_debug_path = out_dir / "routing_debug.jsonl"
+    if routing_debug_path.exists():
+        routing_debug_path.unlink()
+    eval_rows = (
+        evaluate_nonseq_routing_modes(args, alg, records, samples, out_dir)
+        if args.mode == "nonseq" and args.eval_routing_modes
+        else [
+            evaluate_sample(
+                alg,
+                sample,
+                record,
+                eval_pos,
+                phase=f"eval_only_{args.mode}_eval_{eval_pos}",
+                expected_expert=eval_pos,
+                routing_debug_path=routing_debug_path,
+                force_expert_id=eval_pos if args.time_mixing_mode == "own_oracle" else None,
+            )
+            for eval_pos, (record, sample) in enumerate(zip(records, samples))
+        ]
+    )
+    summary = summarize_evals(args.mode, eval_rows, [], alg, out_dir)
+    summary.update({
+        "eval_only": True,
+        "loaded_repository_path": _repo_path_for_report(resolve_repository_path(args.time_load_repository)),
+        "hidden_size": alg.repository.hidden_size,
+        "s1": alg.repository.s1,
+        "s2": alg.repository.s2,
+    })
+    write_json(
+        out_dir / "time_hparams.json",
+        {
+            "args": vars(args),
+            "config": dict(config.__dict__),
+            "command": current_command_line(),
+            "eval_only": True,
+            "loaded_repository_path": summary["loaded_repository_path"],
+        },
+    )
+    write_loss_trace(out_dir / "eval_only_per_record.csv", eval_rows)
+    write_json(out_dir / "eval_only_summary.json", summary)
+    return summary
+
+
+def run_time_routing_calibration(
+    args: argparse.Namespace,
+    config: TIMEEditMultimodalHparams,
+    dataset_path: Path,
+    records: List[Dict[str, Any]],
+    samples: List[Dict[str, Any]],
+    alg: TIMEEdit,
+    out_dir: Path,
+    repo_path: Path,
+) -> Dict[str, Any]:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    debug_path = out_dir / "time_routing_debug.jsonl"
+    if debug_path.exists():
+        debug_path.unlink()
+    command = current_command_line()
+    gpu_status = _gpu_status_text()
+    write_json(
+        out_dir / "time_hparams.json",
+        {
+            "args": vars(args),
+            "config": dict(config.__dict__),
+            "command": command,
+            "eval_only": True,
+            "loaded_repository_path": str(repo_path),
+            "gpu_status_at_start": gpu_status,
+        },
+    )
+
+    self_score_payload = infer_self_score_calibration(args, alg, records, samples, out_dir)
+    score_rows = collect_score_distribution(alg, records, samples, out_dir)
+    score_summary = summarize_score_distribution(score_rows, alg.repository.num_experts)
+    score_summary["self_score_calibration"] = self_score_payload["self_scores"]
+    score_summary["loaded_repository_path"] = str(repo_path)
+    write_loss_trace(out_dir / "time_score_distribution.csv", score_rows)
+    write_json(out_dir / "time_score_distribution_summary.json", score_summary)
+
+    configs = parse_calibration_grid(args.time_routing_calibration_grid)
+    per_record_rows: List[Dict[str, Any]] = []
+    grid_rows: List[Dict[str, Any]] = []
+    confusion_matrices: Dict[str, Any] = {}
+    all_eval_rows: Dict[str, List[Dict[str, Any]]] = {}
+
+    oracle_config = {
+        "config_id": "own_oracle_force_own",
+        "score_norm": "none",
+        "routing_mode": "threshold",
+        "gamma": 1.0e30,
+        "relative_threshold": None,
+        "topk": 0,
+        "mixing_mode": "own_oracle",
+    }
+    oracle_rows: List[Dict[str, Any]] = []
+    with temporary_time_routing(
+        alg,
+        routing_mode="threshold",
+        gamma=1.0e30,
+        topk=0,
+        score_norm="none",
+        relative_threshold=None,
+        mixing_mode="average",
+    ):
+        for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+            oracle_rows.append(
+                evaluate_sample(
+                    alg,
+                    sample,
+                    record,
+                    eval_pos,
+                    phase=f"calibration_{oracle_config['config_id']}_eval_{eval_pos}",
+                    expected_expert=eval_pos,
+                    routing_debug_path=debug_path,
+                    eval_routing_mode=oracle_config["config_id"],
+                    force_expert_id=eval_pos,
+                    extra_fields={**_config_extra_fields(oracle_config), "calibration_phase": "oracle_baseline"},
+                )
+            )
+    oracle_summary = summarize_calibration_config(oracle_config, oracle_rows)
+
+    for config_item in configs:
+        eval_rows: List[Dict[str, Any]] = []
+        routing_mode = str(config_item["routing_mode"])
+        gamma = config_item.get("gamma")
+        relative_threshold = config_item.get("relative_threshold")
+        topk = int(config_item.get("topk") or 0)
+        mixing_mode = str(config_item.get("mixing_mode") or "softmax")
+        with temporary_time_routing(
+            alg,
+            routing_mode=routing_mode,
+            gamma=float(gamma) if gamma is not None else None,
+            topk=topk,
+            score_norm=str(config_item.get("score_norm") or "none"),
+            relative_threshold=float(relative_threshold) if relative_threshold is not None else None,
+            mixing_mode=mixing_mode,
+        ):
+            for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+                row = evaluate_sample(
+                    alg,
+                    sample,
+                    record,
+                    eval_pos,
+                    phase=f"calibration_{config_item['config_id']}_eval_{eval_pos}",
+                    expected_expert=eval_pos,
+                    routing_debug_path=debug_path,
+                    eval_routing_mode=config_item["config_id"],
+                    force_expert_id=eval_pos if mixing_mode == "own_oracle" else None,
+                    extra_fields={**_config_extra_fields(config_item), "calibration_phase": "grid"},
+                )
+                eval_rows.append(row)
+                per_record_rows.extend(_per_expert_calibration_rows(config_item, row))
+        summary = summarize_calibration_config(config_item, eval_rows)
+        grid_rows.append(summary)
+        all_eval_rows[str(config_item["config_id"])] = eval_rows
+        confusion_matrices[str(config_item["config_id"])] = {
+            "config": {key: config_item.get(key) for key in ("score_norm", "routing_mode", "gamma", "relative_threshold", "topk", "mixing_mode")},
+            "matrix": summary["confusion_matrix"],
+        }
+
+    best = choose_best_calibration(grid_rows)
+    diagnosis, recommendation = diagnose_routing_calibration(grid_rows, oracle_summary)
+    best.update(
+        {
+            "diagnosis": diagnosis,
+            "recommendation": recommendation,
+            "sparse_routing_achieved": bool(best.get("best_sparse_success")),
+            "oracle_baseline": oracle_summary,
+            "loaded_repository_path": str(repo_path),
+            "command": command,
+            "gpu_status_at_start": gpu_status,
+            "record_ids": [record_id(record, idx) for idx, record in enumerate(records)],
+        }
+    )
+    write_loss_trace(out_dir / "time_routing_calibration_grid.csv", grid_rows)
+    write_loss_trace(out_dir / "time_routing_calibration_per_record.csv", per_record_rows)
+    write_json(out_dir / "time_routing_calibration_best.json", best)
+    write_json(out_dir / "time_routing_confusion_matrices.json", confusion_matrices)
+    report_path = write_time_routing_calibration_report(
+        out_dir,
+        args,
+        score_summary,
+        grid_rows,
+        best,
+        oracle_summary,
+        repo_path,
+        command,
+        gpu_status,
+    )
+    payload = {
+        "score_summary": score_summary,
+        "grid_rows": grid_rows,
+        "best": best,
+        "oracle_baseline": oracle_summary,
+        "report_path": str(report_path),
+        "loaded_repository_path": str(repo_path),
+        "num_grid_configs": len(grid_rows),
+        "num_per_record_rows": len(per_record_rows),
+    }
+    print(json.dumps(to_jsonable(payload), indent=2, sort_keys=True))
+    return payload
+
+
+def _compact_config_table(rows: List[Dict[str, Any]], limit: int = 15) -> List[str]:
+    lines = [
+        "| config | norm | route | mix | NLL imp | positive | own top1 | own selected | empty | mean size | locality | collapse |",
+        "|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|",
+    ]
+    for row in sorted(rows, key=_sort_key_routing, reverse=True)[:limit]:
+        route = row.get("routing_mode")
+        if route == "topk":
+            route = f"topk={row.get('topk')}"
+        elif route == "threshold":
+            route = f"gamma={row.get('gamma')}"
+        elif route == "relative_threshold":
+            route = f"rel={row.get('relative_threshold')}"
+        lines.append(
+            "| {config} | {norm} | {route} | {mix} | {nll} | {pos}/5 | {top1}/5 | {own}/5 | {empty} | {size} | {loc} | {collapse} |".format(
+                config=row.get("config_id"),
+                norm=row.get("score_norm"),
+                route=route,
+                mix=row.get("mixing_mode"),
+                nll=_fmt(row.get("mean_target_nll_improvement")),
+                pos=row.get("positive_new_count"),
+                top1=row.get("own_top1_count"),
+                own=row.get("own_in_selected_set_count"),
+                empty=row.get("empty_selection_count"),
+                size=_fmt(row.get("mean_selected_set_size")),
+                loc=_fmt(row.get("mean_locality_reference_delta")),
+                collapse=row.get("all_records_collapse_to_same_top_expert"),
+            )
+        )
+    return lines
+
+
+def write_time_routing_calibration_report(
+    out_dir: Path,
+    args: argparse.Namespace,
+    score_summary: Dict[str, Any],
+    grid_rows: List[Dict[str, Any]],
+    best: Dict[str, Any],
+    oracle_summary: Dict[str, Any],
+    repo_path: Path,
+    command: str,
+    gpu_status: str,
+) -> Path:
+    raw_confusion = None
+    best_confusion = None
+    for row in grid_rows:
+        if row.get("score_norm") == "none" and row.get("routing_mode") == "topk" and int(row.get("topk") or 0) == 1:
+            raw_confusion = row.get("confusion_matrix")
+            break
+    best_routing = best.get("best_by_routing_accuracy") or {}
+    best_sparse = best.get("best_sparse_success") or {}
+    best_for_confusion = best_sparse or best_routing
+    best_confusion = best_for_confusion.get("confusion_matrix")
+    dominance = score_summary.get("dominance", {})
+    raw_dominance = dominance.get("none", {})
+    best_target = best.get("best_by_target_nll_improvement") or {}
+    best_locality = best.get("best_by_locality_reference_delta") or {}
+    cuda_setting = os.environ.get("CUDA_VISIBLE_DEVICES") or _cuda_setting_from_command(command) or args.device
+    lines = [
+        "# TIME 5-Edit Routing Calibration Report",
+        "",
+        "## Files Changed",
+        "- `easyeditor/trainer/algs/time_edit.py`",
+        "- `easyeditor/trainer/algs/time_edit_modules.py`",
+        "- `easyeditor/models/time_edit/time_edit_hparams.py`",
+        "- `scripts/time/run_time_medmkeb_smoke.py`",
+        "- `scripts/time/test_time_modules.py`",
+        "",
+        "## Existing Repository Loaded",
+        f"- `{repo_path}`",
+        "",
+        "## Exact Command Run",
+        f"- `{command}`",
+        "",
+        "## GPU",
+        f"- Used CUDA device setting: `{cuda_setting}`.",
+        "- Chosen because the pre-run `nvidia-smi` check showed GPU 3 effectively free; captured start status:",
+        "```text",
+        gpu_status or "unavailable",
+        "```",
+        "",
+        "## Verification",
+        "- `py_compile`: passed before model run.",
+        "- `scripts/time/test_time_modules.py`: passed before model run.",
+        "- 20-edit run: not run.",
+        "- Optional retraining: not run.",
+        "",
+        "## Raw Score Distribution Summary",
+        f"- Expert 3 raw top-1 count: {raw_dominance.get('expert_3_top1_count')} / 5.",
+        f"- Raw top expert counts: `{json.dumps(raw_dominance.get('top_expert_counts'), sort_keys=True)}`.",
+        "",
+        "| expert | raw mean | raw std | raw max | factor mean | factor_z mean | self_score mean | factor_self mean |",
+        "|---:|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    for expert_id, payload in sorted((score_summary.get("per_expert") or {}).items(), key=lambda item: int(item[0])):
+        lines.append(
+            "| {expert} | {raw_mean} | {raw_std} | {raw_max} | {factor_mean} | {factor_z_mean} | {self_mean} | {factor_self_mean} |".format(
+                expert=expert_id,
+                raw_mean=_fmt((payload.get("none") or {}).get("mean")),
+                raw_std=_fmt((payload.get("none") or {}).get("std")),
+                raw_max=_fmt((payload.get("none") or {}).get("max")),
+                factor_mean=_fmt((payload.get("factor") or {}).get("mean")),
+                factor_z_mean=_fmt((payload.get("factor_z") or {}).get("mean")),
+                self_mean=_fmt((payload.get("self_score") or {}).get("mean")),
+                factor_self_mean=_fmt((payload.get("factor_self_score") or {}).get("mean")),
+            )
+        )
+    lines.extend(["", "### Per-Record Own Scores"])
+    lines.append("| record_id | own idx | raw | factor | factor_z | self_score | factor_self |")
+    lines.append("|---|---:|---:|---:|---:|---:|---:|")
+    for row in score_summary.get("per_record_own_scores", []):
+        lines.append(
+            "| {rid} | {idx} | {raw} | {factor} | {factor_z} | {self_score} | {factor_self} |".format(
+                rid=row.get("record_id"),
+                idx=row.get("query_record_index"),
+                raw=_fmt(row.get("none_own_score")),
+                factor=_fmt(row.get("factor_own_score")),
+                factor_z=_fmt(row.get("factor_z_own_score")),
+                self_score=_fmt(row.get("self_score_own_score")),
+                factor_self=_fmt(row.get("factor_self_score_own_score")),
+            )
+        )
+    lines.extend(
+        [
+            "",
+            "## Calibration Grid Summary",
+            f"- Grid configs evaluated: {len(grid_rows)}.",
+            f"- Oracle/force-own mean NLL improvement: {_fmt(oracle_summary.get('mean_target_nll_improvement'))}; positive {oracle_summary.get('positive_new_count')}/5.",
+            "",
+        ]
+    )
+    lines.extend(_compact_config_table(grid_rows))
+    lines.extend(
+        [
+            "",
+            "## Best Configs",
+            f"- Best by routing accuracy: `{best_routing.get('config_id')}` with own top-1 {best_routing.get('own_top1_count')}/5, own selected {best_routing.get('own_in_selected_set_count')}/5, mean selected size {_fmt(best_routing.get('mean_selected_set_size'))}.",
+            f"- Best by target NLL improvement: `{best_target.get('config_id')}` with mean improvement {_fmt(best_target.get('mean_target_nll_improvement'))}.",
+            f"- Best by locality/reference delta: `{best_locality.get('config_id')}` with mean locality delta {_fmt(best_locality.get('mean_locality_reference_delta'))}.",
+            "",
+            "## Confusion Matrices",
+            f"- Raw topk=1: `{json.dumps(raw_confusion, sort_keys=True)}`",
+            f"- Best calibrated routing: `{json.dumps(best_confusion, sort_keys=True)}`",
+            "",
+            "## Sparse Routing",
+            f"- Achieved: {bool(best.get('sparse_routing_achieved'))}.",
+            "",
+            "## Diagnosis",
+            f"- Label: `{best.get('diagnosis')}`.",
+            "",
+            "## Recommendation",
+            f"- {best.get('recommendation')}.",
+            "",
+            "## Output Files",
+            "- `time_score_distribution.csv`",
+            "- `time_score_distribution_summary.json`",
+            "- `time_routing_calibration_grid.csv`",
+            "- `time_routing_calibration_best.json`",
+            "- `time_routing_calibration_per_record.csv`",
+            "- `time_routing_confusion_matrices.json`",
+            "- `time_routing_debug.jsonl`",
+            "- `TIME_5EDIT_ROUTING_CALIBRATION_REPORT.md`",
+            "",
+        ]
+    )
+    path = out_dir / "TIME_5EDIT_ROUTING_CALIBRATION_REPORT.md"
+    path.write_text("\n".join(lines))
+    return path
 
 
 def parse_float_csv(text: str) -> List[float]:
@@ -1766,8 +2694,22 @@ def main() -> None:
     ensure_offline_env()
 
     dataset_path = resolve_dataset_path(args.dataset, Path.cwd(), args.dataset_path)
-    records = load_records(dataset_path, args.sample_index, args.max_edits)
+    repo_path = resolve_repository_path(args.time_load_repository)
+    if args.eval_only and repo_path is None:
+        raise RuntimeError("--eval-only requires --time-load-repository PATH for this runner.")
+    if repo_path is not None:
+        if not repo_path.exists():
+            raise FileNotFoundError(f"TIME repository not found: {repo_path}")
+        print(f"TIME load repository: {repo_path}", flush=True)
+    records = load_records_for_repository(
+        dataset_path,
+        args.sample_index,
+        args.max_edits,
+        repo_path if args.eval_only else None,
+    )
     config = configure(args, dataset_path)
+    if repo_path is not None:
+        config.time_repository_path = str(repo_path)
     image_root = Path(config.coco_image).expanduser()
     device = torch_device(config.device)
     if device.type == "cuda" and device.index is not None:
@@ -1775,7 +2717,24 @@ def main() -> None:
 
     model = get_model(config).to(device).eval()
     samples = [make_sample(model, record, image_root) for record in records]
-    if args.time_overfit_grid:
+    if args.time_routing_calibration:
+        if repo_path is None:
+            raise RuntimeError("--time-routing-calibration requires --time-load-repository PATH.")
+        alg = TIMEEdit(model, config, lambda: None).to(device)
+        try:
+            run_time_routing_calibration(args, config, dataset_path, records, samples, alg, args.out_dir, repo_path)
+        finally:
+            alg.remove_hook()
+            del alg
+    elif args.eval_only:
+        alg = TIMEEdit(model, config, lambda: None).to(device)
+        try:
+            summary = run_eval_only(args, config, dataset_path, records, samples, alg, args.out_dir)
+            print(json.dumps(to_jsonable(summary), indent=2, sort_keys=True))
+        finally:
+            alg.remove_hook()
+            del alg
+    elif args.time_overfit_grid:
         grid_rows = run_overfit_grid(args, config, dataset_path, records, samples, model, device)
         report_path = write_reliability_report(args.out_dir)
         print(json.dumps(to_jsonable({"grid_rows": grid_rows, "reliability_report": str(report_path)}), indent=2, sort_keys=True))

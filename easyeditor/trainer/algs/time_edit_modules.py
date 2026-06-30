@@ -338,6 +338,8 @@ class TIMEExpertRepository(nn.Module):
 @dataclass
 class TIMEForwardDebug:
     scores: torch.Tensor
+    raw_scores: torch.Tensor
+    score_variants: Dict[str, torch.Tensor]
     selected: torch.Tensor
     weights: torch.Tensor
     residual: torch.Tensor
@@ -356,6 +358,10 @@ class TIMECPResidual(nn.Module):
         routing_mode: str = "threshold",
         residual_sign: str = "plus",
         expert_gain: float = 1.0,
+        score_norm: str = "none",
+        relative_threshold: Optional[float] = None,
+        mixing_mode: Optional[str] = None,
+        score_eps: float = 1.0e-8,
         layer_norm: bool = True,
     ) -> None:
         super().__init__()
@@ -366,8 +372,20 @@ class TIMECPResidual(nn.Module):
         self.routing_mode = str(routing_mode or "threshold").lower()
         self.residual_sign = str(residual_sign or "plus").lower()
         self.expert_gain = float(expert_gain)
+        self.score_norm = str(score_norm or "none").lower()
+        self.relative_threshold = None if relative_threshold is None else float(relative_threshold)
+        self.score_eps = float(score_eps)
+        self.self_score_cache: Dict[str, List[float]] = {}
+        requested_mixing = str(mixing_mode or "softmax").lower()
+        if self.disable_score_mixing:
+            requested_mixing = "average"
+        self.mixing_mode = requested_mixing
         if self.residual_sign not in {"plus", "minus"}:
             raise ValueError(f"Unsupported TIME residual_sign: {self.residual_sign}")
+        if self.score_norm not in {"none", "factor", "factor_z", "self_score", "factor_self_score"}:
+            raise ValueError(f"Unsupported TIME score_norm: {self.score_norm}")
+        if self.mixing_mode not in {"softmax", "average", "own_oracle"}:
+            raise ValueError(f"Unsupported TIME mixing_mode: {self.mixing_mode}")
         self.layer_norm = nn.LayerNorm(repository.hidden_size, elementwise_affine=False) if layer_norm else nn.Identity()
 
     def _topk_mask(self, scores: torch.Tensor, candidate: Optional[torch.Tensor] = None) -> torch.Tensor:
@@ -378,6 +396,65 @@ class TIMECPResidual(nn.Module):
         selected = torch.zeros_like(scores, dtype=torch.bool)
         selected.scatter_(-1, top_indices, top_valid)
         return selected
+
+    def _relative_threshold_mask(self, scores: torch.Tensor) -> torch.Tensor:
+        threshold = 1.0 if self.relative_threshold is None else float(self.relative_threshold)
+        max_scores = scores.max(dim=-1, keepdim=True).values
+        return scores >= (threshold * max_scores)
+
+    def _self_score_values(self, base_norm: str, device: torch.device, dtype: torch.dtype) -> torch.Tensor:
+        keys = {
+            "none": ("time_self_score_none", "time_self_score_raw", "self_score_none", "self_score_raw", "time_self_score"),
+            "factor": ("time_self_score_factor", "self_score_factor"),
+        }.get(base_norm, ("time_self_score",))
+        values: List[float] = []
+        cached = self.self_score_cache.get(base_norm)
+        for idx in range(self.repository.num_experts):
+            value = None
+            if cached is not None and idx < len(cached):
+                value = cached[idx]
+            if value is None and idx < len(self.repository.metadata):
+                metadata = self.repository.metadata[idx]
+                for key in keys:
+                    if key in metadata:
+                        value = metadata[key]
+                        break
+            try:
+                numeric = float(value)
+            except (TypeError, ValueError):
+                numeric = 1.0
+            values.append(max(abs(numeric), self.score_eps))
+        if not values:
+            values = [1.0]
+        return torch.tensor(values, device=device, dtype=dtype)
+
+    def _score_variants(
+        self,
+        proj: torch.Tensor,
+        Z: torch.Tensor,
+        U_in: torch.Tensor,
+        V_in: torch.Tensor,
+    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+        raw_scores = apply_activation(proj, self.repository.activation).abs().sum(dim=-1)
+        factor_den = (
+            U_in.norm(dim=-1).clamp_min(self.score_eps)
+            * V_in.norm(dim=-1).clamp_min(self.score_eps)
+        )
+        factor_proj = proj / factor_den.view(1, 1, self.repository.num_experts, self.repository.rank)
+        factor_scores = apply_activation(factor_proj, self.repository.activation).abs().sum(dim=-1)
+        z_norm = Z.reshape(*Z.shape[:2], -1).norm(dim=-1).clamp_min(self.score_eps)
+        factor_z_proj = factor_proj / z_norm.view(*z_norm.shape, 1, 1)
+        factor_z_scores = apply_activation(factor_z_proj, self.repository.activation).abs().sum(dim=-1)
+        raw_self = self._self_score_values("none", raw_scores.device, raw_scores.dtype).view(1, 1, -1)
+        factor_self = self._self_score_values("factor", factor_scores.device, factor_scores.dtype).view(1, 1, -1)
+        variants = {
+            "none": raw_scores,
+            "factor": factor_scores,
+            "factor_z": factor_z_scores,
+            "self_score": raw_scores / raw_self,
+            "factor_self_score": factor_scores / factor_self,
+        }
+        return raw_scores, variants
 
     def _selection(self, scores: torch.Tensor, force_expert_ids: Optional[Iterable[int]]) -> torch.Tensor:
         if self.repository.num_experts == 0:
@@ -393,6 +470,12 @@ class TIMECPResidual(nn.Module):
             elif mode == "threshold_topk":
                 thresholded = scores > float(self.repository.gamma)
                 selected = self._topk_mask(scores, thresholded) if self.topk > 0 else thresholded
+            elif mode == "relative_threshold":
+                thresholded = self._relative_threshold_mask(scores)
+                selected = self._topk_mask(scores, thresholded) if self.topk > 0 else thresholded
+            elif mode == "relative_topk":
+                thresholded = self._relative_threshold_mask(scores)
+                selected = self._topk_mask(scores, thresholded)
             elif mode == "force_current":
                 selected = torch.zeros_like(scores, dtype=torch.bool)
                 selected[..., self.repository.num_experts - 1] = True
@@ -434,7 +517,8 @@ class TIMECPResidual(nn.Module):
 
         proj = torch.einsum("blxy,mrx,mry->blmr", Z, U_in, V_in)
         act_proj = apply_activation(proj, self.repository.activation)
-        scores = act_proj.abs().sum(dim=-1)
+        raw_scores, score_variants = self._score_variants(proj, Z, U_in, V_in)
+        scores = score_variants[str(self.score_norm)]
         selected = self._selection(scores, force_expert_ids)
 
         if token_mask is not None:
@@ -442,7 +526,7 @@ class TIMECPResidual(nn.Module):
             if token_mask.shape != hidden.shape[:2]:
                 raise RuntimeError(f"TIME token_mask shape {tuple(token_mask.shape)} does not match {tuple(hidden.shape[:2])}.")
         selected_float = selected.to(dtype=torch.float32)
-        if self.disable_score_mixing:
+        if self.mixing_mode == "average":
             denom = selected_float.sum(dim=-1, keepdim=True).clamp_min(1.0)
             weights = selected_float / denom
         else:
@@ -468,6 +552,8 @@ class TIMECPResidual(nn.Module):
         selected_counts = selected.sum(dim=-1)
         debug = TIMEForwardDebug(
             scores=scores,
+            raw_scores=raw_scores,
+            score_variants=score_variants,
             selected=selected,
             weights=weights,
             residual=residual,
@@ -484,7 +570,7 @@ class TIMECPResidual(nn.Module):
         top_ids = torch.full(hidden.shape[:2], -1, device=hidden.device, dtype=torch.long)
         top_scores = torch.zeros(hidden.shape[:2], device=hidden.device, dtype=torch.float32)
         selected_counts = torch.zeros(hidden.shape[:2], device=hidden.device, dtype=torch.long)
-        return TIMEForwardDebug(scores, selected, weights, residual, top_ids, top_scores, selected_counts)
+        return TIMEForwardDebug(scores, scores, {"none": scores}, selected, weights, residual, top_ids, top_scores, selected_counts)
 
 
 def extract_first_tensor(output: Any) -> torch.Tensor:

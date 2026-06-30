@@ -80,6 +80,9 @@ class TIMEEdit(EditableModel):
             routing_mode=str(_cfg(self.config, "time_routing_mode", "threshold")),
             residual_sign=str(_cfg(self.config, "time_residual_sign", "plus")),
             expert_gain=float(_cfg(self.config, "time_expert_gain", 1.0)),
+            score_norm=str(_cfg(self.config, "time_score_norm", "none")),
+            relative_threshold=_cfg(self.config, "time_relative_threshold", None),
+            mixing_mode=str(_cfg(self.config, "time_mixing_mode", "softmax")),
         )
         self._optimizer_anchor = nn.Parameter(torch.zeros(1))
         self._time_context: Optional[TIMEInterventionContext] = None
@@ -223,10 +226,20 @@ class TIMEEdit(EditableModel):
 
     def _debug_event(self, context: TIMEInterventionContext, hidden: torch.Tensor, debug: TIMEForwardDebug) -> Dict[str, Any]:
         pooled_scores = self._pooled_scores(debug.scores, self._last_token_mask).detach().float().cpu()
+        pooled_raw_scores = self._pooled_scores(debug.raw_scores, self._last_token_mask).detach().float().cpu()
+        pooled_variants = {
+            name: self._pooled_scores(value, self._last_token_mask).detach().float().cpu()
+            for name, value in debug.score_variants.items()
+        }
         pooled_selected = self._pooled_selected(debug.selected, self._last_token_mask).detach().cpu()
         route_weights = self._pooled_scores(debug.weights, self._last_token_mask).detach().float().cpu()
         top_score, top_id = (pooled_scores.max(dim=-1) if pooled_scores.numel() else (torch.tensor([]), torch.tensor([])))
         row_scores = pooled_scores[0].tolist() if pooled_scores.numel() else []
+        row_raw_scores = pooled_raw_scores[0].tolist() if pooled_raw_scores.numel() else []
+        row_variants = {
+            name: values[0].tolist() if values.numel() else []
+            for name, values in pooled_variants.items()
+        }
         row_selected = pooled_selected[0].tolist() if pooled_selected.numel() else []
         row_weights = route_weights[0].tolist() if route_weights.numel() else []
         return {
@@ -240,6 +253,8 @@ class TIMEEdit(EditableModel):
             "selected_expert_ids": [idx for idx, flag in enumerate(row_selected) if bool(flag)],
             "selected_expert_set_size": int(sum(1 for flag in row_selected if bool(flag))),
             "pooled_scores": row_scores,
+            "raw_pooled_scores": row_raw_scores,
+            "score_variant_pooled_scores": row_variants,
             "pooled_weights": row_weights,
             "residual_norm": float(debug.residual.detach().float().norm().cpu()),
             "target_layer_hidden_delta_norm": float(debug.residual.detach().float().norm().cpu()),
@@ -249,6 +264,9 @@ class TIMEEdit(EditableModel):
             "gamma": float(self.repository.gamma),
             "topk": int(self.time_residual.topk),
             "routing_mode": str(self.time_residual.routing_mode),
+            "score_norm": str(self.time_residual.score_norm),
+            "relative_threshold": self.time_residual.relative_threshold,
+            "mixing_mode": str(self.time_residual.mixing_mode),
             "residual_sign": str(self.time_residual.residual_sign),
             "expert_gain": float(self.time_residual.expert_gain),
             "force_expert_ids": list(context.force_expert_ids),
@@ -416,6 +434,7 @@ class TIMEEdit(EditableModel):
             "time/trainable_params": float(sum(param.numel() for param in self.outer_parameters() if param.requires_grad)),
             "time/force_current_train": float(force_current),
             "time/routing_mode_is_force_current": float(str(self.time_residual.routing_mode) == "force_current"),
+            "time/score_norm_is_none": float(str(self.time_residual.score_norm) == "none"),
             "time/residual_sign_is_minus": float(str(self.time_residual.residual_sign) == "minus"),
             "time/expert_gain": float(self.time_residual.expert_gain),
             "time/reliability_only": float(bool(_cfg(self.config, "time_reliability_only", False))),
@@ -436,12 +455,19 @@ class TIMEEdit(EditableModel):
             }
         debug = self._last_debug
         pooled_scores = self._pooled_scores(debug.scores, self._last_token_mask).detach().float().cpu()
+        pooled_raw_scores = self._pooled_scores(debug.raw_scores, self._last_token_mask).detach().float().cpu()
+        pooled_variants = {
+            name: self._pooled_scores(value, self._last_token_mask).detach().float().cpu()
+            for name, value in debug.score_variants.items()
+        }
         pooled_selected = self._pooled_selected(debug.selected, self._last_token_mask).detach().cpu()
         pooled_weights = self._pooled_scores(debug.weights, self._last_token_mask).detach().float().cpu()
         if pooled_scores.numel() == 0:
             top_id = None
             top_score = None
             scores = []
+            raw_scores = []
+            score_variants = {}
             weights = []
             selected_ids: List[int] = []
         else:
@@ -449,6 +475,11 @@ class TIMEEdit(EditableModel):
             top_score = float(top.values.item())
             top_id = int(top.indices.item())
             scores = pooled_scores[0].tolist()
+            raw_scores = pooled_raw_scores[0].tolist()
+            score_variants = {
+                name: values[0].tolist() if values.numel() else []
+                for name, values in pooled_variants.items()
+            }
             weights = pooled_weights[0].tolist()
             selected_ids = [idx for idx, flag in enumerate(pooled_selected[0].tolist()) if bool(flag)]
         return {
@@ -457,6 +488,8 @@ class TIMEEdit(EditableModel):
             "selected_expert_ids": selected_ids,
             "selected_expert_set_size": len(selected_ids),
             "pooled_scores": scores,
+            "raw_pooled_scores": raw_scores,
+            "score_variant_pooled_scores": score_variants,
             "pooled_weights": weights,
             "residual_norm": float(debug.residual.detach().float().norm().cpu()),
             "target_layer_hidden_delta_norm": float(debug.residual.detach().float().norm().cpu()),
@@ -464,6 +497,9 @@ class TIMEEdit(EditableModel):
             "gamma": float(self.repository.gamma),
             "topk": int(self.time_residual.topk),
             "routing_mode": str(self.time_residual.routing_mode),
+            "score_norm": str(self.time_residual.score_norm),
+            "relative_threshold": self.time_residual.relative_threshold,
+            "mixing_mode": str(self.time_residual.mixing_mode),
             "residual_sign": str(self.time_residual.residual_sign),
             "expert_gain": float(self.time_residual.expert_gain),
         }

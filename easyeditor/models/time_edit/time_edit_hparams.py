@@ -92,6 +92,9 @@ class TIMEEditMultimodalHparams(HyperParams):
     time_disable_align_loss: bool = False
     time_topk: int = 0
     time_routing_mode: str = "threshold"
+    time_score_norm: str = "none"
+    time_relative_threshold: Optional[float] = None
+    time_mixing_mode: str = "softmax"
     time_force_current_during_training: bool = True
     time_residual_sign: str = "plus"
     time_expert_gain: float = 1.0
