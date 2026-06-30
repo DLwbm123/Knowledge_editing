@@ -361,6 +361,10 @@ class TIMECPResidual(nn.Module):
         score_norm: str = "none",
         relative_threshold: Optional[float] = None,
         mixing_mode: Optional[str] = None,
+        calibration_mode: str = "none",
+        calibration_beta: float = 0.0,
+        max_selected_experts: Optional[int] = None,
+        score_pool: str = "token",
         score_eps: float = 1.0e-8,
         layer_norm: bool = True,
     ) -> None:
@@ -374,6 +378,11 @@ class TIMECPResidual(nn.Module):
         self.expert_gain = float(expert_gain)
         self.score_norm = str(score_norm or "none").lower()
         self.relative_threshold = None if relative_threshold is None else float(relative_threshold)
+        self.calibration_mode = str(calibration_mode or "none").lower()
+        self.calibration_beta = float(calibration_beta or 0.0)
+        self.max_selected_experts = None if max_selected_experts is None else int(max_selected_experts)
+        self.score_pool = str(score_pool or "token").lower()
+        self.calibration_stats: Dict[str, List[float]] = {}
         self.score_eps = float(score_eps)
         self.self_score_cache: Dict[str, List[float]] = {}
         requested_mixing = str(mixing_mode or "softmax").lower()
@@ -386,6 +395,10 @@ class TIMECPResidual(nn.Module):
             raise ValueError(f"Unsupported TIME score_norm: {self.score_norm}")
         if self.mixing_mode not in {"softmax", "average", "own_oracle"}:
             raise ValueError(f"Unsupported TIME mixing_mode: {self.mixing_mode}")
+        if self.calibration_mode not in {"none", "self_ratio", "zscore_neg", "neg_margin", "self_minus_neg_mean"}:
+            raise ValueError(f"Unsupported TIME calibration_mode: {self.calibration_mode}")
+        if self.score_pool not in {"token", "mean", "max", "last", "answer_mean"}:
+            raise ValueError(f"Unsupported TIME score_pool: {self.score_pool}")
         self.layer_norm = nn.LayerNorm(repository.hidden_size, elementwise_affine=False) if layer_norm else nn.Identity()
 
     def _topk_mask(self, scores: torch.Tensor, candidate: Optional[torch.Tensor] = None) -> torch.Tensor:
@@ -406,11 +419,16 @@ class TIMECPResidual(nn.Module):
         keys = {
             "none": ("time_self_score_none", "time_self_score_raw", "self_score_none", "self_score_raw", "time_self_score"),
             "factor": ("time_self_score_factor", "self_score_factor"),
+            "factor_z": ("time_self_score_factor_z", "self_score_factor_z"),
+            "self_score": ("time_self_score_unit", "self_score_unit"),
+            "factor_self_score": ("time_self_score_unit", "self_score_unit"),
         }.get(base_norm, ("time_self_score",))
         values: List[float] = []
         cached = self.self_score_cache.get(base_norm)
         for idx in range(self.repository.num_experts):
             value = None
+            if base_norm in {"self_score", "factor_self_score"}:
+                value = 1.0
             if cached is not None and idx < len(cached):
                 value = cached[idx]
             if value is None and idx < len(self.repository.metadata):
@@ -456,6 +474,97 @@ class TIMECPResidual(nn.Module):
         }
         return raw_scores, variants
 
+    def _calibration_values(
+        self,
+        name: str,
+        device: torch.device,
+        dtype: torch.dtype,
+        default: float,
+    ) -> torch.Tensor:
+        values = self.calibration_stats.get(name) or []
+        result: List[float] = []
+        for idx in range(self.repository.num_experts):
+            value = values[idx] if idx < len(values) else default
+            try:
+                result.append(float(value))
+            except (TypeError, ValueError):
+                result.append(float(default))
+        if not result:
+            result = [float(default)]
+        return torch.tensor(result, device=device, dtype=dtype).view(1, 1, -1)
+
+    def _calibrated_scores(self, base_scores: torch.Tensor) -> torch.Tensor:
+        mode = str(self.calibration_mode or "none")
+        if mode == "none":
+            return base_scores
+        if mode == "self_ratio":
+            self_scores = self._calibration_values(
+                "self_score",
+                base_scores.device,
+                base_scores.dtype,
+                1.0,
+            )
+            if "self_score" not in self.calibration_stats:
+                self_scores = self._self_score_values(str(self.score_norm), base_scores.device, base_scores.dtype).view(1, 1, -1)
+            return base_scores / self_scores.abs().clamp_min(self.score_eps)
+
+        mu = self._calibration_values("mu_neg", base_scores.device, base_scores.dtype, 0.0)
+        std = self._calibration_values("std_neg", base_scores.device, base_scores.dtype, 1.0).abs().clamp_min(self.score_eps)
+        if mode in {"zscore_neg", "neg_margin"}:
+            return (base_scores - mu) / std
+        if mode == "self_minus_neg_mean":
+            self_scores = self._calibration_values(
+                "self_score",
+                base_scores.device,
+                base_scores.dtype,
+                1.0,
+            )
+            if "self_score" not in self.calibration_stats:
+                self_scores = self._self_score_values(str(self.score_norm), base_scores.device, base_scores.dtype).view(1, 1, -1)
+            denom = self_scores - mu
+            denom = torch.where(
+                denom.abs() < self.score_eps,
+                torch.full_like(denom, self.score_eps),
+                denom,
+            )
+            return (base_scores - mu) / denom
+        return base_scores
+
+    def pool_scores_for_routing(self, scores: torch.Tensor, token_mask: Optional[torch.Tensor]) -> torch.Tensor:
+        if scores.numel() == 0:
+            return scores.reshape(scores.shape[0], 0)
+        mode = str(self.score_pool or "token")
+        if mode == "token":
+            return scores.mean(dim=1)
+        if token_mask is None:
+            mask = torch.ones(scores.shape[:2], device=scores.device, dtype=torch.bool)
+        else:
+            mask = token_mask.to(scores.device).bool()
+        if mode in {"mean", "answer_mean"}:
+            denom = mask.sum(dim=1, keepdim=True).clamp_min(1).to(scores.dtype)
+            return (scores * mask.unsqueeze(-1).to(scores.dtype)).sum(dim=1) / denom
+        if mode == "max":
+            masked = scores.masked_fill(~mask.unsqueeze(-1), float("-inf"))
+            pooled = masked.max(dim=1).values
+            return torch.where(torch.isfinite(pooled), pooled, torch.zeros_like(pooled))
+        if mode == "last":
+            positions = mask.long().sum(dim=1).clamp_min(1) - 1
+            batch_index = torch.arange(scores.shape[0], device=scores.device)
+            return scores[batch_index, positions]
+        raise ValueError(f"Unsupported TIME score_pool: {self.score_pool}")
+
+    def _cap_selection(self, selected: torch.Tensor, scores: torch.Tensor) -> torch.Tensor:
+        cap = self.max_selected_experts
+        if cap is None or int(cap) <= 0 or scores.shape[-1] <= int(cap):
+            return selected
+        k = min(max(1, int(cap)), scores.shape[-1])
+        masked = scores.masked_fill(~selected, float("-inf"))
+        top_values, top_indices = torch.topk(masked, k=k, dim=-1)
+        top_valid = torch.isfinite(top_values)
+        capped = torch.zeros_like(selected, dtype=torch.bool)
+        capped.scatter_(-1, top_indices, top_valid)
+        return selected & capped
+
     def _selection(self, scores: torch.Tensor, force_expert_ids: Optional[Iterable[int]]) -> torch.Tensor:
         if self.repository.num_experts == 0:
             return torch.zeros_like(scores, dtype=torch.bool)
@@ -464,7 +573,8 @@ class TIMECPResidual(nn.Module):
         else:
             mode = str(self.routing_mode or "threshold").lower()
             if mode == "threshold":
-                selected = scores > float(self.repository.gamma)
+                threshold = float(self.calibration_beta) if self.calibration_mode == "neg_margin" else float(self.repository.gamma)
+                selected = scores > threshold
             elif mode == "topk":
                 selected = self._topk_mask(scores)
             elif mode == "threshold_topk":
@@ -481,6 +591,7 @@ class TIMECPResidual(nn.Module):
                 selected[..., self.repository.num_experts - 1] = True
             else:
                 raise ValueError(f"Unsupported TIME routing_mode: {self.routing_mode}")
+        selected = self._cap_selection(selected, scores)
         if force_expert_ids:
             for idx in force_expert_ids:
                 idx = int(idx)
@@ -518,13 +629,17 @@ class TIMECPResidual(nn.Module):
         proj = torch.einsum("blxy,mrx,mry->blmr", Z, U_in, V_in)
         act_proj = apply_activation(proj, self.repository.activation)
         raw_scores, score_variants = self._score_variants(proj, Z, U_in, V_in)
-        scores = score_variants[str(self.score_norm)]
-        selected = self._selection(scores, force_expert_ids)
-
         if token_mask is not None:
             token_mask = token_mask.to(device=hidden.device).bool()
             if token_mask.shape != hidden.shape[:2]:
                 raise RuntimeError(f"TIME token_mask shape {tuple(token_mask.shape)} does not match {tuple(hidden.shape[:2])}.")
+        base_scores = score_variants[str(self.score_norm)]
+        calibrated_scores = self._calibrated_scores(base_scores)
+        if str(self.score_pool) == "token":
+            scores = calibrated_scores
+        else:
+            scores = self.pool_scores_for_routing(calibrated_scores, token_mask).unsqueeze(1).expand(B, L, self.repository.num_experts)
+        selected = self._selection(scores, force_expert_ids)
         selected_float = selected.to(dtype=torch.float32)
         if self.mixing_mode == "average":
             denom = selected_float.sum(dim=-1, keepdim=True).clamp_min(1.0)

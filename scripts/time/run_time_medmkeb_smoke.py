@@ -99,6 +99,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--eval-only", action="store_true")
     parser.add_argument("--time-routing-calibration", action="store_true")
     parser.add_argument("--time-routing-calibration-grid", default="")
+    parser.add_argument("--time-post-retrain-calibration", action="store_true")
+    parser.add_argument("--time-max-selected-experts", type=int, default=None)
+    parser.add_argument(
+        "--time-calibration-mode",
+        default="none",
+        choices=["none", "self_ratio", "zscore_neg", "neg_margin", "self_minus_neg_mean"],
+    )
+    parser.add_argument("--time-calibration-beta", type=float, default=0.0)
+    parser.add_argument("--time-score-pool", default="mean", choices=["mean", "max", "last", "answer_mean"])
     parser.add_argument("--time-force-current-train", dest="time_force_current_train", action="store_true", default=None)
     parser.add_argument("--time-gamma-sweep", default="")
     parser.add_argument("--time-scale-init-grid", default="")
@@ -251,6 +260,10 @@ def configure(args: argparse.Namespace, dataset_path: Path) -> TIMEEditMultimoda
         config.time_negative_experts = int(args.num_negative_experts)
     config.time_relative_threshold = None if args.time_relative_threshold is None else float(args.time_relative_threshold)
     config.time_mixing_mode = "average" if args.time_disable_score_mixing else str(args.time_mixing_mode)
+    config.time_max_selected_experts = args.time_max_selected_experts
+    config.time_calibration_mode = str(args.time_calibration_mode)
+    config.time_calibration_beta = float(args.time_calibration_beta)
+    config.time_score_pool = str(args.time_score_pool) if args.time_post_retrain_calibration else "token"
     config.time_anti_collapse_loss = bool(args.time_anti_collapse_loss)
     config.time_lambda_anti_collapse = float(args.lambda_anti_collapse)
     config.time_anti_collapse_margin = float(args.anti_collapse_margin)
@@ -298,12 +311,19 @@ def evaluate_sample(
     eval_routing_mode: Optional[str] = None,
     force_expert_id: Optional[int] = None,
     extra_fields: Optional[Dict[str, Any]] = None,
+    base_cache: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     debug_events: List[Dict[str, Any]] = []
     start = time.perf_counter()
-    with torch.no_grad(), alg.time_disabled():
-        base_batch = clone_batch(sample)
-        base_outputs = alg.model(base_batch)
+    if base_cache is None:
+        with torch.no_grad(), alg.time_disabled():
+            base_batch = clone_batch(sample)
+            base_outputs = alg.model(base_batch)
+        base_nll = target_nll_from_outputs(base_outputs, base_batch)
+    else:
+        base_batch = base_cache["batch"]
+        base_outputs = base_cache["outputs"]
+        base_nll = base_cache["nll"]
     with torch.no_grad():
         edited_batch = clone_batch(sample)
         old_current_expert = alg.current_expert_index
@@ -319,7 +339,6 @@ def evaluate_sample(
         finally:
             alg.current_expert_index = old_current_expert
     elapsed = time.perf_counter() - start
-    base_nll = target_nll_from_outputs(base_outputs, base_batch)
     edited_nll = target_nll_from_outputs(edited_outputs, edited_batch)
     routing = alg.routing_summary()
     rid = record_id(record, sample_pos)
@@ -407,6 +426,16 @@ def evaluate_sample(
             event.update(extra_fields)
         append_jsonl(routing_debug_path, event)
     return row
+
+
+def build_base_eval_cache(alg: TIMEEdit, samples: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    cache: List[Dict[str, Any]] = []
+    with torch.no_grad(), alg.time_disabled():
+        for sample in samples:
+            batch = clone_batch(sample)
+            outputs = alg.model(batch)
+            cache.append({"batch": batch, "outputs": outputs, "nll": target_nll_from_outputs(outputs, batch)})
+    return cache
 
 
 def answer_token_static_debug(model: Any, sample: Dict[str, Any], record: Dict[str, Any]) -> Dict[str, Any]:
@@ -1348,6 +1377,11 @@ def temporary_time_routing(
     score_norm: Optional[str] = None,
     relative_threshold: Optional[float] = None,
     mixing_mode: Optional[str] = None,
+    calibration_mode: Optional[str] = None,
+    calibration_beta: Optional[float] = None,
+    max_selected_experts: Optional[int] = None,
+    score_pool: Optional[str] = None,
+    calibration_stats: Optional[Dict[str, List[float]]] = None,
 ):
     old_gamma = alg.repository.gamma
     old_mode = alg.time_residual.routing_mode
@@ -1355,12 +1389,21 @@ def temporary_time_routing(
     old_score_norm = alg.time_residual.score_norm
     old_relative_threshold = alg.time_residual.relative_threshold
     old_mixing_mode = alg.time_residual.mixing_mode
+    old_calibration_mode = alg.time_residual.calibration_mode
+    old_calibration_beta = alg.time_residual.calibration_beta
+    old_max_selected_experts = alg.time_residual.max_selected_experts
+    old_score_pool = alg.time_residual.score_pool
+    old_calibration_stats = dict(getattr(alg.time_residual, "calibration_stats", {}))
     old_config_gamma = getattr(alg.config, "time_gamma", None)
     old_config_mode = getattr(alg.config, "time_routing_mode", None)
     old_config_topk = getattr(alg.config, "time_topk", None)
     old_config_score_norm = getattr(alg.config, "time_score_norm", None)
     old_config_relative_threshold = getattr(alg.config, "time_relative_threshold", None)
     old_config_mixing_mode = getattr(alg.config, "time_mixing_mode", None)
+    old_config_calibration_mode = getattr(alg.config, "time_calibration_mode", None)
+    old_config_calibration_beta = getattr(alg.config, "time_calibration_beta", None)
+    old_config_max_selected_experts = getattr(alg.config, "time_max_selected_experts", None)
+    old_config_score_pool = getattr(alg.config, "time_score_pool", None)
     try:
         if gamma is not None:
             alg.repository.gamma = float(gamma)
@@ -1383,6 +1426,23 @@ def temporary_time_routing(
         if mixing_mode is not None:
             alg.time_residual.mixing_mode = str(mixing_mode)
             setattr(alg.config, "time_mixing_mode", str(mixing_mode))
+        if calibration_mode is not None:
+            alg.time_residual.calibration_mode = str(calibration_mode)
+            setattr(alg.config, "time_calibration_mode", str(calibration_mode))
+        if calibration_beta is not None:
+            alg.time_residual.calibration_beta = float(calibration_beta)
+            setattr(alg.config, "time_calibration_beta", float(calibration_beta))
+        if max_selected_experts is not None:
+            alg.time_residual.max_selected_experts = int(max_selected_experts)
+            setattr(alg.config, "time_max_selected_experts", int(max_selected_experts))
+        else:
+            alg.time_residual.max_selected_experts = None
+            setattr(alg.config, "time_max_selected_experts", None)
+        if score_pool is not None:
+            alg.time_residual.score_pool = str(score_pool)
+            setattr(alg.config, "time_score_pool", str(score_pool))
+        if calibration_stats is not None:
+            alg.time_residual.calibration_stats = dict(calibration_stats)
         yield
     finally:
         alg.repository.gamma = old_gamma
@@ -1391,6 +1451,11 @@ def temporary_time_routing(
         alg.time_residual.score_norm = old_score_norm
         alg.time_residual.relative_threshold = old_relative_threshold
         alg.time_residual.mixing_mode = old_mixing_mode
+        alg.time_residual.calibration_mode = old_calibration_mode
+        alg.time_residual.calibration_beta = old_calibration_beta
+        alg.time_residual.max_selected_experts = old_max_selected_experts
+        alg.time_residual.score_pool = old_score_pool
+        alg.time_residual.calibration_stats = old_calibration_stats
         if old_config_gamma is not None:
             setattr(alg.config, "time_gamma", old_config_gamma)
         if old_config_mode is not None:
@@ -1400,6 +1465,10 @@ def temporary_time_routing(
         setattr(alg.config, "time_score_norm", old_config_score_norm)
         setattr(alg.config, "time_relative_threshold", old_config_relative_threshold)
         setattr(alg.config, "time_mixing_mode", old_config_mixing_mode)
+        setattr(alg.config, "time_calibration_mode", old_config_calibration_mode)
+        setattr(alg.config, "time_calibration_beta", old_config_calibration_beta)
+        setattr(alg.config, "time_max_selected_experts", old_config_max_selected_experts)
+        setattr(alg.config, "time_score_pool", old_config_score_pool)
 
 
 def evaluate_nonseq_routing_modes(
@@ -2280,6 +2349,770 @@ def write_time_routing_calibration_report(
     path = out_dir / "TIME_5EDIT_ROUTING_CALIBRATION_REPORT.md"
     path.write_text("\n".join(lines))
     return path
+
+
+POST_RETRAIN_SCORE_NORMS = ["factor_z", "factor_self_score"]
+POST_RETRAIN_SCORE_POOLS = ["mean", "max", "last"]
+POST_RETRAIN_BASE_SCORE_NORMS = ["none", "factor_z", "factor_self_score"]
+
+
+def post_retrain_route_label(config: Dict[str, Any]) -> str:
+    if config.get("calibration_mode") == "neg_margin":
+        return f"neg_margin_b{format_float_for_path(float(config.get('beta') or 0.0))}"
+    route = str(config.get("routing_mode"))
+    if route == "topk":
+        return f"topk{int(config.get('topk') or 1)}"
+    if route == "threshold":
+        return f"gamma{format_float_for_path(float(config.get('gamma') or 0.0))}"
+    if route == "relative_threshold":
+        return f"rel{format_float_for_path(float(config.get('relative_threshold') or 0.0))}"
+    return route
+
+
+def post_retrain_config_id(config: Dict[str, Any]) -> str:
+    cap = config.get("max_selected_experts")
+    cap_text = "capnone" if cap is None else f"cap{int(cap)}"
+    return "_".join(
+        [
+            str(config.get("score_norm")),
+            str(config.get("calibration_mode")),
+            str(config.get("score_pool")),
+            post_retrain_route_label(config),
+            cap_text,
+            str(config.get("mixing_mode")),
+        ]
+    )
+
+
+def post_retrain_calibration_configs() -> List[Dict[str, Any]]:
+    all_routes = [
+        {"routing_mode": "topk", "topk": 1, "gamma": None, "relative_threshold": None},
+        {"routing_mode": "topk", "topk": 2, "gamma": None, "relative_threshold": None},
+        {"routing_mode": "relative_threshold", "topk": 0, "gamma": None, "relative_threshold": 0.90},
+        {"routing_mode": "relative_threshold", "topk": 0, "gamma": None, "relative_threshold": 0.95},
+        {"routing_mode": "relative_threshold", "topk": 0, "gamma": None, "relative_threshold": 0.98},
+        {"routing_mode": "relative_threshold", "topk": 0, "gamma": None, "relative_threshold": 0.99},
+        {"routing_mode": "threshold", "topk": 0, "gamma": 0.5, "relative_threshold": None},
+        {"routing_mode": "threshold", "topk": 0, "gamma": 0.7, "relative_threshold": None},
+        {"routing_mode": "threshold", "topk": 0, "gamma": 1.0, "relative_threshold": None},
+    ]
+    priority_routes = [all_routes[idx] for idx in (0, 1, 3, 4, 6, 7)]
+    configs: List[Dict[str, Any]] = []
+    seen: set[str] = set()
+
+    def add(
+        score_norm: str,
+        calibration_mode: str,
+        route: Dict[str, Any],
+        max_selected_experts: Optional[int],
+        score_pool: str,
+        mixing_mode: str,
+        beta: Optional[float] = None,
+    ) -> None:
+        config = {
+            **route,
+            "score_norm": score_norm,
+            "calibration_mode": calibration_mode,
+            "beta": beta,
+            "max_selected_experts": max_selected_experts,
+            "score_pool": score_pool,
+            "mixing_mode": mixing_mode,
+        }
+        if calibration_mode == "neg_margin":
+            config["routing_mode"] = "threshold"
+            config["topk"] = 0
+            config["gamma"] = beta
+            config["relative_threshold"] = None
+        config["config_id"] = post_retrain_config_id(config)
+        if config["config_id"] not in seen:
+            seen.add(config["config_id"])
+            configs.append(config)
+
+    for calibration_mode in ("zscore_neg", "self_minus_neg_mean"):
+        for route in all_routes:
+            for cap in (None, 2):
+                for pool in ("mean", "max"):
+                    for mix in CALIBRATION_MIXING_MODES:
+                        add("factor_z", calibration_mode, route, cap, pool, mix)
+
+    for route in priority_routes:
+        for cap in (None, 2):
+            for pool in ("mean", "max"):
+                for mix in CALIBRATION_MIXING_MODES:
+                    add("factor_self_score", "self_ratio", route, cap, pool, mix)
+
+    neg_margin_route = {"routing_mode": "threshold", "topk": 0, "gamma": None, "relative_threshold": None}
+    for beta in (0.0, 0.5, 1.0, 1.5, 2.0):
+        for cap in (None, 1, 2, 3):
+            for pool in ("mean", "max"):
+                for mix in CALIBRATION_MIXING_MODES:
+                    add("factor_z", "neg_margin", neg_margin_route, cap, pool, mix, beta=beta)
+
+    for score_norm in POST_RETRAIN_SCORE_NORMS:
+        for route in [all_routes[idx] for idx in (0, 1, 3, 4, 6)]:
+            for cap in (None, 2):
+                for mix in CALIBRATION_MIXING_MODES:
+                    add(score_norm, "none", route, cap, "mean", mix)
+
+    for calibration_mode in ("zscore_neg", "self_minus_neg_mean"):
+        for route in [all_routes[1], all_routes[3]]:
+            for cap in (None, 2):
+                add("factor_z", calibration_mode, route, cap, "last", "average")
+    for route in [all_routes[1], all_routes[3]]:
+        add("factor_self_score", "self_ratio", route, 2, "last", "average")
+    return configs
+
+
+def metadata_self_scores(alg: TIMEEdit, score_norm: str) -> List[float]:
+    keys = {
+        "none": ("time_self_score_none", "self_score_raw", "time_self_score_raw"),
+        "factor_z": ("time_self_score_factor_z", "self_score_factor_z"),
+        "factor_self_score": ("time_self_score_unit", "self_score_unit"),
+    }.get(score_norm, ("time_self_score",))
+    values: List[float] = []
+    for metadata in alg.repository.metadata:
+        value = None
+        if score_norm == "factor_self_score":
+            value = 1.0
+        for key in keys:
+            if value is None and key in metadata:
+                value = metadata[key]
+        try:
+            values.append(float(value))
+        except (TypeError, ValueError):
+            values.append(1.0)
+    return values or [1.0] * max(1, alg.repository.num_experts)
+
+
+def collect_post_retrain_score_distribution(
+    args: argparse.Namespace,
+    alg: TIMEEdit,
+    records: List[Dict[str, Any]],
+    samples: List[Dict[str, Any]],
+    out_dir: Path,
+    base_cache: List[Dict[str, Any]],
+) -> Tuple[List[Dict[str, Any]], Dict[str, Any], Dict[Tuple[str, str], List[List[float]]]]:
+    debug_path = out_dir / "post_retrain_routing_debug.jsonl"
+    matrices: Dict[Tuple[str, str], List[List[float]]] = {}
+    norm_rows: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}
+    for score_norm in POST_RETRAIN_BASE_SCORE_NORMS:
+        for score_pool in POST_RETRAIN_SCORE_POOLS:
+            matrix: List[List[float]] = []
+            rows: List[Dict[str, Any]] = []
+            with temporary_time_routing(
+                alg,
+                routing_mode="threshold",
+                gamma=1.0e30,
+                topk=0,
+                score_norm=score_norm,
+                relative_threshold=None,
+                mixing_mode="average",
+                calibration_mode="none",
+                max_selected_experts=None,
+                score_pool=score_pool,
+                calibration_stats={},
+            ):
+                for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+                    row = evaluate_sample(
+                        alg,
+                        sample,
+                        record,
+                        eval_pos,
+                        phase=f"post_retrain_score_dist_{score_norm}_{score_pool}_{eval_pos}",
+                        expected_expert=eval_pos,
+                        routing_debug_path=debug_path,
+                        eval_routing_mode="post_retrain_score_distribution",
+                        force_expert_id=eval_pos,
+                        extra_fields={"score_distribution_norm": score_norm, "score_pool": score_pool},
+                        base_cache=base_cache[eval_pos],
+                    )
+                    values = [float(value) for value in (row.get("pooled_scores") or [])]
+                    matrix.append(values)
+                    rows.append(row)
+            matrices[(score_norm, score_pool)] = matrix
+            norm_rows[(score_norm, score_pool)] = rows
+
+    distribution_rows: List[Dict[str, Any]] = []
+    for score_pool in POST_RETRAIN_SCORE_POOLS:
+        raw = matrices.get(("none", score_pool), [])
+        factor_z = matrices.get(("factor_z", score_pool), [])
+        factor_self = matrices.get(("factor_self_score", score_pool), [])
+        for query_index, record in enumerate(records):
+            width = max(
+                len(raw[query_index]) if query_index < len(raw) else 0,
+                len(factor_z[query_index]) if query_index < len(factor_z) else 0,
+                len(factor_self[query_index]) if query_index < len(factor_self) else 0,
+            )
+            for expert_index in range(width):
+                distribution_rows.append(
+                    {
+                        "score_pool": score_pool,
+                        "record_id": record_id(record, query_index),
+                        "query_record_index": query_index,
+                        "expert_index": expert_index,
+                        "own_expert": expert_index == query_index,
+                        "raw_score": raw[query_index][expert_index] if query_index < len(raw) and expert_index < len(raw[query_index]) else None,
+                        "factor_z_score": factor_z[query_index][expert_index] if query_index < len(factor_z) and expert_index < len(factor_z[query_index]) else None,
+                        "factor_self_score": factor_self[query_index][expert_index] if query_index < len(factor_self) and expert_index < len(factor_self[query_index]) else None,
+                    }
+                )
+
+    summary: Dict[str, Any] = {
+        "loaded_repository_path": _repo_path_for_report(resolve_repository_path(args.time_load_repository)),
+        "score_pools": list(POST_RETRAIN_SCORE_POOLS),
+        "answer_mean_evaluated": False,
+        "answer_mean_note": "No reliable answer_mask is present in the current LLaVA-Med sample batches; answer_mean falls back to mean and was not included in the bounded grid.",
+        "per_norm_pool": {},
+        "negative_stats": {},
+        "self_scores_from_metadata": {
+            score_norm: metadata_self_scores(alg, score_norm)
+            for score_norm in POST_RETRAIN_BASE_SCORE_NORMS
+        },
+    }
+    for (score_norm, score_pool), matrix in matrices.items():
+        key = f"{score_norm}|{score_pool}"
+        top_counts: Dict[str, int] = {}
+        per_expert: Dict[str, Any] = {}
+        for query_scores in matrix:
+            if query_scores:
+                top_id = int(max(range(len(query_scores)), key=lambda idx: query_scores[idx]))
+                top_counts[str(top_id)] = top_counts.get(str(top_id), 0) + 1
+        num_experts = max((len(row) for row in matrix), default=0)
+        mu_neg: List[float] = []
+        std_neg: List[float] = []
+        for expert_index in range(num_experts):
+            values = [row[expert_index] for row in matrix if expert_index < len(row)]
+            neg = [row[expert_index] for idx, row in enumerate(matrix) if idx != expert_index and expert_index < len(row)]
+            mean = float(sum(values) / len(values)) if values else None
+            std = math.sqrt(sum((value - mean) ** 2 for value in values) / len(values)) if values and mean is not None else None
+            neg_mean = float(sum(neg) / len(neg)) if neg else 0.0
+            neg_std = math.sqrt(sum((value - neg_mean) ** 2 for value in neg) / len(neg)) if neg else 0.0
+            mu_neg.append(neg_mean)
+            std_neg.append(max(float(neg_std), 1.0e-8))
+            per_expert[str(expert_index)] = {
+                "mean": mean,
+                "std": std,
+                "max": max(values) if values else None,
+                "mu_neg": neg_mean,
+                "std_neg": neg_std,
+                "self_score_metadata": (summary["self_scores_from_metadata"].get(score_norm) or [None] * num_experts)[expert_index],
+            }
+        summary["per_norm_pool"][key] = {
+            "top_expert_counts": top_counts,
+            "dominant_top_expert": max(top_counts, key=top_counts.get) if top_counts else None,
+            "max_top_expert_count": max(top_counts.values()) if top_counts else 0,
+            "per_expert": per_expert,
+        }
+        summary["negative_stats"][key] = {
+            "mu_neg": mu_neg,
+            "std_neg": std_neg,
+        }
+    return distribution_rows, summary, matrices
+
+
+def calibration_stats_for_post_config(config: Dict[str, Any], score_summary: Dict[str, Any]) -> Dict[str, List[float]]:
+    score_norm = str(config.get("score_norm"))
+    score_pool = str(config.get("score_pool"))
+    key = f"{score_norm}|{score_pool}"
+    neg = score_summary.get("negative_stats", {}).get(key, {})
+    return {
+        "mu_neg": list(neg.get("mu_neg") or []),
+        "std_neg": list(neg.get("std_neg") or []),
+        "self_score": list((score_summary.get("self_scores_from_metadata") or {}).get(score_norm) or []),
+    }
+
+
+def sparse_routing_pass(summary: Dict[str, Any]) -> bool:
+    return bool(
+        int(summary.get("positive_new_count") or 0) >= 4
+        and int(summary.get("own_in_selected_set_count") or 0) >= 4
+        and (_float_or_none(summary.get("mean_selected_set_size")) or 1.0e9) <= 2.0
+        and (_float_or_none(summary.get("max_selected_set_size")) or 1.0e9) <= 3.0
+        and int(summary.get("empty_selection_count") or 0) <= 1
+        and int(summary.get("max_top_expert_count") or 0) <= 3
+    )
+
+
+def strict_sparse_pass(summary: Dict[str, Any]) -> bool:
+    return bool(
+        int(summary.get("own_top1_count") or 0) >= 4
+        and int(summary.get("positive_new_count") or 0) >= 4
+        and (_float_or_none(summary.get("mean_selected_set_size")) or 1.0e9) <= 2.0
+    )
+
+
+def summarize_post_retrain_config(config: Dict[str, Any], rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    selected_sizes = [float(row.get("selected_expert_set_size") or 0.0) for row in rows]
+    top_ids = [row.get("top_expert_id") for row in rows if row.get("top_expert_id") is not None]
+    top_counts: Dict[str, int] = {}
+    for top_id in top_ids:
+        top_counts[str(top_id)] = top_counts.get(str(top_id), 0) + 1
+    summary = {
+        "config_id": config.get("config_id"),
+        "score_norm": config.get("score_norm"),
+        "calibration_mode": config.get("calibration_mode"),
+        "score_pool": config.get("score_pool"),
+        "routing_mode": "neg_margin" if config.get("calibration_mode") == "neg_margin" else config.get("routing_mode"),
+        "gamma": config.get("gamma"),
+        "relative_threshold": config.get("relative_threshold"),
+        "beta": config.get("beta"),
+        "topk": config.get("topk"),
+        "max_selected_experts": config.get("max_selected_experts"),
+        "mixing_mode": config.get("mixing_mode"),
+        "num_records": len(rows),
+        "mean_target_nll_improvement": _mean([row.get("target_nll_delta") for row in rows]),
+        "positive_new_count": sum(1 for row in rows if (row.get("target_nll_delta") or 0.0) > 0.0),
+        "own_top1_count": sum(1 for row in rows if row.get("routing_top1_correct")),
+        "own_in_selected_set_count": sum(1 for row in rows if row.get("selected_own_expert")),
+        "empty_selection_count": sum(1 for row in rows if int(row.get("selected_expert_set_size") or 0) == 0),
+        "mean_selected_set_size": _mean(selected_sizes),
+        "max_selected_set_size": max(selected_sizes) if selected_sizes else None,
+        "mean_residual_norm": _mean([row.get("residual_norm") for row in rows]),
+        "mean_hidden_delta_norm": _mean([row.get("target_layer_hidden_delta_norm") for row in rows]),
+        "mean_locality_reference_delta": _mean([row.get("reference_delta") for row in rows]),
+        "most_common_top_expert_id": max(top_counts, key=top_counts.get) if top_counts else None,
+        "max_top_expert_count": max(top_counts.values()) if top_counts else 0,
+        "top_expert_counts": top_counts,
+        "confusion_matrix": _calibration_confusion(rows),
+        "confusion_matrix_id": config.get("config_id"),
+    }
+    summary["selected_set_is_sparse"] = bool(
+        (_float_or_none(summary.get("mean_selected_set_size")) or 1.0e9) <= 2.0
+        and (_float_or_none(summary.get("max_selected_set_size")) or 1.0e9) <= 3.0
+    )
+    summary["sparse_routing_pass"] = sparse_routing_pass(summary)
+    summary["strict_sparse_pass"] = strict_sparse_pass(summary)
+    return summary
+
+
+def _sort_key_post_sparse(row: Dict[str, Any]) -> Tuple[float, float, float, float, float, float, float, float]:
+    locality = _float_or_none(row.get("mean_locality_reference_delta"))
+    return (
+        float(bool(row.get("strict_sparse_pass"))),
+        float(row.get("positive_new_count") or 0),
+        float(row.get("own_in_selected_set_count") or 0),
+        float(row.get("own_top1_count") or 0),
+        -float(row.get("mean_selected_set_size") or 1.0e9),
+        float(locality is not None and locality <= 5.0),
+        float(row.get("mean_target_nll_improvement") or -1.0e9),
+        -float(row.get("mean_locality_reference_delta") or 1.0e9),
+    )
+
+
+def choose_post_retrain_best(grid_rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    sparse = [row for row in grid_rows if row.get("sparse_routing_pass")]
+    strict = [row for row in grid_rows if row.get("strict_sparse_pass")]
+    return {
+        "best_sparse": max(sparse, key=_sort_key_post_sparse) if sparse else {},
+        "best_strict_sparse": max(strict, key=_sort_key_post_sparse) if strict else {},
+        "best_own_top1": max(grid_rows, key=lambda row: (int(row.get("own_top1_count") or 0), int(row.get("own_in_selected_set_count") or 0), -float(row.get("mean_selected_set_size") or 1.0e9), float(row.get("mean_target_nll_improvement") or -1.0e9))) if grid_rows else {},
+        "best_target_nll": max(grid_rows, key=_sort_key_target) if grid_rows else {},
+        "best_locality": max(grid_rows, key=_sort_key_locality) if grid_rows else {},
+    }
+
+
+def diagnose_post_retrain_calibration(grid_rows: List[Dict[str, Any]], best: Dict[str, Any]) -> Tuple[str, str]:
+    sparse = [row for row in grid_rows if row.get("sparse_routing_pass")]
+    best_sparse = best.get("best_sparse") or {}
+    if best_sparse.get("calibration_mode") in {"zscore_neg", "self_minus_neg_mean"}:
+        return "posthoc_per_expert_calibration_success", f"proceed to 5-edit sequential with `{best_sparse.get('config_id')}`"
+    if sparse and (_float_or_none(best_sparse.get("mean_locality_reference_delta")) or 0.0) > 5.0:
+        return "sparse_routing_but_locality_damage", "run another 5-edit retrain with stronger alignment/locality control before sequential"
+
+    topk2_rows = [
+        row for row in grid_rows
+        if row.get("routing_mode") == "topk"
+        and int(row.get("topk") or 0) == 2
+        and int(row.get("own_in_selected_set_count") or 0) >= 4
+        and int(row.get("positive_new_count") or 0) >= 4
+        and (_float_or_none(row.get("mean_selected_set_size")) or 1.0e9) <= 2.0
+    ]
+    if topk2_rows:
+        best_topk2 = max(topk2_rows, key=_sort_key_post_sparse)
+        return "topk_sparse_fallback_success", f"proceed to 5-edit sequential with practical fallback `{best_topk2.get('config_id')}`"
+
+    capped_pass = [row for row in sparse if row.get("max_selected_experts") in {1, 2}]
+    if capped_pass:
+        best_cap = max(capped_pass, key=_sort_key_post_sparse)
+        return "selection_cap_needed", f"proceed only with selection cap config `{best_cap.get('config_id')}`"
+
+    non_mean_pass = [row for row in sparse if row.get("score_pool") != "mean"]
+    mean_pass = [row for row in sparse if row.get("score_pool") == "mean"]
+    if non_mean_pass and not mean_pass:
+        best_pool = max(non_mean_pass, key=_sort_key_post_sparse)
+        return "token_pooling_issue", f"proceed with token pooling config `{best_pool.get('config_id')}`"
+
+    compact = [
+        row for row in grid_rows
+        if int(row.get("own_in_selected_set_count") or 0) >= 4
+        and (_float_or_none(row.get("mean_selected_set_size")) or 1.0e9) <= 2.0
+    ]
+    if not compact:
+        return "intrinsic_score_still_not_sparse", "run another 5-edit retrain with stronger routing supervision or add a cross-attention factor generator"
+    return "intrinsic_score_still_not_sparse", "revisit intrinsic routing design before 5-edit sequential"
+
+
+def previous_score_norm_best(out_dir: Path) -> Dict[str, Any]:
+    prior_dir = out_dir.parent / "five_edit_score_norm_retrain"
+    grid_path = prior_dir / "five_edit_score_norm_routing_grid.csv"
+    rows = _read_csv_rows(grid_path)
+    prior: Dict[str, Any] = {"grid_path": str(grid_path), "rows": len(rows)}
+    if rows:
+        non_oracle = [row for row in rows if row.get("config_id") != "force_own"]
+        prior["best_own_top1"] = max(non_oracle, key=lambda row: (int(float(row.get("own_top1_count") or 0)), int(float(row.get("own_in_selected_set_count") or 0)), -float(row.get("mean_selected_set_size") or 1.0e9))) if non_oracle else {}
+        prior["best_own_selected_with_size"] = max(non_oracle, key=lambda row: (int(float(row.get("own_in_selected_set_count") or 0)), -float(row.get("mean_selected_set_size") or 1.0e9), int(float(row.get("positive_new_count") or 0)))) if non_oracle else {}
+        prior["best_mean_nll"] = max(non_oracle, key=_sort_key_target) if non_oracle else {}
+        prior["best_locality"] = max(non_oracle, key=_sort_key_locality) if non_oracle else {}
+        prior["factor_z_rel0p95_average"] = next((row for row in rows if row.get("config_id") == "factor_z_rel0p95_average"), {})
+    confusion_path = prior_dir / "five_edit_score_norm_confusion_matrices.json"
+    if confusion_path.exists():
+        try:
+            prior["confusion_matrices"] = json.loads(confusion_path.read_text())
+        except json.JSONDecodeError:
+            prior["confusion_matrices"] = {}
+    return prior
+
+
+def per_record_post_row(
+    config: Dict[str, Any],
+    row: Dict[str, Any],
+    score_matrices: Dict[Tuple[str, str], List[List[float]]],
+) -> Dict[str, Any]:
+    score_pool = str(config.get("score_pool"))
+    expected = int(row.get("expected_expert")) if row.get("expected_expert") is not None else -1
+
+    def score_at(norm: str) -> Optional[float]:
+        matrix = score_matrices.get((norm, score_pool), [])
+        if 0 <= expected < len(matrix) and 0 <= expected < len(matrix[expected]):
+            return matrix[expected][expected]
+        return None
+
+    return {
+        "config_id": config.get("config_id"),
+        "score_norm": config.get("score_norm"),
+        "calibration_mode": config.get("calibration_mode"),
+        "score_pool": config.get("score_pool"),
+        "routing_mode": "neg_margin" if config.get("calibration_mode") == "neg_margin" else config.get("routing_mode"),
+        "gamma": config.get("gamma"),
+        "relative_threshold": config.get("relative_threshold"),
+        "beta": config.get("beta"),
+        "topk": config.get("topk"),
+        "max_selected_experts": config.get("max_selected_experts"),
+        "mixing_mode": config.get("mixing_mode"),
+        "record_id": row.get("record_id"),
+        "own_expert_index": row.get("expected_expert"),
+        "target_nll_before": row.get("base_target_nll"),
+        "target_nll_after": row.get("target_nll"),
+        "target_nll_improvement": row.get("target_nll_delta"),
+        "improved": row.get("target_improved"),
+        "own_expert_score_raw": score_at("none"),
+        "own_expert_score_factor_z": score_at("factor_z"),
+        "own_expert_score_factor_self_score": score_at("factor_self_score"),
+        "calibrated_own_score": row.get("own_expert_score"),
+        "top_expert_id": row.get("top_expert_id"),
+        "top_calibrated_score": row.get("top_score"),
+        "own_selected": row.get("selected_own_expert"),
+        "selected_expert_ids": row.get("selected_expert_ids"),
+        "selected_set_size": row.get("selected_expert_set_size"),
+        "residual_norm": row.get("residual_norm"),
+        "hidden_delta_norm": row.get("target_layer_hidden_delta_norm"),
+        "locality_reference_delta": row.get("reference_delta"),
+    }
+
+
+def write_post_retrain_calibration_report(
+    out_dir: Path,
+    args: argparse.Namespace,
+    repo_path: Path,
+    command: str,
+    gpu_status: str,
+    score_summary: Dict[str, Any],
+    grid_rows: List[Dict[str, Any]],
+    best: Dict[str, Any],
+    diagnosis: str,
+    recommendation: str,
+    previous: Dict[str, Any],
+    confusion_matrices: Dict[str, Any],
+) -> Path:
+    best_sparse = best.get("best_sparse") or {}
+    best_own_top1 = best.get("best_own_top1") or {}
+    best_target = best.get("best_target_nll") or {}
+    best_locality = best.get("best_locality") or {}
+    previous_best = previous.get("factor_z_rel0p95_average") or {}
+    previous_confusion = ((previous.get("confusion_matrices") or {}).get("factor_z_rel0p95_average") or {}).get("matrix")
+    new_confusion = (confusion_matrices.get(str(best_sparse.get("config_id"))) or {}).get("matrix") if best_sparse else None
+    topk2_fallback = [
+        row for row in grid_rows
+        if row.get("routing_mode") == "topk"
+        and int(row.get("topk") or 0) == 2
+        and int(row.get("own_in_selected_set_count") or 0) >= 4
+        and int(row.get("positive_new_count") or 0) >= 4
+        and (_float_or_none(row.get("mean_selected_set_size")) or 1.0e9) <= 2.0
+    ]
+    per_expert_calibration_needed = bool(best_sparse and best_sparse.get("calibration_mode") != "none")
+    lines = [
+        "# TIME 5-Edit Post-Retrain Calibration Report",
+        "",
+        "## Files Changed",
+        "- `easyeditor/trainer/algs/time_edit.py`",
+        "- `easyeditor/trainer/algs/time_edit_modules.py`",
+        "- `easyeditor/models/time_edit/time_edit_hparams.py`",
+        "- `scripts/time/run_time_medmkeb_smoke.py`",
+        "- `scripts/time/test_time_modules.py`",
+        "",
+        "## Repository Loaded",
+        f"- `{repo_path}`",
+        "",
+        "## Exact Command Run",
+        f"- `{command}`",
+        "",
+        "## GPU",
+        f"- Used CUDA device setting: `{_cuda_setting_from_command(command) or os.environ.get('CUDA_VISIBLE_DEVICES', args.device)}`.",
+        "- Chosen because the pre-run `nvidia-smi` check showed GPU 3 free; captured start status:",
+        "```text",
+        gpu_status or "unavailable",
+        "```",
+        "",
+        "## Verification",
+        "- `py_compile`: passed before model run.",
+        "- `scripts/time/test_time_modules.py`: passed before model run.",
+        "- Eval-only repository loading: used.",
+        "- Retraining: not run.",
+        "- 20-edit run: not run.",
+        "",
+        "## Previous Best Config",
+        f"- Previous best normalized config: `{previous_best.get('config_id')}`.",
+        f"- own top-1 {previous_best.get('own_top1_count')}/5; own selected {previous_best.get('own_in_selected_set_count')}/5; mean size {_fmt(previous_best.get('mean_selected_set_size'))}; positive {previous_best.get('positive_new_count')}/5; NLL improvement {_fmt(previous_best.get('mean_target_nll_improvement'))}; locality {_fmt(previous_best.get('mean_locality_reference_delta'))}.",
+        "",
+        "## Score Distribution Summary",
+        f"- Pools evaluated: `{', '.join(score_summary.get('score_pools') or [])}`.",
+        f"- answer_mean evaluated: {score_summary.get('answer_mean_evaluated')} ({score_summary.get('answer_mean_note')}).",
+    ]
+    for key, payload in sorted((score_summary.get("per_norm_pool") or {}).items()):
+        lines.append(
+            f"- `{key}` top counts `{json.dumps(payload.get('top_expert_counts'), sort_keys=True)}`, max top count {payload.get('max_top_expert_count')}."
+        )
+    lines.extend(
+        [
+            "",
+            "## Calibration Grid Summary",
+            f"- Grid configs evaluated: {len(grid_rows)}.",
+            "",
+            "| config | norm | calib | pool | route | cap | mix | NLL imp | pos | own top1 | own selected | empty | mean size | max size | locality | max top | sparse | strict |",
+            "|---|---|---|---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|",
+        ]
+    )
+    for row in sorted(grid_rows, key=_sort_key_post_sparse, reverse=True)[:20]:
+        lines.append(
+            "| {config} | {norm} | {calib} | {pool} | {route} | {cap} | {mix} | {nll} | {pos}/5 | {top1}/5 | {own}/5 | {empty} | {mean_size} | {max_size} | {loc} | {max_top} | {sparse} | {strict} |".format(
+                config=row.get("config_id"),
+                norm=row.get("score_norm"),
+                calib=row.get("calibration_mode"),
+                pool=row.get("score_pool"),
+                route=post_retrain_route_label(row),
+                cap=row.get("max_selected_experts"),
+                mix=row.get("mixing_mode"),
+                nll=_fmt(row.get("mean_target_nll_improvement")),
+                pos=row.get("positive_new_count"),
+                top1=row.get("own_top1_count"),
+                own=row.get("own_in_selected_set_count"),
+                empty=row.get("empty_selection_count"),
+                mean_size=_fmt(row.get("mean_selected_set_size")),
+                max_size=_fmt(row.get("max_selected_set_size")),
+                loc=_fmt(row.get("mean_locality_reference_delta")),
+                max_top=row.get("max_top_expert_count"),
+                sparse=row.get("sparse_routing_pass"),
+                strict=row.get("strict_sparse_pass"),
+            )
+        )
+    lines.extend(
+        [
+            "",
+            "## Best Configs",
+            f"- Best sparse routing: `{best_sparse.get('config_id')}`.",
+            f"- Best own top-1: `{best_own_top1.get('config_id')}` with own top-1 {best_own_top1.get('own_top1_count')}/5.",
+            f"- Best target NLL improvement: `{best_target.get('config_id')}` with mean improvement {_fmt(best_target.get('mean_target_nll_improvement'))}.",
+            f"- Best locality/reference delta: `{best_locality.get('config_id')}` with mean locality delta {_fmt(best_locality.get('mean_locality_reference_delta'))}.",
+            "",
+            "## Confusion Matrices",
+            f"- Previous `factor_z_rel0p95_average`: `{json.dumps(previous_confusion, sort_keys=True)}`",
+            f"- New best sparse config: `{json.dumps(new_confusion, sort_keys=True)}`",
+            "",
+            "## Decisions",
+            f"- Strict sparse routing achieved: {bool(best.get('best_strict_sparse'))}.",
+            f"- Topk=2 viable fallback: {bool(topk2_fallback)}.",
+            f"- Per-expert calibration necessary: {per_expert_calibration_needed}.",
+            f"- Locality/reference delta for best sparse: {_fmt(best_sparse.get('mean_locality_reference_delta'))}.",
+            "",
+            "## Diagnosis",
+            f"- Label: `{diagnosis}`.",
+            "",
+            "## Recommendation",
+            f"- {recommendation}.",
+            "",
+            "## Output Files",
+            "- `post_retrain_score_distribution.csv`",
+            "- `post_retrain_score_distribution_summary.json`",
+            "- `post_retrain_calibration_grid.csv`",
+            "- `post_retrain_calibration_best.json`",
+            "- `post_retrain_per_record.csv`",
+            "- `post_retrain_confusion_matrices.json`",
+            "- `post_retrain_routing_debug.jsonl`",
+            "- `TIME_5EDIT_POST_RETRAIN_CALIBRATION_REPORT.md`",
+            "",
+        ]
+    )
+    path = out_dir / "TIME_5EDIT_POST_RETRAIN_CALIBRATION_REPORT.md"
+    path.write_text("\n".join(lines))
+    return path
+
+
+def run_post_retrain_calibration(
+    args: argparse.Namespace,
+    config: TIMEEditMultimodalHparams,
+    dataset_path: Path,
+    records: List[Dict[str, Any]],
+    samples: List[Dict[str, Any]],
+    alg: TIMEEdit,
+    out_dir: Path,
+    repo_path: Path,
+) -> Dict[str, Any]:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    debug_path = out_dir / "post_retrain_routing_debug.jsonl"
+    if debug_path.exists():
+        debug_path.unlink()
+    command = current_command_line()
+    gpu_status = _gpu_status_text()
+    write_json(
+        out_dir / "time_hparams.json",
+        {
+            "args": vars(args),
+            "config": dict(config.__dict__),
+            "command": command,
+            "eval_only": True,
+            "loaded_repository_path": str(repo_path),
+            "gpu_status_at_start": gpu_status,
+            "post_retrain_calibration": True,
+        },
+    )
+    base_cache = build_base_eval_cache(alg, samples)
+    score_rows, score_summary, score_matrices = collect_post_retrain_score_distribution(
+        args,
+        alg,
+        records,
+        samples,
+        out_dir,
+        base_cache,
+    )
+    write_loss_trace(out_dir / "post_retrain_score_distribution.csv", score_rows)
+    write_json(out_dir / "post_retrain_score_distribution_summary.json", score_summary)
+
+    configs = post_retrain_calibration_configs()
+    per_record_rows: List[Dict[str, Any]] = []
+    grid_rows: List[Dict[str, Any]] = []
+    confusion_matrices: Dict[str, Any] = {}
+    for config_item in configs:
+        eval_rows: List[Dict[str, Any]] = []
+        stats = calibration_stats_for_post_config(config_item, score_summary)
+        with temporary_time_routing(
+            alg,
+            routing_mode=str(config_item["routing_mode"]),
+            gamma=float(config_item["gamma"]) if config_item.get("gamma") is not None else None,
+            topk=int(config_item.get("topk") or 0),
+            score_norm=str(config_item["score_norm"]),
+            relative_threshold=float(config_item["relative_threshold"]) if config_item.get("relative_threshold") is not None else None,
+            mixing_mode=str(config_item["mixing_mode"]),
+            calibration_mode=str(config_item["calibration_mode"]),
+            calibration_beta=float(config_item.get("beta") or 0.0),
+            max_selected_experts=config_item.get("max_selected_experts"),
+            score_pool=str(config_item["score_pool"]),
+            calibration_stats=stats,
+        ):
+            for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+                row = evaluate_sample(
+                    alg,
+                    sample,
+                    record,
+                    eval_pos,
+                    phase=f"post_retrain_{config_item['config_id']}_eval_{eval_pos}",
+                    expected_expert=eval_pos,
+                    routing_debug_path=debug_path,
+                    eval_routing_mode=str(config_item["config_id"]),
+                    extra_fields={
+                        "post_retrain_calibration": True,
+                        "calibration_config_id": config_item["config_id"],
+                        "calibration_mode": config_item["calibration_mode"],
+                        "score_pool": config_item["score_pool"],
+                        "max_selected_experts": config_item.get("max_selected_experts"),
+                        "calibration_beta": config_item.get("beta"),
+                    },
+                    base_cache=base_cache[eval_pos],
+                )
+                eval_rows.append(row)
+                per_record_rows.append(per_record_post_row(config_item, row, score_matrices))
+        summary = summarize_post_retrain_config(config_item, eval_rows)
+        grid_rows.append(summary)
+        confusion_matrices[str(config_item["config_id"])] = {
+            "config": {
+                key: config_item.get(key)
+                for key in (
+                    "score_norm",
+                    "calibration_mode",
+                    "score_pool",
+                    "routing_mode",
+                    "gamma",
+                    "relative_threshold",
+                    "beta",
+                    "topk",
+                    "max_selected_experts",
+                    "mixing_mode",
+                )
+            },
+            "matrix": summary.get("confusion_matrix"),
+        }
+
+    best = choose_post_retrain_best(grid_rows)
+    diagnosis, recommendation = diagnose_post_retrain_calibration(grid_rows, best)
+    previous = previous_score_norm_best(out_dir)
+    best_payload = {
+        **best,
+        "diagnosis": diagnosis,
+        "recommendation": recommendation,
+        "loaded_repository_path": str(repo_path),
+        "command": command,
+        "gpu_status_at_start": gpu_status,
+        "record_ids": [record_id(record, idx) for idx, record in enumerate(records)],
+        "num_grid_configs": len(grid_rows),
+        "previous_score_norm_best": previous,
+        "answer_mean_evaluated": False,
+    }
+    write_loss_trace(out_dir / "post_retrain_calibration_grid.csv", grid_rows)
+    write_loss_trace(out_dir / "post_retrain_per_record.csv", per_record_rows)
+    write_json(out_dir / "post_retrain_confusion_matrices.json", confusion_matrices)
+    write_json(out_dir / "post_retrain_calibration_best.json", best_payload)
+    report_path = write_post_retrain_calibration_report(
+        out_dir,
+        args,
+        repo_path,
+        command,
+        gpu_status,
+        score_summary,
+        grid_rows,
+        best,
+        diagnosis,
+        recommendation,
+        previous,
+        confusion_matrices,
+    )
+    payload = {
+        "loaded_repository_path": str(repo_path),
+        "num_grid_configs": len(grid_rows),
+        "num_per_record_rows": len(per_record_rows),
+        "best": best_payload,
+        "report_path": str(report_path),
+    }
+    print(json.dumps(to_jsonable(payload), indent=2, sort_keys=True))
+    return payload
 
 
 def score_norm_retrain_eval_configs() -> List[Dict[str, Any]]:
@@ -3240,7 +4073,16 @@ def main() -> None:
 
     model = get_model(config).to(device).eval()
     samples = [make_sample(model, record, image_root) for record in records]
-    if args.time_routing_calibration and args.eval_only:
+    if args.time_post_retrain_calibration and args.eval_only:
+        if repo_path is None:
+            raise RuntimeError("--time-post-retrain-calibration requires --time-load-repository PATH.")
+        alg = TIMEEdit(model, config, lambda: None).to(device)
+        try:
+            run_post_retrain_calibration(args, config, dataset_path, records, samples, alg, args.out_dir, repo_path)
+        finally:
+            alg.remove_hook()
+            del alg
+    elif args.time_routing_calibration and args.eval_only:
         if repo_path is None:
             raise RuntimeError("--time-routing-calibration requires --time-load-repository PATH.")
         alg = TIMEEdit(model, config, lambda: None).to(device)

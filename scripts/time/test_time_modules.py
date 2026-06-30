@@ -165,6 +165,35 @@ def test_score_variants_and_relative_threshold() -> None:
         raise AssertionError(f"Relative threshold should keep only the dominant expert, got {selected}.")
 
 
+def test_post_retrain_calibration_controls() -> None:
+    repo = make_repo(hidden_size=16, rank=1, num_experts=3)
+    repo.activation = "identity"
+    repo.gamma = -1.0
+    for expert in repo.experts:
+        for param in expert.parameters():
+            param.data.zero_()
+        expert.V_in.data[0, 0] = 1.0
+        expert.U_out.data[0, 0] = 1.0
+        expert.V_out.data[0, 0] = 1.0
+    for idx, value in enumerate((3.0, 2.0, 1.0)):
+        repo.experts[idx].U_in.data[0, 0] = value
+
+    x = torch.zeros(1, 2, 16)
+    x[:, :, 0] = 1.0
+    capped = TIMECPResidual(repo, routing_mode="threshold", max_selected_experts=2, score_pool="mean", layer_norm=False)
+    _residual, debug = capped(x, return_debug=True)
+    selected = debug.selected[0, 0].tolist()
+    if selected != [True, True, False]:
+        raise AssertionError(f"Max-selected cap should keep the top two experts, got {selected}.")
+
+    calibrated = TIMECPResidual(repo, routing_mode="topk", topk=1, score_norm="none", calibration_mode="zscore_neg", score_pool="mean", layer_norm=False)
+    calibrated.calibration_stats = {"mu_neg": [2.9, 0.0, 0.0], "std_neg": [0.1, 1.0, 1.0]}
+    _residual, debug = calibrated(x, return_debug=True)
+    top = int(debug.scores[0, 0].argmax().item())
+    if top != 1:
+        raise AssertionError(f"zscore_neg calibration should rerank top expert to 1, got {top}.")
+
+
 def test_gradient_isolation() -> None:
     torch.manual_seed(3)
     base = torch.nn.Linear(16, 16)
@@ -213,6 +242,7 @@ def main() -> None:
         test_save_load,
         test_routing_synthetic,
         test_score_variants_and_relative_threshold,
+        test_post_retrain_calibration_controls,
         test_gradient_isolation,
         test_no_dense_tensor_saved,
     ]

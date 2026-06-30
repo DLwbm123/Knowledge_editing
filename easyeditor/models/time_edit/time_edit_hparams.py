@@ -96,6 +96,10 @@ class TIMEEditMultimodalHparams(HyperParams):
     time_align_score_norm: str = "none"
     time_relative_threshold: Optional[float] = None
     time_mixing_mode: str = "softmax"
+    time_max_selected_experts: Optional[int] = None
+    time_calibration_mode: str = "none"
+    time_calibration_beta: float = 0.0
+    time_score_pool: str = "token"
     time_anti_collapse_loss: bool = False
     time_lambda_anti_collapse: float = 0.0
     time_anti_collapse_margin: float = 0.05

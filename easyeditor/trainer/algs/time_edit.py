@@ -83,6 +83,10 @@ class TIMEEdit(EditableModel):
             score_norm=str(_cfg(self.config, "time_score_norm", "none")),
             relative_threshold=_cfg(self.config, "time_relative_threshold", None),
             mixing_mode=str(_cfg(self.config, "time_mixing_mode", "softmax")),
+            calibration_mode=str(_cfg(self.config, "time_calibration_mode", "none")),
+            calibration_beta=float(_cfg(self.config, "time_calibration_beta", 0.0)),
+            max_selected_experts=_cfg(self.config, "time_max_selected_experts", None),
+            score_pool=str(_cfg(self.config, "time_score_pool", "token")),
         )
         self._optimizer_anchor = nn.Parameter(torch.zeros(1))
         self._time_context: Optional[TIMEInterventionContext] = None
@@ -270,6 +274,10 @@ class TIMEEdit(EditableModel):
             "score_norm": str(self.time_residual.score_norm),
             "relative_threshold": self.time_residual.relative_threshold,
             "mixing_mode": str(self.time_residual.mixing_mode),
+            "calibration_mode": str(self.time_residual.calibration_mode),
+            "calibration_beta": float(self.time_residual.calibration_beta),
+            "max_selected_experts": self.time_residual.max_selected_experts,
+            "score_pool": str(self.time_residual.score_pool),
             "residual_sign": str(self.time_residual.residual_sign),
             "expert_gain": float(self.time_residual.expert_gain),
             "force_expert_ids": list(context.force_expert_ids),
@@ -596,6 +604,10 @@ class TIMEEdit(EditableModel):
             "score_norm": str(self.time_residual.score_norm),
             "relative_threshold": self.time_residual.relative_threshold,
             "mixing_mode": str(self.time_residual.mixing_mode),
+            "calibration_mode": str(self.time_residual.calibration_mode),
+            "calibration_beta": float(self.time_residual.calibration_beta),
+            "max_selected_experts": self.time_residual.max_selected_experts,
+            "score_pool": str(self.time_residual.score_pool),
             "residual_sign": str(self.time_residual.residual_sign),
             "expert_gain": float(self.time_residual.expert_gain),
         }
