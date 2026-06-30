@@ -895,6 +895,58 @@ def _routing_confusion(rows: List[Dict[str, Any]]) -> Dict[str, Dict[str, int]]:
     return confusion
 
 
+def _edit_count_word(num_edits: int) -> str:
+    return {5: "five", 10: "ten"}.get(int(num_edits), str(num_edits))
+
+
+def _nonseq_prefix(num_edits: int) -> str:
+    return f"time_{_edit_count_word(num_edits)}_nonseq" if int(num_edits) == 10 else "five_edit_nonseq"
+
+
+def _nonseq_report_name(num_edits: int) -> str:
+    return "TIME_10EDIT_NONSEQ_CALIBRATED_REPORT.md" if int(num_edits) == 10 else "TIME_5EDIT_NONSEQ_DIAGNOSTIC_REPORT.md"
+
+
+def _sequential_prefix(num_edits: int) -> str:
+    return f"time_{_edit_count_word(num_edits)}_sequential" if int(num_edits) == 10 else "time_sequential"
+
+
+def _sequential_report_name(num_edits: int) -> str:
+    return "TIME_10EDIT_SEQUENTIAL_CALIBRATED_REPORT.md" if int(num_edits) == 10 else "TIME_5EDIT_SEQUENTIAL_CALIBRATED_REPORT.md"
+
+
+def _positive_gate(num_records: int) -> int:
+    return max(1, math.ceil(0.8 * int(num_records)))
+
+
+def _selected_gate(num_records: int) -> int:
+    return max(1, math.ceil(0.9 * int(num_records))) if int(num_records) >= 10 else _positive_gate(num_records)
+
+
+def _max_top_expert_gate(num_records: int) -> int:
+    return 4 if int(num_records) >= 10 else 3
+
+
+def _top_expert_counts(rows: List[Dict[str, Any]], field: str = "top_score_expert_id") -> Dict[str, int]:
+    counts: Dict[str, int] = {}
+    for row in rows:
+        value = row.get(field, row.get("top_expert_id"))
+        if value is None:
+            continue
+        key = str(value)
+        counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
+def _worst_nll_degradation(rows: List[Dict[str, Any]]) -> float:
+    degradations = [
+        max(0.0, -float(row.get("target_nll_delta")))
+        for row in rows
+        if row.get("target_nll_delta") is not None
+    ]
+    return max(degradations, default=0.0)
+
+
 def _recommended_threshold_gamma(rows: List[Dict[str, Any]], min_own: int = 3) -> Optional[float]:
     scores = sorted(
         [float(row["own_expert_score"]) for row in rows if row.get("own_expert_score") is not None],
@@ -913,20 +965,85 @@ def summarize_five_edit_nonseq(eval_rows: List[Dict[str, Any]], routing_modes: L
         top1_count = sum(1 for row in rows if row.get("routing_top1_correct"))
         selected_own_count = sum(1 for row in rows if row.get("selected_own_expert"))
         empty_count = sum(1 for row in rows if int(row.get("selected_expert_set_size") or 0) == 0)
+        top_counts = _top_expert_counts(rows)
         by_mode[mode] = {
             "num_records": len(rows),
             "mean_target_nll_improvement": _mean([row.get("target_nll_delta") for row in rows]),
             "positive_new_count": sum(1 for row in rows if (row.get("target_nll_delta") or 0.0) > 0.0),
             "mean_reference_delta": _mean([row.get("reference_delta") for row in rows]),
+            "mean_residual_norm": _mean([row.get("residual_norm") for row in rows]),
+            "mean_hidden_delta_norm": _mean([row.get("hidden_delta_norm") for row in rows]),
+            "worst_per_record_nll_degradation": _worst_nll_degradation(rows),
             "routing_top1_count": top1_count,
             "routing_top1_accuracy": float(top1_count / len(rows)) if rows else None,
             "threshold_selected_own_count": selected_own_count,
             "threshold_empty_selection_count": empty_count,
             "mean_selected_expert_set_size": _mean([float(value) for value in selected_sizes if value is not None]),
+            "max_selected_expert_set_size": max([float(value) for value in selected_sizes if value is not None], default=None),
+            "top_expert_counts": top_counts,
+            "max_top_expert_count": max(top_counts.values()) if top_counts else 0,
             "routing_confusion_matrix": _routing_confusion(rows),
             "recommended_gamma_for_at_least_3_own": _recommended_threshold_gamma(rows, min_own=3),
         }
     return by_mode
+
+
+def nonseq_calibrated_acceptance(mode_summaries: Dict[str, Dict[str, Any]], num_records: int) -> Dict[str, Any]:
+    calibrated = mode_summaries.get("calibrated") or {}
+    positive_gate = _positive_gate(num_records)
+    selected_gate = _selected_gate(num_records)
+    max_top_gate = _max_top_expert_gate(num_records)
+    mean_size = calibrated.get("mean_selected_expert_set_size")
+    max_size = calibrated.get("max_selected_expert_set_size")
+    result = {
+        "positive_new_gate": positive_gate,
+        "own_top1_gate": positive_gate,
+        "own_selected_gate": selected_gate,
+        "max_top_expert_gate": max_top_gate,
+        "positive_new_pass": int(calibrated.get("positive_new_count") or 0) >= positive_gate,
+        "own_top1_pass": int(calibrated.get("routing_top1_count") or 0) >= positive_gate,
+        "own_selected_pass": int(calibrated.get("threshold_selected_own_count") or 0) >= selected_gate,
+        "mean_selected_size_pass": mean_size is not None and float(mean_size) <= 2.0,
+        "max_selected_size_pass": max_size is not None and float(max_size) <= 3.0,
+        "empty_selection_pass": int(calibrated.get("threshold_empty_selection_count") or 0) <= 1,
+        "max_top_expert_pass": int(calibrated.get("max_top_expert_count") or 0) <= max_top_gate,
+        "locality_reported": calibrated.get("mean_reference_delta") is not None,
+    }
+    result["calibrated_nonseq_pass"] = all(
+        bool(result[key])
+        for key in (
+            "positive_new_pass",
+            "own_top1_pass",
+            "own_selected_pass",
+            "mean_selected_size_pass",
+            "max_selected_size_pass",
+            "empty_selection_pass",
+            "max_top_expert_pass",
+            "locality_reported",
+        )
+    )
+    return result
+
+
+def diagnose_ten_nonseq(mode_summaries: Dict[str, Dict[str, Any]], acceptance: Dict[str, Any]) -> str:
+    if acceptance.get("calibrated_nonseq_pass"):
+        return "10edit_nonseq_calibrated_pass"
+    force = mode_summaries.get("force_own") or {}
+    calibrated = mode_summaries.get("calibrated") or {}
+    labels: List[str] = []
+    if int(force.get("positive_new_count") or 0) < int(acceptance.get("positive_new_gate") or 8):
+        labels.append("expert_capacity_issue")
+    if not acceptance.get("own_top1_pass") or int(calibrated.get("max_top_expert_count") or 0) > int(acceptance.get("max_top_expert_gate") or 4):
+        labels.append("routing_collapse_issue")
+    if not acceptance.get("own_selected_pass"):
+        labels.append("routing_calibration_scale_limit")
+    if not acceptance.get("mean_selected_size_pass") or not acceptance.get("max_selected_size_pass"):
+        labels.append("routing_density_issue")
+    if not acceptance.get("empty_selection_pass"):
+        labels.append("threshold_unsuitable")
+    if (calibrated.get("mean_reference_delta") or 0.0) > 50.0:
+        labels.append("locality_damage_issue")
+    return "+".join(labels) if labels else "routing_calibration_scale_limit"
 
 
 def diagnose_five_edit_nonseq(mode_summaries: Dict[str, Dict[str, Any]]) -> str:
@@ -1021,19 +1138,28 @@ def write_five_edit_nonseq_outputs(
     summary: Dict[str, Any],
 ) -> Dict[str, Any]:
     routing_modes = parse_eval_routing_modes(args.eval_routing_modes)
+    num_records = len(records)
+    prefix = _nonseq_prefix(num_records)
+    report_name = _nonseq_report_name(num_records)
     mode_summaries = summarize_five_edit_nonseq(eval_rows, routing_modes)
-    diagnosis = diagnose_five_edit_nonseq(mode_summaries)
-    recommendation = recommendation_for_diagnosis(diagnosis)
+    calibrated_acceptance = nonseq_calibrated_acceptance(mode_summaries, num_records)
+    diagnosis = diagnose_ten_nonseq(mode_summaries, calibrated_acceptance) if num_records >= 10 else diagnose_five_edit_nonseq(mode_summaries)
+    recommendation = (
+        "proceed to 10-edit sequential gate" if calibrated_acceptance.get("calibrated_nonseq_pass") and num_records >= 10
+        else recommendation_for_diagnosis(diagnosis)
+    )
     record_ids = [record_id(record, idx) for idx, record in enumerate(records)]
     acceptance = {
-        "capacity_pass": int((mode_summaries.get("force_own") or {}).get("positive_new_count") or 0) >= 4,
-        "routing_pass": int((mode_summaries.get("topk") or {}).get("routing_top1_count") or 0) >= 3,
+        "capacity_pass": int((mode_summaries.get("force_own") or {}).get("positive_new_count") or 0) >= _positive_gate(num_records),
+        "routing_pass": bool(calibrated_acceptance.get("calibrated_nonseq_pass")) if "calibrated" in routing_modes else int((mode_summaries.get("topk") or {}).get("routing_top1_count") or 0) >= 3,
         "threshold_pass": int((mode_summaries.get("threshold") or {}).get("threshold_selected_own_count") or 0) >= 3,
-        "locality_reported": all(summary.get("mean_reference_delta") is not None for summary in mode_summaries.values()),
+        "locality_reported": all((mode_summaries.get(mode) or {}).get("mean_reference_delta") is not None for mode in routing_modes),
+        "calibrated": calibrated_acceptance,
     }
-    write_loss_trace(out_dir / "five_edit_nonseq_per_record.csv", eval_rows)
-    write_loss_trace(out_dir / "five_edit_nonseq_routing_scores.csv", _routing_score_rows(eval_rows))
-    write_loss_trace(out_dir / "five_edit_nonseq_confusion_matrix.csv", _confusion_csv_rows(mode_summaries))
+    write_loss_trace(out_dir / f"{prefix}_per_record.csv", eval_rows)
+    write_loss_trace(out_dir / f"{prefix}_routing_scores.csv", _routing_score_rows(eval_rows))
+    write_loss_trace(out_dir / f"{prefix}_confusion_matrix.csv", _confusion_csv_rows(mode_summaries))
+    write_json(out_dir / f"{prefix}_confusion_matrices.json", {mode: (mode_summaries.get(mode) or {}).get("routing_confusion_matrix") for mode in routing_modes})
     diagnostic = {
         "record_ids": record_ids,
         "eval_routing_modes": routing_modes,
@@ -1041,9 +1167,10 @@ def write_five_edit_nonseq_outputs(
         "diagnosis": diagnosis,
         "recommendation": recommendation,
         "acceptance": acceptance,
-        "report_path": str(out_dir / "TIME_5EDIT_NONSEQ_DIAGNOSTIC_REPORT.md"),
+        "report_path": str(out_dir / report_name),
     }
     summary.update(diagnostic)
+    write_json(out_dir / f"{prefix}_summary.json", diagnostic)
     write_five_edit_nonseq_report(out_dir, args, eval_rows, summary)
     return diagnostic
 
@@ -1090,9 +1217,12 @@ def _report_table(rows: List[Dict[str, Any]], mode: str) -> List[str]:
 
 def write_five_edit_nonseq_report(out_dir: Path, args: argparse.Namespace, eval_rows: List[Dict[str, Any]], summary: Dict[str, Any]) -> Path:
     mode_summaries = summary.get("routing_mode_summaries") or {}
+    num_records = len(summary.get("record_ids") or [])
+    prefix = _nonseq_prefix(num_records)
+    report_name = _nonseq_report_name(num_records)
     command = _run_command_for(out_dir) or current_command_line()
     lines = [
-        "# TIME 5-Edit Nonseq Diagnostic Report",
+        f"# TIME {num_records}-Edit Nonseq Calibrated Report",
         "",
         "## Files Changed",
         "- `scripts/time/run_time_medmkeb_smoke.py`",
@@ -1110,29 +1240,35 @@ def write_five_edit_nonseq_report(out_dir: Path, args: argparse.Namespace, eval_
         "",
     ]
     lines.extend(_report_table(eval_rows, "force_own"))
+    if "calibrated" in (summary.get("eval_routing_modes") or []):
+        lines.extend(_report_table(eval_rows, "calibrated"))
     lines.extend(_report_table(eval_rows, "topk"))
     lines.extend(_report_table(eval_rows, "threshold"))
     lines.extend(
         [
             "## Aggregate Metrics",
-            "| routing mode | mean NLL improvement | positive_new | mean reference delta | top1 own | selected own | empty selections | mean selected size | gamma recommendation |",
-            "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+            "| routing mode | mean NLL improvement | positive_new | mean reference delta | residual | hidden delta | top1 own | selected own | empty | mean size | max size | max top | worst degradation |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
         ]
     )
     for mode in summary.get("eval_routing_modes", []):
         metrics = mode_summaries.get(mode) or {}
         lines.append(
-            "| {mode} | {mean_delta} | {positive}/{num} | {ref} | {top1}/{num} | {selected_own}/{num} | {empty} | {selected_size} | {gamma_rec} |".format(
+            "| {mode} | {mean_delta} | {positive}/{num} | {ref} | {residual} | {hidden} | {top1}/{num} | {selected_own}/{num} | {empty} | {selected_size} | {max_size} | {max_top} | {worst} |".format(
                 mode=mode,
                 mean_delta=_fmt(metrics.get("mean_target_nll_improvement")),
                 positive=metrics.get("positive_new_count"),
                 num=metrics.get("num_records"),
                 ref=_fmt(metrics.get("mean_reference_delta")),
+                residual=_fmt(metrics.get("mean_residual_norm")),
+                hidden=_fmt(metrics.get("mean_hidden_delta_norm")),
                 top1=metrics.get("routing_top1_count"),
                 selected_own=metrics.get("threshold_selected_own_count"),
                 empty=metrics.get("threshold_empty_selection_count"),
                 selected_size=_fmt(metrics.get("mean_selected_expert_set_size")),
-                gamma_rec=_fmt(metrics.get("recommended_gamma_for_at_least_3_own")),
+                max_size=_fmt(metrics.get("max_selected_expert_set_size")),
+                max_top=metrics.get("max_top_expert_count"),
+                worst=_fmt(metrics.get("worst_per_record_nll_degradation")),
             )
         )
     lines.extend(["", "## Routing Confusion Matrix"])
@@ -1146,6 +1282,18 @@ def write_five_edit_nonseq_report(out_dir: Path, args: argparse.Namespace, eval_
             f"- Routing pass: {summary.get('acceptance', {}).get('routing_pass')}.",
             f"- Threshold pass: {summary.get('acceptance', {}).get('threshold_pass')}.",
             f"- Locality reported: {summary.get('acceptance', {}).get('locality_reported')}.",
+            f"- Calibrated acceptance: `{json.dumps((summary.get('acceptance') or {}).get('calibrated'), sort_keys=True)}`.",
+            "",
+            "## Output Files",
+            "- `expert_repository.pt`",
+            "- `loss_trace.csv`",
+            f"- `{prefix}_loss_trace.csv`" if num_records == 10 else "- `loss_trace.csv`",
+            f"- `{prefix}_per_record.csv`",
+            f"- `{prefix}_routing_scores.csv`",
+            f"- `{prefix}_confusion_matrices.json`",
+            f"- `{prefix}_routing_debug.jsonl`",
+            f"- `{prefix}_summary.json`",
+            f"- `{report_name}`",
             "",
             "## Diagnosis",
             f"- Label: `{summary.get('diagnosis')}`.",
@@ -1155,7 +1303,7 @@ def write_five_edit_nonseq_report(out_dir: Path, args: argparse.Namespace, eval_
             "",
         ]
     )
-    path = out_dir / "TIME_5EDIT_NONSEQ_DIAGNOSTIC_REPORT.md"
+    path = out_dir / report_name
     path.write_text("\n".join(lines))
     return path
 
@@ -1250,7 +1398,9 @@ def run_smoke(
 ) -> Dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     sequential_eval_modes = parse_eval_routing_modes(args.eval_routing_modes) if args.mode == "sequential" and args.eval_routing_modes else []
-    routing_debug_path = out_dir / ("time_sequential_routing_debug.jsonl" if sequential_eval_modes else "routing_debug.jsonl")
+    routing_debug_path = out_dir / (
+        f"{_sequential_prefix(args.max_edits)}_routing_debug.jsonl" if sequential_eval_modes else "routing_debug.jsonl"
+    )
     if routing_debug_path.exists():
         routing_debug_path.unlink()
     write_json(
@@ -1373,6 +1523,8 @@ def run_smoke(
         sequential_retention_summary = write_time_sequential_outputs(out_dir, args, records, sequential_all_rows, loss_rows)
     if args.mode == "nonseq":
         write_loss_trace(out_dir / "time_score_norm_retrain_loss_trace.csv", loss_rows)
+        if len(records) == 10:
+            write_loss_trace(out_dir / "time_ten_nonseq_loss_trace.csv", loss_rows)
     if anti_collapse_rows:
         write_loss_trace(out_dir / "time_anti_collapse_trace.csv", anti_collapse_rows)
     if score_matrix_rows:
@@ -1398,9 +1550,9 @@ def run_smoke(
     if args.mode == "one":
         summary_path = out_dir / "one_edit_summary.json"
     elif args.mode == "nonseq":
-        summary_path = out_dir / "five_edit_nonseq_summary.json"
+        summary_path = out_dir / ("time_ten_nonseq_summary.json" if len(records) == 10 else "five_edit_nonseq_summary.json")
     else:
-        summary_path = out_dir / "five_edit_seq_summary.json"
+        summary_path = out_dir / ("time_ten_sequential_summary.json" if len(records) == 10 else "five_edit_seq_summary.json")
     if args.mode == "nonseq" and args.eval_routing_modes:
         write_five_edit_nonseq_outputs(out_dir, args, records, eval_rows, summary)
     write_json(summary_path, summary)
@@ -1522,41 +1674,43 @@ def evaluate_nonseq_routing_modes(
 ) -> List[Dict[str, Any]]:
     modes = parse_eval_routing_modes(args.eval_routing_modes)
     rows: List[Dict[str, Any]] = []
-    routing_debug_path = out_dir / "five_edit_nonseq_routing_debug.jsonl"
+    routing_debug_path = out_dir / f"{_nonseq_prefix(len(records))}_routing_debug.jsonl"
     if routing_debug_path.exists():
         routing_debug_path.unlink()
-    for mode in modes:
-        if mode == "force_own":
-            context = temporary_time_routing(alg, routing_mode="threshold", gamma=1.0e30, topk=0)
-        elif mode == "topk":
-            context = temporary_time_routing(alg, routing_mode="topk", gamma=float(args.gamma), topk=max(1, int(args.time_topk or 1)))
-        elif mode == "threshold":
-            context = temporary_time_routing(alg, routing_mode="threshold", gamma=float(args.gamma), topk=0)
-        elif mode == "relative":
-            context = temporary_time_routing(
-                alg,
-                routing_mode="relative_threshold",
-                gamma=float(args.gamma),
-                topk=0,
-                relative_threshold=float(args.time_relative_threshold if args.time_relative_threshold is not None else 0.9),
-            )
-        else:
-            raise ValueError(f"Unsupported eval routing mode: {mode}")
+    ordered_modes = list(modes)
+    if "calibrated" in ordered_modes:
+        ordered_modes = [mode for mode in ordered_modes if mode != "force_own"]
+        ordered_modes.insert(0, "force_own")
+    force_rows: List[Dict[str, Any]] = []
+    calibration_stats: Dict[str, List[float]] = {}
+    for mode in ordered_modes:
+        if mode == "calibrated":
+            calibration_stats = _sequential_calibration_stats(force_rows, alg.repository.num_experts)
+        context = _sequential_eval_context(args, alg, mode, calibration_stats)
         with context:
+            mode_rows: List[Dict[str, Any]] = []
             for eval_pos, (record, sample) in enumerate(zip(records, samples)):
-                rows.append(
-                    evaluate_sample(
-                        alg,
-                        sample,
-                        record,
-                        eval_pos,
-                        phase=f"final_nonseq_{mode}_eval_{eval_pos}",
-                        expected_expert=eval_pos,
-                        routing_debug_path=routing_debug_path,
-                        eval_routing_mode=mode,
-                        force_expert_id=eval_pos if mode == "force_own" else None,
-                    )
+                row = evaluate_sample(
+                    alg,
+                    sample,
+                    record,
+                    eval_pos,
+                    phase=f"final_nonseq_{mode}_eval_{eval_pos}",
+                    expected_expert=eval_pos,
+                    routing_debug_path=routing_debug_path,
+                    eval_routing_mode=mode,
+                    force_expert_id=eval_pos if mode == "force_own" else None,
+                    extra_fields={
+                        "calibration_stats_source": "final_force_own_scores" if mode == "calibrated" else None,
+                        "calibration_mu_neg": calibration_stats.get("mu_neg") if mode == "calibrated" else None,
+                        "calibration_std_neg": calibration_stats.get("std_neg") if mode == "calibrated" else None,
+                    },
                 )
+                mode_rows.append(row)
+                if mode in modes:
+                    rows.append(row)
+            if mode == "force_own":
+                force_rows = mode_rows
     return rows
 
 
@@ -1832,6 +1986,11 @@ def summarize_time_sequential_retention(
             for row in mode_rows
             if row.get("immediate_improvement") is not None and row.get("retained_improvement") is not None
         ]
+        per_record_degradation = [
+            max(0.0, -float(row.get("retained_improvement")))
+            for row in mode_rows
+            if row.get("retained_improvement") is not None
+        ]
         top_routed_counts: Dict[str, int] = {}
         top_score_counts: Dict[str, int] = {}
         for row in mode_rows:
@@ -1855,6 +2014,13 @@ def summarize_time_sequential_retention(
             "mean_final_nll_improvement": _mean([row.get("retained_improvement") for row in mode_rows]),
             "mean_retention_ratio": _mean([row.get("retention_ratio") for row in mode_rows]),
             "worst_retention_drop": max(retention_drops, default=None),
+            "worst_per_record_nll_degradation": max(per_record_degradation, default=0.0),
+            "catastrophic_forgetting_count": sum(
+                1
+                for row in mode_rows
+                if (_float_or_none(row.get("immediate_improvement")) or 0.0) > 0.0
+                and (_float_or_none(row.get("retained_improvement")) or 0.0) < 0.0
+            ),
             "mean_locality_reference_delta": _mean([row.get("locality_reference_delta") for row in mode_rows]),
             "locality_reference_delta": _mean([row.get("locality_reference_delta") for row in mode_rows]),
             "mean_selected_set_size": _mean(selected_sizes),
@@ -1869,27 +2035,45 @@ def summarize_time_sequential_retention(
         mode_summary["retained_positive_count"] = retained_positive
         max_selected = mode_summary["max_selected_set_size"]
         max_selected_pass = max_selected is not None and float(max_selected) <= 3.0
-        mode_summary["capacity_pass"] = bool(mode == "force_own" and retained_positive >= 4)
+        positive_gate = _positive_gate(final_step)
+        selected_gate = _selected_gate(final_step)
+        max_top_gate = _max_top_expert_gate(final_step)
+        mode_summary["capacity_pass"] = bool(mode == "force_own" and retained_positive >= positive_gate)
         mode_summary["sparse_routing_pass"] = bool(
             mode != "force_own"
-            and retained_positive >= 4
-            and int(mode_summary["own_in_selected_set_count"]) >= 4
+            and retained_positive >= positive_gate
+            and int(mode_summary["own_top1_count"]) >= positive_gate
+            and int(mode_summary["own_in_selected_set_count"]) >= selected_gate
             and (mode_summary["mean_selected_set_size"] is not None and float(mode_summary["mean_selected_set_size"]) <= 2.0)
             and max_selected_pass
             and int(mode_summary["empty_selection_count"]) <= 1
-            and int(mode_summary["max_top_score_count"]) <= 3
+            and int(mode_summary["max_top_score_count"]) <= max_top_gate
+            and int(mode_summary["catastrophic_forgetting_count"]) == 0
+            and mode_summary["mean_locality_reference_delta"] is not None
         )
         mode_summary["sparse_routing_acceptance"] = {
-            "positive_new_ge_4_of_5": retained_positive >= 4,
-            "own_selected_ge_4_of_5": int(mode_summary["own_in_selected_set_count"]) >= 4,
+            "positive_new_gate": positive_gate,
+            "retained_positive_gate": positive_gate,
+            "own_top1_gate": positive_gate,
+            "own_selected_gate": selected_gate,
+            "max_top_expert_gate": max_top_gate,
+            "positive_new_pass": retained_positive >= positive_gate,
+            "retained_positive_pass": retained_positive >= positive_gate,
+            "own_top1_pass": int(mode_summary["own_top1_count"]) >= positive_gate,
+            "own_selected_pass": int(mode_summary["own_in_selected_set_count"]) >= selected_gate,
             "mean_selected_set_size_le_2": (
                 mode_summary["mean_selected_set_size"] is not None and float(mode_summary["mean_selected_set_size"]) <= 2.0
             ),
             "max_selected_set_size_le_3": max_selected_pass,
             "empty_selection_count_le_1": int(mode_summary["empty_selection_count"]) <= 1,
-            "max_top_expert_count_le_3": int(mode_summary["max_top_score_count"]) <= 3,
+            "max_top_expert_count_pass": int(mode_summary["max_top_score_count"]) <= max_top_gate,
+            "no_catastrophic_forgetting": int(mode_summary["catastrophic_forgetting_count"]) == 0,
+            "locality_reported": mode_summary["mean_locality_reference_delta"] is not None,
         }
-        mode_summary["retention_pass"] = bool(retained_positive >= 4 and int(mode_summary["forgotten_count"]) <= 1)
+        mode_summary["retention_pass"] = bool(
+            retained_positive >= positive_gate
+            and int(mode_summary["catastrophic_forgetting_count"]) == 0
+        )
         summary["by_mode"][mode] = mode_summary
     force_pass = bool((summary["by_mode"].get("force_own") or {}).get("capacity_pass"))
     calibrated = summary["by_mode"].get("calibrated") or {}
@@ -1910,6 +2094,7 @@ def write_time_sequential_outputs(
     loss_rows: List[Dict[str, Any]],
 ) -> Dict[str, Any]:
     modes = parse_eval_routing_modes(args.eval_routing_modes)
+    prefix = _sequential_prefix(len(records))
     final_rows = _sequential_final_rows(sequential_rows, len(records))
     score_rows = _sequential_routing_score_rows(sequential_rows)
     confusion = {
@@ -1925,12 +2110,12 @@ def write_time_sequential_outputs(
     for mode in modes:
         confusion["final"][mode] = _routing_confusion([row for row in final_rows if row.get("eval_routing_mode") == mode])
     retention_summary = summarize_time_sequential_retention(sequential_rows, records, modes, args)
-    write_loss_trace(out_dir / "time_sequential_loss_trace.csv", loss_rows)
-    write_loss_trace(out_dir / "time_sequential_after_each_edit.csv", sequential_rows)
-    write_loss_trace(out_dir / "time_sequential_per_record.csv", final_rows)
-    write_loss_trace(out_dir / "time_sequential_routing_scores.csv", score_rows)
-    write_json(out_dir / "time_sequential_confusion_matrices.json", confusion)
-    write_json(out_dir / "time_sequential_retention_summary.json", retention_summary)
+    write_loss_trace(out_dir / f"{prefix}_loss_trace.csv", loss_rows)
+    write_loss_trace(out_dir / f"{prefix}_after_each_edit.csv", sequential_rows)
+    write_loss_trace(out_dir / f"{prefix}_per_record.csv", final_rows)
+    write_loss_trace(out_dir / f"{prefix}_routing_scores.csv", score_rows)
+    write_json(out_dir / f"{prefix}_confusion_matrices.json", confusion)
+    write_json(out_dir / f"{prefix}_retention_summary.json", retention_summary)
     return retention_summary
 
 
@@ -1943,14 +2128,17 @@ def write_time_sequential_calibrated_report(
     by_mode = retention_summary.get("by_mode") or {}
     gate = retention_summary.get("gate") or {}
     config = retention_summary.get("calibrated_config") or {}
+    num_edits = int(retention_summary.get("num_edits") or args.max_edits)
+    prefix = _sequential_prefix(num_edits)
+    report_name = _sequential_report_name(num_edits)
     lines = [
-        "# TIME 5-Edit Sequential Calibrated Gate",
+        f"# TIME {num_edits}-Edit Sequential Calibrated Gate",
         "",
         "## Scope",
         "- Mode: sequential.",
         f"- Max edits: {retention_summary.get('num_edits')}.",
         f"- Eval routing modes: `{', '.join(retention_summary.get('eval_routing_modes') or [])}`.",
-        "- This run is bounded to the requested 5-edit gate; no 20-edit run or larger sweep is included.",
+        f"- This run is bounded to the requested {num_edits}-edit gate; no 20-edit run or larger sweep is included.",
         "",
         "## Calibrated Routing Config",
         f"- Score norm: `{config.get('score_norm')}`.",
@@ -1981,6 +2169,8 @@ def write_time_sequential_calibrated_report(
                 f"- Mean retained improvement: {row.get('mean_retained_improvement')}.",
                 f"- Mean retention ratio: {row.get('mean_retention_ratio')}.",
                 f"- Worst retention drop: {row.get('worst_retention_drop')}.",
+                f"- Worst per-record NLL degradation: {row.get('worst_per_record_nll_degradation')}.",
+                f"- Catastrophic forgetting count: {row.get('catastrophic_forgetting_count')}.",
                 f"- Mean locality/reference delta: {row.get('mean_locality_reference_delta')}.",
                 f"- Mean selected set size: {row.get('mean_selected_set_size')}.",
                 f"- Max selected set size: {row.get('max_selected_set_size')}.",
@@ -2000,15 +2190,15 @@ def write_time_sequential_calibrated_report(
             "## Output Files",
             "- `expert_repository.pt`",
             "- `loss_trace.csv`",
-            "- `time_sequential_loss_trace.csv`",
-            "- `time_sequential_after_each_edit.csv`",
-            "- `time_sequential_per_record.csv`",
-            "- `time_sequential_routing_scores.csv`",
-            "- `time_sequential_confusion_matrices.json`",
-            "- `time_sequential_routing_debug.jsonl`",
-            "- `time_sequential_retention_summary.json`",
-            "- `five_edit_seq_summary.json`",
-            "- `TIME_5EDIT_SEQUENTIAL_CALIBRATED_REPORT.md`",
+            f"- `{prefix}_loss_trace.csv`",
+            f"- `{prefix}_after_each_edit.csv`",
+            f"- `{prefix}_per_record.csv`",
+            f"- `{prefix}_routing_scores.csv`",
+            f"- `{prefix}_confusion_matrices.json`",
+            f"- `{prefix}_routing_debug.jsonl`",
+            f"- `{prefix}_retention_summary.json`",
+            f"- `{'time_ten_sequential_summary.json' if num_edits == 10 else 'five_edit_seq_summary.json'}`",
+            f"- `{report_name}`",
             "",
             "## Repository",
             f"- Experts saved: {summary.get('num_experts')}.",
@@ -2019,7 +2209,7 @@ def write_time_sequential_calibrated_report(
             "",
         ]
     )
-    path = out_dir / "TIME_5EDIT_SEQUENTIAL_CALIBRATED_REPORT.md"
+    path = out_dir / report_name
     path.write_text("\n".join(lines))
     return path
 
@@ -4630,11 +4820,11 @@ def main() -> None:
                 report_path = args.out_dir / "TIME_5EDIT_SCORE_NORM_RETRAIN_REPORT.md"
                 report_key = "score_norm_retrain_report"
             elif args.mode == "nonseq" and args.eval_routing_modes:
-                report_path = args.out_dir / "TIME_5EDIT_NONSEQ_DIAGNOSTIC_REPORT.md"
-                report_key = "five_edit_nonseq_report"
+                report_path = args.out_dir / _nonseq_report_name(args.max_edits)
+                report_key = "ten_edit_nonseq_report" if args.max_edits == 10 else "five_edit_nonseq_report"
             elif args.mode == "sequential" and args.eval_routing_modes:
-                report_path = args.out_dir / "TIME_5EDIT_SEQUENTIAL_CALIBRATED_REPORT.md"
-                report_key = "five_edit_sequential_report"
+                report_path = args.out_dir / _sequential_report_name(args.max_edits)
+                report_key = "ten_edit_sequential_report" if args.max_edits == 10 else "five_edit_sequential_report"
             else:
                 report_path = write_calibrated_report(args.out_dir)
                 report_key = "calibrated_report"
