@@ -89,6 +89,9 @@ class TIMEEdit(EditableModel):
         self._last_debug: Optional[TIMEForwardDebug] = None
         self._last_token_mask: Optional[torch.Tensor] = None
         self._last_info: Dict[str, float] = {}
+        self._time_anti_collapse_batches: List[Dict[str, Any]] = []
+        self._time_anti_collapse_expected_ids: List[int] = []
+        self._last_anti_collapse_trace: Dict[str, Any] = {}
         self.global_step = 0
         self.current_expert_index: Optional[int] = None
         self._install_hook()
@@ -354,10 +357,91 @@ class TIMEEdit(EditableModel):
         if max_neg > 0:
             previous_ids = previous_ids[-max_neg:]
         ids = [int(current_index)] + previous_ids
-        pooled = self._pooled_scores(self._last_debug.scores, self._last_token_mask)
+        score_norm = str(_cfg(self.config, "time_align_score_norm", _cfg(self.config, "time_score_norm", "none")))
+        pooled = self._pooled_debug_scores(self._last_debug, self._last_token_mask, score_norm)
         logits = pooled[:, ids] / max(float(_cfg(self.config, "time_tau", 1.0)), 1.0e-8)
         targets = torch.zeros(logits.shape[0], device=logits.device, dtype=torch.long)
         return F.cross_entropy(logits, targets)
+
+    def _pooled_debug_scores(self, debug: TIMEForwardDebug, mask: Optional[torch.Tensor], score_norm: str) -> torch.Tensor:
+        score_norm = str(score_norm or "none")
+        if score_norm == str(self.time_residual.score_norm):
+            scores = debug.scores
+        else:
+            scores = debug.score_variants.get(score_norm)
+            if scores is None:
+                scores = debug.scores
+        return self._pooled_scores(scores, mask)
+
+    def _factor_norm_regularizer(self) -> torch.Tensor:
+        weight = float(_cfg(self.config, "time_lambda_factor_norm_reg", 0.0) or 0.0)
+        if weight == 0.0 or self.current_expert_index is None or self.repository.num_experts == 0:
+            return torch.tensor(0.0, device=next(self.parameters()).device)
+        expert = self.repository.experts[int(self.current_expert_index)]
+        reg = torch.tensor(0.0, device=next(self.parameters()).device)
+        for name in ("U_in", "V_in", "U_out", "V_out"):
+            value = getattr(expert, name)
+            reg = reg + value.float().pow(2).mean()
+        return reg
+
+    def _anti_collapse_loss(self, current_index: Optional[int]) -> torch.Tensor:
+        self._last_anti_collapse_trace = {
+            "active": bool(_cfg(self.config, "time_anti_collapse_loss", False)),
+            "num_previous_batches": float(len(self._time_anti_collapse_batches)),
+            "current_scores": [],
+            "previous_own_scores": [],
+        }
+        if (
+            not bool(_cfg(self.config, "time_anti_collapse_loss", False))
+            or current_index is None
+            or not self._time_anti_collapse_batches
+        ):
+            return torch.tensor(0.0, device=next(self.parameters()).device)
+        score_norm = str(_cfg(self.config, "time_anti_collapse_score_norm", "factor_z"))
+        margin = float(_cfg(self.config, "time_anti_collapse_margin", 0.05))
+        losses: List[torch.Tensor] = []
+        current_scores_trace: List[float] = []
+        previous_scores_trace: List[float] = []
+        current_idx = int(current_index)
+        old_debug = self._last_debug
+        old_mask = self._last_token_mask
+        for prev_idx, prev_batch in zip(self._time_anti_collapse_expected_ids, self._time_anti_collapse_batches):
+            outputs = self._forward_with_time(
+                prev_batch,
+                call_label="anti_collapse_prev",
+                force_current=True,
+                debug_events=None,
+            )
+            del outputs
+            if self._last_debug is None:
+                continue
+            pooled = self._pooled_debug_scores(self._last_debug, self._last_token_mask, score_norm)
+            if pooled.numel() == 0 or current_idx >= pooled.shape[-1]:
+                continue
+            current_score = pooled[:, current_idx]
+            if 0 <= int(prev_idx) < pooled.shape[-1]:
+                previous_own = pooled[:, int(prev_idx)].detach()
+                losses.append(F.relu(current_score - previous_own + margin).mean())
+                previous_scores_trace.append(float(previous_own.detach().mean().cpu()))
+            else:
+                losses.append(F.relu(current_score - margin).mean())
+                previous_scores_trace.append(float("nan"))
+            current_scores_trace.append(float(current_score.detach().mean().cpu()))
+        self._last_debug = old_debug
+        self._last_token_mask = old_mask
+        self._last_anti_collapse_trace = {
+            "active": True,
+            "score_norm": score_norm,
+            "margin": margin,
+            "num_previous_batches": float(len(self._time_anti_collapse_batches)),
+            "current_scores": current_scores_trace,
+            "previous_own_scores": previous_scores_trace,
+            "mean_current_score": float(sum(current_scores_trace) / len(current_scores_trace)) if current_scores_trace else 0.0,
+            "mean_previous_own_score": float(sum(previous_scores_trace) / len(previous_scores_trace)) if previous_scores_trace else 0.0,
+        }
+        if not losses:
+            return torch.tensor(0.0, device=next(self.parameters()).device)
+        return torch.stack(losses).mean()
 
     def edit(self, batch, condition=None, detach_history=False):
         record_id = "unknown"
@@ -399,11 +483,15 @@ class TIMEEdit(EditableModel):
                 l_loc = self._reference_kl(reference_batch)
 
             l_align = self._alignment_loss(self.current_expert_index)
+            l_anti = self._anti_collapse_loss(self.current_expert_index)
+            l_factor_norm = self._factor_norm_regularizer()
             l_total = (
                 float(_cfg(self.config, "time_lambda_rel", 1.0)) * l_rel
                 + float(_cfg(self.config, "time_lambda_gen", 1.0)) * l_gen
                 + float(_cfg(self.config, "time_lambda_loc", 1.0)) * l_loc
                 + float(_cfg(self.config, "time_lambda_align", 0.5)) * l_align
+                + float(_cfg(self.config, "time_lambda_anti_collapse", 0.0)) * l_anti
+                + float(_cfg(self.config, "time_lambda_factor_norm_reg", 0.0)) * l_factor_norm
             )
             l_total = l_total + sum((param.sum() * 0.0 for param in self.outer_parameters()), l_total * 0.0)
 
@@ -421,6 +509,8 @@ class TIMEEdit(EditableModel):
             "loss/time_gen": _to_float(l_gen),
             "loss/time_loc": _to_float(l_loc),
             "loss/time_align": _to_float(l_align),
+            "loss/time_anti_collapse": _to_float(l_anti),
+            "loss/time_factor_norm_reg": _to_float(l_factor_norm),
             "loss/total": _to_float(l_total),
             "loss/edit": _to_float(l_rel),
             "loss/loc": _to_float(l_loc),
@@ -435,6 +525,12 @@ class TIMEEdit(EditableModel):
             "time/force_current_train": float(force_current),
             "time/routing_mode_is_force_current": float(str(self.time_residual.routing_mode) == "force_current"),
             "time/score_norm_is_none": float(str(self.time_residual.score_norm) == "none"),
+            "time/score_norm": str(self.time_residual.score_norm),
+            "time/align_score_norm": str(_cfg(self.config, "time_align_score_norm", _cfg(self.config, "time_score_norm", "none"))),
+            "time/anti_collapse_active": float(bool(_cfg(self.config, "time_anti_collapse_loss", False))),
+            "time/anti_collapse_prev_batches": float((self._last_anti_collapse_trace or {}).get("num_previous_batches", 0.0) or 0.0),
+            "time/anti_collapse_current_prev_mean": float((self._last_anti_collapse_trace or {}).get("mean_current_score", 0.0) or 0.0),
+            "time/anti_collapse_prev_own_mean": float((self._last_anti_collapse_trace or {}).get("mean_previous_own_score", 0.0) or 0.0),
             "time/residual_sign_is_minus": float(str(self.time_residual.residual_sign) == "minus"),
             "time/expert_gain": float(self.time_residual.expert_gain),
             "time/reliability_only": float(bool(_cfg(self.config, "time_reliability_only", False))),

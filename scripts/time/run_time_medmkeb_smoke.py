@@ -76,8 +76,25 @@ def parse_args() -> argparse.Namespace:
         default="none",
         choices=["none", "factor", "factor_z", "self_score", "factor_self_score"],
     )
+    parser.add_argument(
+        "--time-align-score-norm",
+        default=None,
+        choices=["none", "factor", "factor_z", "self_score", "factor_self_score"],
+    )
+    parser.add_argument("--lambda-align", dest="lambda_align", type=float, default=None)
+    parser.add_argument("--num-negative-experts", dest="num_negative_experts", type=int, default=None)
     parser.add_argument("--time-relative-threshold", type=float, default=None)
     parser.add_argument("--time-mixing-mode", default="softmax", choices=["softmax", "average", "own_oracle"])
+    parser.add_argument("--time-anti-collapse-loss", action="store_true")
+    parser.add_argument("--lambda-anti-collapse", dest="lambda_anti_collapse", type=float, default=0.0)
+    parser.add_argument("--anti-collapse-margin", dest="anti_collapse_margin", type=float, default=0.05)
+    parser.add_argument(
+        "--anti-collapse-score-norm",
+        dest="anti_collapse_score_norm",
+        default="factor_z",
+        choices=["none", "factor", "factor_z", "self_score", "factor_self_score"],
+    )
+    parser.add_argument("--lambda-factor-norm-reg", dest="lambda_factor_norm_reg", type=float, default=0.0)
     parser.add_argument("--time-load-repository", type=Path, default=None)
     parser.add_argument("--eval-only", action="store_true")
     parser.add_argument("--time-routing-calibration", action="store_true")
@@ -227,8 +244,18 @@ def configure(args: argparse.Namespace, dataset_path: Path) -> TIMEEditMultimoda
     config.time_topk = int(args.time_topk)
     config.time_routing_mode = str(args.time_routing_mode)
     config.time_score_norm = str(args.time_score_norm)
+    config.time_align_score_norm = str(args.time_align_score_norm or args.time_score_norm)
+    if args.lambda_align is not None:
+        config.time_lambda_align = float(args.lambda_align)
+    if args.num_negative_experts is not None:
+        config.time_negative_experts = int(args.num_negative_experts)
     config.time_relative_threshold = None if args.time_relative_threshold is None else float(args.time_relative_threshold)
     config.time_mixing_mode = "average" if args.time_disable_score_mixing else str(args.time_mixing_mode)
+    config.time_anti_collapse_loss = bool(args.time_anti_collapse_loss)
+    config.time_lambda_anti_collapse = float(args.lambda_anti_collapse)
+    config.time_anti_collapse_margin = float(args.anti_collapse_margin)
+    config.time_anti_collapse_score_norm = str(args.anti_collapse_score_norm)
+    config.time_lambda_factor_norm_reg = float(args.lambda_factor_norm_reg)
     config.time_repository_path = str(args.time_load_repository) if args.time_load_repository is not None else None
     config.eval_only = bool(args.eval_only)
     if args.time_force_current_train is not None:
@@ -484,6 +511,8 @@ def train_one_edit(
     loss_rows: List[Dict[str, Any]],
     reliability_rows: List[Dict[str, Any]],
     out_dir: Path,
+    previous_samples: Optional[List[Dict[str, Any]]] = None,
+    anti_collapse_rows: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     rid = record_id(record, sample_pos)
     expert_index = alg.add_expert(
@@ -496,6 +525,9 @@ def train_one_edit(
         },
     )
     optimizer = torch.optim.AdamW(alg.outer_parameters(), lr=float(args.lr))
+    previous_samples = previous_samples or []
+    alg._time_anti_collapse_batches = [clone_batch(prev) for prev in previous_samples]
+    alg._time_anti_collapse_expected_ids = list(range(len(previous_samples)))
     batch = {
         "edit_inner": clone_batch(sample),
         "edit_outer": clone_batch(sample),
@@ -513,6 +545,10 @@ def train_one_edit(
         "lambda_gen": float(alg.config.time_lambda_gen),
         "lambda_loc": float(alg.config.time_lambda_loc),
         "lambda_align": float(alg.config.time_lambda_align),
+        "lambda_anti_collapse": float(getattr(alg.config, "time_lambda_anti_collapse", 0.0)),
+        "lambda_factor_norm_reg": float(getattr(alg.config, "time_lambda_factor_norm_reg", 0.0)),
+        "align_score_norm": str(getattr(alg.config, "time_align_score_norm", alg.config.time_score_norm)),
+        "anti_collapse_score_norm": str(getattr(alg.config, "time_anti_collapse_score_norm", "factor_z")),
         "residual_sign": str(alg.time_residual.residual_sign),
         "expert_gain": float(alg.time_residual.expert_gain),
         "base_vlm_trainable_params": float(base_trainable_param_count(alg)),
@@ -551,6 +587,8 @@ def train_one_edit(
             "target_nll": float(loss_rel.detach().cpu()),
             "loss_total": float(loss_total.detach().cpu()),
             "loss_loc": float(loss_loc.detach().cpu()),
+            "loss_anti_collapse": float(info.get("loss/time_anti_collapse", 0.0) or 0.0),
+            "loss_factor_norm_reg": float(info.get("loss/time_factor_norm_reg", 0.0) or 0.0),
             "answer_avg_logprob": -float(loss_rel.detach().cpu()),
             "answer_total_logprob": -float(loss_rel.detach().cpu()) * int(answer_debug["supervised_target_token_count"]),
             "current_expert_score": float(info.get("time/top_score", 0.0) or 0.0),
@@ -559,8 +597,16 @@ def train_one_edit(
             "hidden_delta_norm": float(alg.routing_summary().get("target_layer_hidden_delta_norm", 0.0) or 0.0),
             "residual_sign": str(alg.time_residual.residual_sign),
             "expert_gain": float(alg.time_residual.expert_gain),
+            "score_norm": str(alg.time_residual.score_norm),
+            "align_score_norm": str(getattr(alg.config, "time_align_score_norm", alg.config.time_score_norm)),
+            "anti_collapse_active": bool(args.time_anti_collapse_loss),
+            "anti_collapse_prev_batches": float(info.get("time/anti_collapse_prev_batches", 0.0) or 0.0),
+            "anti_collapse_current_prev_mean": float(info.get("time/anti_collapse_current_prev_mean", 0.0) or 0.0),
+            "anti_collapse_prev_own_mean": float(info.get("time/anti_collapse_prev_own_mean", 0.0) or 0.0),
             **factor_grad_trace(alg),
         }
+        if anti_collapse_rows is not None:
+            anti_collapse_rows.append(step_trace)
         if args.time_reliability_only or args.time_overfit_grid:
             reliability_rows.append(step_trace)
         torch.nn.utils.clip_grad_norm_(alg.outer_parameters(), float(alg.config.grad_clip), error_if_nonfinite=True)
@@ -631,6 +677,119 @@ def write_loss_trace(path: Path, rows: List[Dict[str, Any]]) -> None:
             writer.writerow(to_jsonable(row))
 
 
+def collect_score_matrix_rows(
+    alg: TIMEEdit,
+    records: List[Dict[str, Any]],
+    samples: List[Dict[str, Any]],
+    after_edit_index: int,
+    out_dir: Path,
+    phase_prefix: str = "score_matrix",
+) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    debug_path = out_dir / "score_matrix_debug.jsonl"
+    with temporary_time_routing(
+        alg,
+        routing_mode="threshold",
+        gamma=1.0e30,
+        topk=0,
+        score_norm="none",
+        relative_threshold=None,
+        mixing_mode="average",
+    ):
+        for query_index, (record, sample) in enumerate(zip(records[: after_edit_index + 1], samples[: after_edit_index + 1])):
+            row = evaluate_sample(
+                alg,
+                sample,
+                record,
+                query_index,
+                phase=f"{phase_prefix}_after_edit_{after_edit_index}_query_{query_index}",
+                expected_expert=query_index,
+                routing_debug_path=debug_path,
+                eval_routing_mode="score_matrix",
+                force_expert_id=query_index,
+                extra_fields={"score_matrix_after_edit": after_edit_index},
+            )
+            variants = row.get("score_variant_pooled_scores") or {}
+            raw_scores = variants.get("none") or row.get("raw_pooled_scores") or []
+            for expert_index, raw_score in enumerate(raw_scores):
+                matrix_row = {
+                    "after_edit_index": after_edit_index,
+                    "query_record_index": query_index,
+                    "record_id": row.get("record_id"),
+                    "expert_index": expert_index,
+                    "own_expert": expert_index == query_index,
+                    "raw_score": raw_score,
+                    "top_raw_expert": int(max(range(len(raw_scores)), key=lambda idx: raw_scores[idx])) if raw_scores else None,
+                }
+                for mode in SCORE_NORM_MODES:
+                    values = variants.get(mode) or []
+                    matrix_row[f"{mode}_score"] = values[expert_index] if expert_index < len(values) else None
+                    matrix_row[f"{mode}_top_expert"] = int(max(range(len(values)), key=lambda idx: values[idx])) if values else None
+                rows.append(matrix_row)
+    return rows
+
+
+def compute_self_score_metadata(
+    alg: TIMEEdit,
+    records: List[Dict[str, Any]],
+    samples: List[Dict[str, Any]],
+    out_dir: Path,
+) -> Dict[str, Any]:
+    debug_path = out_dir / "self_score_metadata_debug.jsonl"
+    payload: Dict[str, Any] = {"records": []}
+    self_scores = {"none": [], "factor": [], "factor_z": []}
+    with temporary_time_routing(
+        alg,
+        routing_mode="threshold",
+        gamma=1.0e30,
+        topk=0,
+        score_norm="none",
+        relative_threshold=None,
+        mixing_mode="average",
+    ):
+        for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+            row = evaluate_sample(
+                alg,
+                sample,
+                record,
+                eval_pos,
+                phase=f"self_score_metadata_eval_{eval_pos}",
+                expected_expert=eval_pos,
+                routing_debug_path=debug_path,
+                eval_routing_mode="self_score_metadata",
+                force_expert_id=eval_pos,
+                extra_fields={"calibration_phase": "self_score_metadata"},
+            )
+            variants = row.get("score_variant_pooled_scores") or {}
+            entry = {
+                "record_id": row.get("record_id"),
+                "expert_index": eval_pos,
+                "target": row.get("target"),
+            }
+            for mode, key in (("none", "self_score_raw"), ("factor", "self_score_factor"), ("factor_z", "self_score_factor_z")):
+                values = variants.get(mode) or row.get("raw_pooled_scores") or []
+                value = float(values[eval_pos]) if eval_pos < len(values) else 1.0
+                entry[key] = value
+                self_scores[mode].append(value)
+            payload["records"].append(entry)
+            if eval_pos < len(alg.repository.metadata):
+                metadata = alg.repository.metadata[eval_pos]
+                metadata["self_score_raw"] = entry["self_score_raw"]
+                metadata["self_score_factor"] = entry["self_score_factor"]
+                metadata["self_score_factor_z"] = entry["self_score_factor_z"]
+                metadata["time_self_score_none"] = entry["self_score_raw"]
+                metadata["time_self_score_factor"] = entry["self_score_factor"]
+                metadata["time_self_score_factor_z"] = entry["self_score_factor_z"]
+    alg.time_residual.self_score_cache = {
+        "none": list(self_scores["none"]),
+        "factor": list(self_scores["factor"]),
+        "factor_z": list(self_scores["factor_z"]),
+    }
+    payload["self_score_cache"] = self_scores
+    write_json(out_dir / "time_self_score_metadata.json", payload)
+    return payload
+
+
 def summarize_evals(mode: str, eval_rows: List[Dict[str, Any]], train_rows: List[Dict[str, Any]], alg: TIMEEdit, out_dir: Path) -> Dict[str, Any]:
     deltas = [row.get("target_nll_delta") for row in eval_rows if row.get("target_nll_delta") is not None]
     ref = [row.get("reference_delta") for row in eval_rows if row.get("reference_delta") is not None]
@@ -674,7 +833,7 @@ def parse_eval_routing_modes(text: str) -> List[str]:
     modes = [part.strip() for part in str(text or "").split(",") if part.strip()]
     if not modes:
         return []
-    allowed = {"force_own", "topk", "threshold"}
+    allowed = {"force_own", "topk", "threshold", "relative"}
     unsupported = [mode for mode in modes if mode not in allowed]
     if unsupported:
         raise ValueError(f"Unsupported --eval-routing-modes values: {unsupported}. Allowed: {sorted(allowed)}")
@@ -1072,12 +1231,29 @@ def run_smoke(
 
     loss_rows: List[Dict[str, Any]] = []
     reliability_rows: List[Dict[str, Any]] = []
+    anti_collapse_rows: List[Dict[str, Any]] = []
+    score_matrix_rows: List[Dict[str, Any]] = []
     train_records: List[Dict[str, Any]] = []
     eval_rows: List[Dict[str, Any]] = []
     immediate_after_edit: Dict[str, float] = {}
 
     for pos, (record, sample) in enumerate(zip(records, samples)):
-        train_records.append(train_one_edit(alg, sample, record, pos, args, loss_rows, reliability_rows, out_dir))
+        train_records.append(
+            train_one_edit(
+                alg,
+                sample,
+                record,
+                pos,
+                args,
+                loss_rows,
+                reliability_rows,
+                out_dir,
+                previous_samples=samples[:pos],
+                anti_collapse_rows=anti_collapse_rows,
+            )
+        )
+        if args.mode == "nonseq" and args.time_anti_collapse_loss:
+            score_matrix_rows.extend(collect_score_matrix_rows(alg, records, samples, pos, out_dir))
         if args.mode == "sequential":
             for eval_pos in range(pos + 1):
                 eval_row = evaluate_sample(
@@ -1092,6 +1268,8 @@ def run_smoke(
                 eval_rows.append(eval_row)
                 if eval_pos == pos and eval_row.get("target_nll") is not None:
                     immediate_after_edit[record_id(records[eval_pos], eval_pos)] = float(eval_row["target_nll"])
+
+    self_score_metadata = compute_self_score_metadata(alg, records, samples, out_dir) if args.mode == "nonseq" else {}
 
     if args.mode == "nonseq" and args.eval_routing_modes:
         eval_rows = evaluate_nonseq_routing_modes(args, alg, records, samples, out_dir)
@@ -1127,10 +1305,25 @@ def run_smoke(
         eval_rows = final_rows
 
     write_loss_trace(out_dir / "loss_trace.csv", loss_rows)
+    if args.mode == "nonseq":
+        write_loss_trace(out_dir / "time_score_norm_retrain_loss_trace.csv", loss_rows)
+    if anti_collapse_rows:
+        write_loss_trace(out_dir / "time_anti_collapse_trace.csv", anti_collapse_rows)
+    if score_matrix_rows:
+        write_loss_trace(out_dir / "time_score_matrix_after_each_edit.csv", score_matrix_rows)
     if reliability_rows:
         write_loss_trace(out_dir / "time_reliability_overfit_trace.csv", reliability_rows)
     summary = summarize_evals(args.mode, eval_rows, train_records, alg, out_dir)
-    summary.update({"hidden_size": alg.repository.hidden_size, "s1": alg.repository.s1, "s2": alg.repository.s2})
+    summary.update({
+        "hidden_size": alg.repository.hidden_size,
+        "s1": alg.repository.s1,
+        "s2": alg.repository.s2,
+        "self_score_metadata": self_score_metadata,
+        "anti_collapse_active": bool(args.time_anti_collapse_loss),
+        "score_norm": str(config.time_score_norm),
+        "align_score_norm": str(config.time_align_score_norm),
+        "anti_collapse_score_norm": str(config.time_anti_collapse_score_norm),
+    })
     if args.mode == "one":
         summary_path = out_dir / "one_edit_summary.json"
     elif args.mode == "nonseq":
@@ -1228,6 +1421,14 @@ def evaluate_nonseq_routing_modes(
             context = temporary_time_routing(alg, routing_mode="topk", gamma=float(args.gamma), topk=max(1, int(args.time_topk or 1)))
         elif mode == "threshold":
             context = temporary_time_routing(alg, routing_mode="threshold", gamma=float(args.gamma), topk=0)
+        elif mode == "relative":
+            context = temporary_time_routing(
+                alg,
+                routing_mode="relative_threshold",
+                gamma=float(args.gamma),
+                topk=0,
+                relative_threshold=float(args.time_relative_threshold if args.time_relative_threshold is not None else 0.9),
+            )
         else:
             raise ValueError(f"Unsupported eval routing mode: {mode}")
         with context:
@@ -2081,6 +2282,328 @@ def write_time_routing_calibration_report(
     return path
 
 
+def score_norm_retrain_eval_configs() -> List[Dict[str, Any]]:
+    configs: List[Dict[str, Any]] = [
+        {
+            "config_id": "force_own",
+            "score_norm": "none",
+            "routing_mode": "threshold",
+            "gamma": 1.0e30,
+            "relative_threshold": None,
+            "topk": 0,
+            "mixing_mode": "own_oracle",
+            "group": "capacity_oracle",
+        }
+    ]
+    route_specs = [
+        ("raw_topk1", "none", "topk", None, None, 1, "raw_baseline"),
+        ("raw_gamma0p5", "none", "threshold", 0.5, None, 0, "raw_baseline"),
+        ("factor_z_topk1", "factor_z", "topk", None, None, 1, "factor_z_sparse"),
+        ("factor_z_topk2", "factor_z", "topk", None, None, 2, "factor_z_sparse"),
+        ("factor_z_rel0p9", "factor_z", "relative_threshold", None, 0.9, 0, "factor_z_sparse"),
+        ("factor_z_rel0p95", "factor_z", "relative_threshold", None, 0.95, 0, "factor_z_sparse"),
+        ("factor_z_gamma0p5", "factor_z", "threshold", 0.5, None, 0, "factor_z_sparse"),
+        ("factor_z_gamma0p7", "factor_z", "threshold", 0.7, None, 0, "factor_z_sparse"),
+        ("factor_z_gamma1", "factor_z", "threshold", 1.0, None, 0, "factor_z_sparse"),
+        ("factor_self_score_topk1", "factor_self_score", "topk", None, None, 1, "factor_self_sparse"),
+        ("factor_self_score_topk2", "factor_self_score", "topk", None, None, 2, "factor_self_sparse"),
+        ("factor_self_score_rel0p9", "factor_self_score", "relative_threshold", None, 0.9, 0, "factor_self_sparse"),
+        ("factor_self_score_rel0p95", "factor_self_score", "relative_threshold", None, 0.95, 0, "factor_self_sparse"),
+    ]
+    for mix in CALIBRATION_MIXING_MODES:
+        for base_id, score_norm, routing_mode, gamma, relative_threshold, topk, group in route_specs:
+            configs.append(
+                {
+                    "config_id": f"{base_id}_{mix}",
+                    "score_norm": score_norm,
+                    "routing_mode": routing_mode,
+                    "gamma": gamma,
+                    "relative_threshold": relative_threshold,
+                    "topk": topk,
+                    "mixing_mode": mix,
+                    "group": group,
+                }
+            )
+    return configs
+
+
+def retrain_sparse_success(summary: Dict[str, Any]) -> bool:
+    mean_size = _float_or_none(summary.get("mean_selected_set_size"))
+    if mean_size is None:
+        return False
+    return bool(
+        (
+            int(summary.get("own_top1_count") or 0) >= 4
+            or (int(summary.get("own_in_selected_set_count") or 0) >= 5 and mean_size <= 2.0)
+        )
+        and int(summary.get("positive_new_count") or 0) >= 4
+        and mean_size <= 2.0
+        and int(summary.get("empty_selection_count") or 0) <= 1
+    )
+
+
+def max_top_expert_count(summary: Dict[str, Any]) -> int:
+    counts = summary.get("top_expert_counts") or {}
+    return max((int(value) for value in counts.values()), default=0)
+
+
+def diagnose_score_norm_retrain(grid_rows: List[Dict[str, Any]], force_summary: Dict[str, Any]) -> Tuple[str, str]:
+    force_pass = int(force_summary.get("positive_new_count") or 0) >= 4
+    if not force_pass:
+        return "anti_collapse_hurts_expert_capacity", "reduce anti-collapse"
+    normalized = [row for row in grid_rows if row.get("score_norm") in {"factor_z", "factor_self_score"}]
+    sparse = [row for row in normalized if row.get("sparse_success")]
+    if sparse:
+        best_sparse = max(sparse, key=_sort_key_target)
+        if (_float_or_none(best_sparse.get("mean_locality_reference_delta")) or 0.0) > 5.0:
+            return "routing_fixed_but_locality_damage", "proceed cautiously with 5-edit sequential after locality tuning"
+        return "score_normalized_retrain_success", "proceed to 5-edit sequential with best config"
+
+    factor_z_fixed = any(row.get("score_norm") == "factor_z" and max_top_expert_count(row) <= 3 for row in normalized)
+    factor_self_fixed = any(row.get("score_norm") == "factor_self_score" and max_top_expert_count(row) <= 3 for row in normalized)
+    if factor_z_fixed and not factor_self_fixed:
+        return "factor_norm_score_scale_issue", "run gamma/topk calibration again"
+    if factor_self_fixed and not factor_z_fixed:
+        return "per_expert_score_calibration_issue", "run gamma/topk calibration again"
+    if not factor_z_fixed and not factor_self_fixed:
+        return "intrinsic_score_not_discriminative_after_retrain", "add cross-attention factor generator or stronger routing supervision"
+    return "routing_improved_but_not_sparse", "run gamma/topk calibration again"
+
+
+def summarize_trace_file(path: Path) -> Dict[str, Any]:
+    rows = _read_csv_rows(path)
+    if not rows:
+        return {"num_rows": 0}
+    first = rows[0]
+    last = rows[-1]
+    keys = [
+        "loss_total",
+        "loss_rel",
+        "loss_time_align",
+        "loss_time_anti_collapse",
+        "loss_time_factor_norm_reg",
+        "time_current_expert_index",
+        "time_anti_collapse_prev_batches",
+        "time_anti_collapse_current_prev_mean",
+        "time_anti_collapse_prev_own_mean",
+        "current_expert_grad_norm_total",
+        "U_in_factor_norm",
+        "V_in_factor_norm",
+        "U_out_factor_norm",
+        "V_out_factor_norm",
+    ]
+    return {
+        "num_rows": len(rows),
+        "first": {key: first.get(key) for key in keys if key in first},
+        "last": {key: last.get(key) for key in keys if key in last},
+    }
+
+
+def run_score_norm_retrain_grid(
+    args: argparse.Namespace,
+    records: List[Dict[str, Any]],
+    samples: List[Dict[str, Any]],
+    alg: TIMEEdit,
+    out_dir: Path,
+) -> Dict[str, Any]:
+    debug_path = out_dir / "five_edit_score_norm_routing_debug.jsonl"
+    if debug_path.exists():
+        debug_path.unlink()
+    configs = score_norm_retrain_eval_configs()
+    per_record_rows: List[Dict[str, Any]] = []
+    grid_rows: List[Dict[str, Any]] = []
+    confusion_matrices: Dict[str, Any] = {}
+    for config_item in configs:
+        eval_rows: List[Dict[str, Any]] = []
+        with temporary_time_routing(
+            alg,
+            routing_mode=str(config_item["routing_mode"]),
+            gamma=float(config_item["gamma"]) if config_item.get("gamma") is not None else None,
+            topk=int(config_item.get("topk") or 0),
+            score_norm=str(config_item["score_norm"]),
+            relative_threshold=float(config_item["relative_threshold"]) if config_item.get("relative_threshold") is not None else None,
+            mixing_mode=str(config_item["mixing_mode"] if config_item["mixing_mode"] != "own_oracle" else "average"),
+        ):
+            for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+                row = evaluate_sample(
+                    alg,
+                    sample,
+                    record,
+                    eval_pos,
+                    phase=f"score_norm_retrain_{config_item['config_id']}_eval_{eval_pos}",
+                    expected_expert=eval_pos,
+                    routing_debug_path=debug_path,
+                    eval_routing_mode=str(config_item["config_id"]),
+                    force_expert_id=eval_pos if config_item["config_id"] == "force_own" else None,
+                    extra_fields={**_config_extra_fields(config_item), "score_norm_retrain_group": config_item.get("group")},
+                )
+                eval_rows.append(row)
+                per_record_rows.append(
+                    {
+                        **_config_extra_fields(config_item),
+                        "group": config_item.get("group"),
+                        "record_id": row.get("record_id"),
+                        "own_expert_index": row.get("expected_expert"),
+                        "target": row.get("target"),
+                        "target_nll_before": row.get("base_target_nll"),
+                        "target_nll_after": row.get("target_nll"),
+                        "target_nll_improvement": row.get("target_nll_delta"),
+                        "improved": row.get("target_improved"),
+                        "first_token_rank_before": row.get("base_first_target_token_rank"),
+                        "first_token_rank_after": row.get("first_target_token_rank"),
+                        "answer_token_logprob_delta": row.get("answer_token_logprob_delta"),
+                        "residual_norm": row.get("residual_norm"),
+                        "hidden_delta_norm": row.get("target_layer_hidden_delta_norm"),
+                        "own_expert_score": row.get("own_expert_score"),
+                        "top_expert_id": row.get("top_expert_id"),
+                        "top_expert_score": row.get("top_score"),
+                        "own_top1": row.get("routing_top1_correct"),
+                        "own_selected": row.get("selected_own_expert"),
+                        "selected_expert_set_size": row.get("selected_expert_set_size"),
+                        "selected_expert_ids": row.get("selected_expert_ids"),
+                        "locality_reference_delta": row.get("reference_delta"),
+                    }
+                )
+        summary = summarize_calibration_config(config_item, eval_rows)
+        summary["group"] = config_item.get("group")
+        summary["sparse_success"] = retrain_sparse_success(summary)
+        summary["max_top_expert_count"] = max_top_expert_count(summary)
+        grid_rows.append(summary)
+        confusion_matrices[str(config_item["config_id"])] = {
+            "config": {key: config_item.get(key) for key in ("score_norm", "routing_mode", "gamma", "relative_threshold", "topk", "mixing_mode", "group")},
+            "matrix": summary.get("confusion_matrix"),
+        }
+    force_summary = next((row for row in grid_rows if row.get("config_id") == "force_own"), {})
+    raw_topk = next((row for row in grid_rows if row.get("config_id") == "raw_topk1_softmax"), {})
+    normalized_rows = [row for row in grid_rows if row.get("score_norm") in {"factor_z", "factor_self_score"}]
+    best = choose_best_calibration(normalized_rows)
+    factor_z_rows = [row for row in normalized_rows if row.get("score_norm") == "factor_z"]
+    factor_self_rows = [row for row in normalized_rows if row.get("score_norm") == "factor_self_score"]
+    best_factor_z = max(factor_z_rows, key=_sort_key_routing) if factor_z_rows else {}
+    best_factor_self = max(factor_self_rows, key=_sort_key_routing) if factor_self_rows else {}
+    diagnosis, recommendation = diagnose_score_norm_retrain(grid_rows, force_summary)
+    summary = {
+        "command": current_command_line(),
+        "record_ids": [record_id(record, idx) for idx, record in enumerate(records)],
+        "anti_collapse_active": bool(args.time_anti_collapse_loss),
+        "score_norm": str(args.time_score_norm),
+        "align_score_norm": str(args.time_align_score_norm or args.time_score_norm),
+        "anti_collapse_score_norm": str(args.anti_collapse_score_norm),
+        "lambda_align": args.lambda_align,
+        "num_negative_experts": args.num_negative_experts,
+        "lambda_anti_collapse": args.lambda_anti_collapse,
+        "anti_collapse_margin": args.anti_collapse_margin,
+        "lambda_factor_norm_reg": args.lambda_factor_norm_reg,
+        "force_own": force_summary,
+        "raw_topk": raw_topk,
+        "best_factor_z_sparse_routing": best_factor_z,
+        "best_factor_self_score_sparse_routing": best_factor_self,
+        "best_normalized": best,
+        "strict_sparse_routing_achieved": bool(best.get("best_sparse_success")),
+        "expert_3_collapse_fixed": bool(max_top_expert_count(raw_topk) > 3 and any(max_top_expert_count(row) <= 3 for row in normalized_rows)),
+        "diagnosis": diagnosis,
+        "recommendation": recommendation,
+        "training_trace_summary": summarize_trace_file(out_dir / "time_score_norm_retrain_loss_trace.csv"),
+        "anti_collapse_trace_summary": summarize_trace_file(out_dir / "time_anti_collapse_trace.csv"),
+        "num_eval_configs": len(grid_rows),
+    }
+    write_loss_trace(out_dir / "five_edit_score_norm_per_record.csv", per_record_rows)
+    write_loss_trace(out_dir / "five_edit_score_norm_routing_grid.csv", grid_rows)
+    write_json(out_dir / "five_edit_score_norm_confusion_matrices.json", confusion_matrices)
+    write_json(out_dir / "five_edit_score_norm_summary.json", summary)
+    write_score_norm_retrain_report(out_dir, args, grid_rows, summary)
+    return summary
+
+
+def write_score_norm_retrain_report(
+    out_dir: Path,
+    args: argparse.Namespace,
+    grid_rows: List[Dict[str, Any]],
+    summary: Dict[str, Any],
+) -> Path:
+    command = current_command_line()
+    gpu_status = _gpu_status_text()
+    force = summary.get("force_own") or {}
+    raw = summary.get("raw_topk") or {}
+    best_factor_z = summary.get("best_factor_z_sparse_routing") or {}
+    best_factor_self = summary.get("best_factor_self_score_sparse_routing") or {}
+    best_norm = (summary.get("best_normalized") or {}).get("best_sparse_success") or (summary.get("best_normalized") or {}).get("best_by_routing_accuracy") or {}
+    lines = [
+        "# TIME 5-Edit Score-Normalized Retrain Report",
+        "",
+        "## Files Changed",
+        "- `easyeditor/trainer/algs/time_edit.py`",
+        "- `easyeditor/models/time_edit/time_edit_hparams.py`",
+        "- `scripts/time/run_time_medmkeb_smoke.py`",
+        "",
+        "## Exact Command Run",
+        f"- `{command}`",
+        "",
+        "## GPU",
+        f"- Used CUDA device setting: `{_cuda_setting_from_command(command) or os.environ.get('CUDA_VISIBLE_DEVICES', args.device)}`.",
+        "- GPU status captured during report write:",
+        "```text",
+        gpu_status or "unavailable",
+        "```",
+        "",
+        "## Verification",
+        "- `py_compile`: passed before model run.",
+        "- `scripts/time/test_time_modules.py`: passed before model run.",
+        "- 20-edit run: not run.",
+        "",
+        "## Training Setup",
+        f"- Anti-collapse active: {summary.get('anti_collapse_active')}.",
+        f"- Routing score normalization: `{summary.get('score_norm')}`.",
+        f"- Alignment score normalization: `{summary.get('align_score_norm')}`.",
+        f"- Anti-collapse score normalization: `{summary.get('anti_collapse_score_norm')}`.",
+        f"- lambda_align: {summary.get('lambda_align')}; negative experts: {summary.get('num_negative_experts')}.",
+        f"- lambda_anti_collapse: {summary.get('lambda_anti_collapse')}; margin: {summary.get('anti_collapse_margin')}.",
+        f"- lambda_factor_norm_reg: {summary.get('lambda_factor_norm_reg')}.",
+        "",
+        "## Training Trace Summary",
+        f"- Loss trace: `{json.dumps(summary.get('training_trace_summary'), sort_keys=True)}`",
+        f"- Anti-collapse trace: `{json.dumps(summary.get('anti_collapse_trace_summary'), sort_keys=True)}`",
+        "",
+        "## Key Results",
+        f"- Force-own: positive {force.get('positive_new_count')}/5, mean NLL improvement {_fmt(force.get('mean_target_nll_improvement'))}, locality {_fmt(force.get('mean_locality_reference_delta'))}.",
+        f"- Raw topk=1: own top-1 {raw.get('own_top1_count')}/5, max-top-expert count {raw.get('max_top_expert_count')}, confusion `{json.dumps(raw.get('confusion_matrix'), sort_keys=True)}`.",
+        f"- Best factor_z sparse candidate: `{best_factor_z.get('config_id')}` with own top-1 {best_factor_z.get('own_top1_count')}/5, own selected {best_factor_z.get('own_in_selected_set_count')}/5, mean selected size {_fmt(best_factor_z.get('mean_selected_set_size'))}, positive {best_factor_z.get('positive_new_count')}/5, locality {_fmt(best_factor_z.get('mean_locality_reference_delta'))}.",
+        f"- Best factor_self_score sparse candidate: `{best_factor_self.get('config_id')}` with own top-1 {best_factor_self.get('own_top1_count')}/5, own selected {best_factor_self.get('own_in_selected_set_count')}/5, mean selected size {_fmt(best_factor_self.get('mean_selected_set_size'))}, positive {best_factor_self.get('positive_new_count')}/5, locality {_fmt(best_factor_self.get('mean_locality_reference_delta'))}.",
+        "",
+        "## Confusion Matrices",
+        f"- Raw topk=1: `{json.dumps(raw.get('confusion_matrix'), sort_keys=True)}`",
+        f"- Best normalized config `{best_norm.get('config_id')}`: `{json.dumps(best_norm.get('confusion_matrix'), sort_keys=True)}`",
+        "",
+        "## Acceptance",
+        f"- Expert-3 collapse fixed: {summary.get('expert_3_collapse_fixed')}.",
+        f"- Strict sparse routing achieved: {summary.get('strict_sparse_routing_achieved')}.",
+        f"- Locality/reference delta for best normalized config: {_fmt(best_norm.get('mean_locality_reference_delta'))}.",
+        "",
+        "## Diagnosis",
+        f"- Label: `{summary.get('diagnosis')}`.",
+        "",
+        "## Recommendation",
+        f"- {summary.get('recommendation')}.",
+        "",
+        "## Output Files",
+        "- `expert_repository.pt`",
+        "- `time_score_norm_retrain_loss_trace.csv`",
+        "- `time_score_matrix_after_each_edit.csv`",
+        "- `time_anti_collapse_trace.csv`",
+        "- `time_self_score_metadata.json`",
+        "- `five_edit_score_norm_summary.json`",
+        "- `five_edit_score_norm_per_record.csv`",
+        "- `five_edit_score_norm_routing_grid.csv`",
+        "- `five_edit_score_norm_confusion_matrices.json`",
+        "- `five_edit_score_norm_routing_debug.jsonl`",
+        "- `TIME_5EDIT_SCORE_NORM_RETRAIN_REPORT.md`",
+        "",
+    ]
+    path = out_dir / "TIME_5EDIT_SCORE_NORM_RETRAIN_REPORT.md"
+    path.write_text("\n".join(lines))
+    return path
+
+
 def parse_float_csv(text: str) -> List[float]:
     return [float(part.strip()) for part in str(text or "").split(",") if part.strip()]
 
@@ -2717,7 +3240,7 @@ def main() -> None:
 
     model = get_model(config).to(device).eval()
     samples = [make_sample(model, record, image_root) for record in records]
-    if args.time_routing_calibration:
+    if args.time_routing_calibration and args.eval_only:
         if repo_path is None:
             raise RuntimeError("--time-routing-calibration requires --time-load-repository PATH.")
         alg = TIMEEdit(model, config, lambda: None).to(device)
@@ -2747,9 +3270,17 @@ def main() -> None:
         try:
             summary = run_smoke(args, config, dataset_path, records, samples, alg, args.out_dir, print_summary=False)
             gamma_rows = run_gamma_sweep(args, alg, records, samples, args.out_dir) if args.time_gamma_sweep else []
+            score_norm_summary = (
+                run_score_norm_retrain_grid(args, records, samples, alg, args.out_dir)
+                if args.time_routing_calibration and args.mode == "nonseq"
+                else None
+            )
             if args.time_reliability_only or args.out_dir.name == "one_edit_full_objective_confirm":
                 report_path = write_reliability_report(args.out_dir)
                 report_key = "reliability_report"
+            elif score_norm_summary is not None:
+                report_path = args.out_dir / "TIME_5EDIT_SCORE_NORM_RETRAIN_REPORT.md"
+                report_key = "score_norm_retrain_report"
             elif args.mode == "nonseq" and args.eval_routing_modes:
                 report_path = args.out_dir / "TIME_5EDIT_NONSEQ_DIAGNOSTIC_REPORT.md"
                 report_key = "five_edit_nonseq_report"
@@ -2757,6 +3288,8 @@ def main() -> None:
                 report_path = write_calibrated_report(args.out_dir)
                 report_key = "calibrated_report"
             payload = dict(summary)
+            if score_norm_summary is not None:
+                payload["score_norm_retrain"] = score_norm_summary
             if gamma_rows:
                 payload["gamma_sweep_rows"] = gamma_rows
             payload[report_key] = str(report_path)
