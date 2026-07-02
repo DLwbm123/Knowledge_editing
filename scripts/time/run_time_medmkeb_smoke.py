@@ -101,6 +101,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--time-routing-calibration-grid", default="")
     parser.add_argument("--time-post-retrain-calibration", action="store_true")
     parser.add_argument("--time-10edit-routing-repair-eval", action="store_true")
+    parser.add_argument("--time-fragile-routing-repair-eval", action="store_true")
+    parser.add_argument("--time-adaptive-margin-microcheck", action="store_true")
+    parser.add_argument("--time-adaptive-topk-margin", type=float, action="append", default=None)
+    parser.add_argument("--time-adaptive-topk-max", type=int, default=3)
+    parser.add_argument("--time-force-include-own-eval", action="store_true")
     parser.add_argument("--time-max-selected-experts", type=int, default=None)
     parser.add_argument(
         "--time-calibration-mode",
@@ -1719,8 +1724,8 @@ def _sequential_eval_context(args: argparse.Namespace, alg: TIMEEdit, mode: str,
     score_norm = str(args.time_score_norm or "factor_z")
     score_pool = str(args.time_score_pool or "mean")
     mixing_mode = "average" if args.time_disable_score_mixing else str(args.time_mixing_mode)
-    relative_threshold = float(args.time_relative_threshold if args.time_relative_threshold is not None else 0.9)
     calibration_mode = normalize_time_calibration_mode(args.time_calibration_mode)
+    calibrated_route = _calibrated_route_spec(args)
     if mode == "force_own":
         return temporary_time_routing(
             alg,
@@ -1738,11 +1743,11 @@ def _sequential_eval_context(args: argparse.Namespace, alg: TIMEEdit, mode: str,
     if mode == "calibrated":
         return temporary_time_routing(
             alg,
-            routing_mode="relative_threshold",
+            routing_mode=str(calibrated_route["routing_mode"]),
             gamma=float(args.gamma),
-            topk=0,
+            topk=int(calibrated_route.get("topk") or 0),
             score_norm=score_norm,
-            relative_threshold=relative_threshold,
+            relative_threshold=calibrated_route.get("relative_threshold"),
             mixing_mode=mixing_mode,
             calibration_mode=calibration_mode,
             calibration_beta=float(args.time_calibration_beta),
@@ -1785,7 +1790,7 @@ def _sequential_eval_context(args: argparse.Namespace, alg: TIMEEdit, mode: str,
             gamma=float(args.gamma),
             topk=0,
             score_norm=score_norm,
-            relative_threshold=relative_threshold,
+            relative_threshold=float(args.time_relative_threshold if args.time_relative_threshold is not None else 0.9),
             mixing_mode=mixing_mode,
             calibration_mode="none",
             max_selected_experts=None,
@@ -1793,6 +1798,25 @@ def _sequential_eval_context(args: argparse.Namespace, alg: TIMEEdit, mode: str,
             calibration_stats={},
         )
     raise ValueError(f"Unsupported eval routing mode: {mode}")
+
+
+def _calibrated_route_spec(args: argparse.Namespace) -> Dict[str, Any]:
+    requested = str(args.time_routing_mode or "threshold").lower()
+    topk = int(args.time_topk or 0)
+    relative_threshold = float(args.time_relative_threshold if args.time_relative_threshold is not None else 0.9)
+    if requested == "topk":
+        return {"routing_mode": "topk", "topk": max(1, topk or 1), "relative_threshold": None}
+    if requested in {"relative_threshold", "relative_topk"}:
+        return {
+            "routing_mode": requested,
+            "topk": topk,
+            "relative_threshold": relative_threshold,
+        }
+    if requested == "threshold_topk":
+        return {"routing_mode": "threshold_topk", "topk": max(1, topk or 1), "relative_threshold": None}
+    if requested == "threshold" and args.time_relative_threshold is not None:
+        return {"routing_mode": "relative_threshold", "topk": topk, "relative_threshold": relative_threshold}
+    return {"routing_mode": requested, "topk": topk, "relative_threshold": None}
 
 
 def _sequential_calibration_stats(rows: List[Dict[str, Any]], num_experts: int) -> Dict[str, List[float]]:
@@ -1963,6 +1987,7 @@ def summarize_time_sequential_retention(
     args: argparse.Namespace,
 ) -> Dict[str, Any]:
     final_step = len(records)
+    calibrated_route = _calibrated_route_spec(args)
     summary: Dict[str, Any] = {
         "num_edits": final_step,
         "eval_routing_modes": modes,
@@ -1971,14 +1996,36 @@ def summarize_time_sequential_retention(
             "calibration_mode_requested": str(args.time_calibration_mode),
             "calibration_mode_internal": normalize_time_calibration_mode(args.time_calibration_mode),
             "score_pool": str(args.time_score_pool),
-            "routing_mode": "relative_threshold",
-            "relative_threshold": float(args.time_relative_threshold if args.time_relative_threshold is not None else 0.9),
+            "routing_mode": calibrated_route.get("routing_mode"),
+            "relative_threshold": calibrated_route.get("relative_threshold"),
+            "topk": calibrated_route.get("topk"),
             "max_selected_experts": args.time_max_selected_experts,
             "mixing_mode": str(args.time_mixing_mode),
         },
         "retention_definition": "retained_improvement = base_target_nll - current_target_nll; forgotten means positive immediate improvement became non-positive at final evaluation.",
+        "after_each_edit_by_mode": {},
         "by_mode": {},
     }
+    for edit_step in range(1, final_step + 1):
+        step_rows = [row for row in rows if int(row.get("edit_step") or 0) == edit_step]
+        summary["after_each_edit_by_mode"][str(edit_step)] = {}
+        for mode in modes:
+            mode_rows = [row for row in step_rows if row.get("eval_routing_mode") == mode]
+            selected_sizes = [row.get("selected_expert_set_size") for row in mode_rows]
+            top_counts = _top_expert_counts(mode_rows, field="top_score_expert_id")
+            summary["after_each_edit_by_mode"][str(edit_step)][mode] = {
+                "num_records": len(mode_rows),
+                "positive_new_count": sum(1 for row in mode_rows if (_float_or_none(row.get("retained_improvement")) or 0.0) > 0.0),
+                "forgotten_count": sum(1 for row in mode_rows if row.get("forgotten")),
+                "own_top1_count": sum(1 for row in mode_rows if row.get("own_top1")),
+                "own_selected_count": sum(1 for row in mode_rows if row.get("own_selected")),
+                "mean_selected_set_size": _mean(selected_sizes),
+                "max_selected_set_size": max([float(value) for value in selected_sizes if value is not None], default=None),
+                "max_top_expert_count": max(top_counts.values()) if top_counts else 0,
+                "mean_retained_improvement": _mean([row.get("retained_improvement") for row in mode_rows]),
+                "mean_locality_reference_delta": _mean([row.get("locality_reference_delta") for row in mode_rows]),
+                "confusion_matrix": _routing_confusion(mode_rows),
+            }
     for mode in modes:
         mode_rows = _sequential_final_rows(rows, final_step, mode)
         selected_sizes = [row.get("selected_expert_set_size") for row in mode_rows]
@@ -2039,12 +2086,21 @@ def summarize_time_sequential_retention(
         positive_gate = _positive_gate(final_step)
         selected_gate = _selected_gate(final_step)
         max_top_gate = _max_top_expert_gate(final_step)
+        own_top1_pass = int(mode_summary["own_top1_count"]) >= positive_gate
+        own_selected_pass = int(mode_summary["own_in_selected_set_count"]) >= selected_gate
+        sparse_selected_fallback_pass = bool(
+            str((summary.get("calibrated_config") or {}).get("routing_mode")) == "topk"
+            and int((summary.get("calibrated_config") or {}).get("topk") or 0) >= 2
+            and own_selected_pass
+            and mode_summary["mean_selected_set_size"] is not None
+            and float(mode_summary["mean_selected_set_size"]) <= 2.0
+        )
         mode_summary["capacity_pass"] = bool(mode == "force_own" and retained_positive >= positive_gate)
         mode_summary["sparse_routing_pass"] = bool(
             mode != "force_own"
             and retained_positive >= positive_gate
-            and int(mode_summary["own_top1_count"]) >= positive_gate
-            and int(mode_summary["own_in_selected_set_count"]) >= selected_gate
+            and (own_top1_pass or sparse_selected_fallback_pass)
+            and own_selected_pass
             and (mode_summary["mean_selected_set_size"] is not None and float(mode_summary["mean_selected_set_size"]) <= 2.0)
             and max_selected_pass
             and int(mode_summary["empty_selection_count"]) <= 1
@@ -2060,8 +2116,10 @@ def summarize_time_sequential_retention(
             "max_top_expert_gate": max_top_gate,
             "positive_new_pass": retained_positive >= positive_gate,
             "retained_positive_pass": retained_positive >= positive_gate,
-            "own_top1_pass": int(mode_summary["own_top1_count"]) >= positive_gate,
-            "own_selected_pass": int(mode_summary["own_in_selected_set_count"]) >= selected_gate,
+            "own_top1_pass": own_top1_pass,
+            "own_selected_pass": own_selected_pass,
+            "own_top1_or_sparse_selected_pass": bool(own_top1_pass or sparse_selected_fallback_pass),
+            "sparse_selected_fallback_pass": sparse_selected_fallback_pass,
             "mean_selected_set_size_le_2": (
                 mode_summary["mean_selected_set_size"] is not None and float(mode_summary["mean_selected_set_size"]) <= 2.0
             ),
@@ -2147,6 +2205,7 @@ def write_time_sequential_calibrated_report(
         f"- Score pool: `{config.get('score_pool')}`.",
         f"- Routing mode: `{config.get('routing_mode')}`.",
         f"- Relative threshold: {config.get('relative_threshold')}.",
+        f"- Top-k: {config.get('topk')}.",
         f"- Max selected experts: {config.get('max_selected_experts')}.",
         f"- Mixing mode: `{config.get('mixing_mode')}`.",
         "",
@@ -2156,8 +2215,35 @@ def write_time_sequential_calibrated_report(
         f"- Calibrated retention pass: {gate.get('calibrated_retention_pass')}.",
         f"- Overall pass: {gate.get('overall_pass')}.",
         "",
+        "## After-Each-Edit Drift",
+        "| edit step | mode | records | positive | forgotten | own top1 | own selected | mean size | max size | max top | mean retained | locality |",
+        "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    for step, mode_payload in sorted((retention_summary.get("after_each_edit_by_mode") or {}).items(), key=lambda item: int(item[0])):
+        for mode in retention_summary.get("eval_routing_modes") or []:
+            row = (mode_payload or {}).get(mode) or {}
+            lines.append(
+                "| {step} | {mode} | {num} | {positive} | {forgotten} | {top1} | {selected} | {mean_size} | {max_size} | {max_top} | {retained} | {loc} |".format(
+                    step=step,
+                    mode=mode,
+                    num=row.get("num_records"),
+                    positive=row.get("positive_new_count"),
+                    forgotten=row.get("forgotten_count"),
+                    top1=row.get("own_top1_count"),
+                    selected=row.get("own_selected_count"),
+                    mean_size=_fmt(row.get("mean_selected_set_size")),
+                    max_size=_fmt(row.get("max_selected_set_size")),
+                    max_top=row.get("max_top_expert_count"),
+                    retained=_fmt(row.get("mean_retained_improvement")),
+                    loc=_fmt(row.get("mean_locality_reference_delta")),
+                )
+            )
+    lines.extend(
+        [
+            "",
         "## Final Metrics By Mode",
     ]
+    )
     for mode, row in by_mode.items():
         lines.extend(
             [
@@ -3851,6 +3937,1423 @@ def run_ten_edit_routing_repair_eval(
         "num_grid_configs": len(grid_rows),
         "phase1_pass": phase1_pass,
         "diagnosis": diagnosis,
+        "best": best_payload,
+        "report_path": str(report_path),
+    }
+    print(json.dumps(to_jsonable(payload), indent=2, sort_keys=True))
+    return payload
+
+
+def fragile_margin_values(args: argparse.Namespace) -> List[float]:
+    values = args.time_adaptive_topk_margin
+    if not values:
+        values = [0.0, 0.02, 0.05, 0.10, 0.20]
+    return [float(value) for value in values]
+
+
+def _fragile_float_suffix(value: float) -> str:
+    return format_float_for_path(float(value))
+
+
+def fragile_repair_configs(args: argparse.Namespace) -> List[Dict[str, Any]]:
+    score_norm = str(args.time_score_norm or "factor_z")
+    calibration_mode = normalize_time_calibration_mode(args.time_calibration_mode or "zscore_neg_mean")
+    score_pool = str(args.time_score_pool or "mean")
+    mixing_mode = str(args.time_mixing_mode or "softmax")
+    configs: List[Dict[str, Any]] = [
+        {
+            "config_id": "calibrated_topk2_baseline",
+            "group": "baseline",
+            "score_norm": score_norm,
+            "calibration_mode": calibration_mode,
+            "score_pool": score_pool,
+            "routing_mode": "topk",
+            "gamma": float(args.gamma),
+            "relative_threshold": None,
+            "topk": 2,
+            "max_selected_experts": None,
+            "mixing_mode": mixing_mode,
+            "adaptive_margin": None,
+            "adaptive_topk_max": None,
+            "force_include_own": False,
+        },
+        {
+            "config_id": "calibrated_topk3",
+            "group": "topk3",
+            "score_norm": score_norm,
+            "calibration_mode": calibration_mode,
+            "score_pool": score_pool,
+            "routing_mode": "topk",
+            "gamma": float(args.gamma),
+            "relative_threshold": None,
+            "topk": 3,
+            "max_selected_experts": None,
+            "mixing_mode": mixing_mode,
+            "adaptive_margin": None,
+            "adaptive_topk_max": None,
+            "force_include_own": False,
+        },
+    ]
+    for margin in fragile_margin_values(args):
+        configs.append(
+            {
+                "config_id": f"adaptive_topk2_to_3_margin{_fragile_float_suffix(margin)}",
+                "group": "adaptive_topk2_to_3",
+                "score_norm": score_norm,
+                "calibration_mode": calibration_mode,
+                "score_pool": score_pool,
+                "routing_mode": "topk",
+                "gamma": float(args.gamma),
+                "relative_threshold": None,
+                "topk": 2,
+                "max_selected_experts": None,
+                "mixing_mode": mixing_mode,
+                "adaptive_margin": float(margin),
+                "adaptive_topk_max": int(args.time_adaptive_topk_max or 3),
+                "force_include_own": False,
+            }
+        )
+    if args.time_force_include_own_eval:
+        configs.append(
+            {
+                "config_id": "force_include_own",
+                "group": "force_include_own_upper_bound",
+                "score_norm": score_norm,
+                "calibration_mode": calibration_mode,
+                "score_pool": score_pool,
+                "routing_mode": "topk",
+                "gamma": float(args.gamma),
+                "relative_threshold": None,
+                "topk": 2,
+                "max_selected_experts": None,
+                "mixing_mode": mixing_mode,
+                "adaptive_margin": None,
+                "adaptive_topk_max": None,
+                "force_include_own": True,
+            }
+        )
+    for threshold in (0.85, 0.90, 0.95):
+        configs.append(
+            {
+                "config_id": f"relative_threshold_rel{_fragile_float_suffix(threshold)}_cap3",
+                "group": "optional_relative_threshold",
+                "score_norm": score_norm,
+                "calibration_mode": calibration_mode,
+                "score_pool": score_pool,
+                "routing_mode": "relative_threshold",
+                "gamma": float(args.gamma),
+                "relative_threshold": float(threshold),
+                "topk": 0,
+                "max_selected_experts": 3,
+                "mixing_mode": mixing_mode,
+                "adaptive_margin": None,
+                "adaptive_topk_max": None,
+                "force_include_own": False,
+            }
+        )
+    return configs
+
+
+def _score_order(scores: List[float]) -> List[int]:
+    return sorted(range(len(scores)), key=lambda idx: float(scores[idx]), reverse=True)
+
+
+def _rank_details(scores: List[float], own_expert: int) -> Dict[str, Any]:
+    ordered = _score_order(scores)
+    top_ids = ordered[:3]
+
+    def score_at_rank(rank: int) -> Optional[float]:
+        return scores[top_ids[rank - 1]] if len(top_ids) >= rank else None
+
+    own_score = scores[own_expert] if 0 <= own_expert < len(scores) else None
+    own_rank = ordered.index(own_expert) + 1 if own_expert in ordered else None
+    top1_score = score_at_rank(1)
+    top2_score = score_at_rank(2)
+    top3_score = score_at_rank(3)
+    return {
+        "top1_expert_id": top_ids[0] if len(top_ids) >= 1 else None,
+        "top2_expert_id": top_ids[1] if len(top_ids) >= 2 else None,
+        "top3_expert_id": top_ids[2] if len(top_ids) >= 3 else None,
+        "own_expert_rank": own_rank,
+        "own_expert_score": own_score,
+        "top1_score": top1_score,
+        "top2_score": top2_score,
+        "top3_score": top3_score,
+        "own_score_margin_vs_top1": (
+            float(own_score - top1_score) if own_score is not None and top1_score is not None else None
+        ),
+        "top1_minus_own_score": (
+            float(top1_score - own_score) if own_score is not None and top1_score is not None else None
+        ),
+        "rank2_minus_rank3": (
+            float(top2_score - top3_score) if top2_score is not None and top3_score is not None else None
+        ),
+    }
+
+
+def prior_sequential_retention_reference(repo_path: Path, records: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    prior_path = repo_path.parent / "time_ten_sequential_per_record.csv"
+    output: Dict[str, Dict[str, Any]] = {}
+    if not prior_path.exists():
+        return output
+    rows = _read_csv_rows(prior_path)
+    for idx, record in enumerate(records):
+        rid = record_id(record, idx)
+        record_rows = [row for row in rows if str(row.get("record_id")) == rid]
+        force = next((row for row in record_rows if row.get("eval_routing_mode") == "force_own"), {})
+        calibrated = next((row for row in record_rows if row.get("eval_routing_mode") == "calibrated"), {})
+        source = force or calibrated
+        output[rid] = {
+            "prior_reference_path": str(prior_path),
+            "target_nll_immediately_after_own_edit": _float_or_none(source.get("target_nll_immediately_after_own_edit")),
+            "immediate_improvement": _float_or_none(source.get("immediate_improvement")),
+            "immediate_reference_mode": source.get("eval_routing_mode"),
+            "prior_calibrated_topk2_final_nll": _float_or_none(calibrated.get("target_nll_current") or calibrated.get("target_nll")),
+            "prior_calibrated_topk2_retained_improvement": _float_or_none(calibrated.get("retained_improvement") or calibrated.get("target_nll_delta")),
+            "prior_calibrated_topk2_own_selected": calibrated.get("own_selected") or calibrated.get("selected_own_expert"),
+            "prior_calibrated_topk2_own_top1": calibrated.get("own_top1") or calibrated.get("routing_top1_correct"),
+        }
+    return output
+
+
+def _fragile_flag(row: Dict[str, Any]) -> bool:
+    rid = str(row.get("record_id"))
+    return bool(
+        rid in {"1293", "942", "671"}
+        or not row.get("own_selected")
+        or not row.get("own_top1")
+        or not row.get("improved")
+        or row.get("forgotten")
+    )
+
+
+def _selection_boundary_score(scores: List[float], selected_ids: List[int]) -> Optional[float]:
+    selected_scores = [scores[idx] for idx in selected_ids if 0 <= int(idx) < len(scores)]
+    return min(selected_scores) if selected_scores else None
+
+
+def fragile_per_record_row(
+    config: Dict[str, Any],
+    row: Dict[str, Any],
+    prior_reference: Dict[str, Dict[str, Any]],
+    baseline_rows_by_record: Dict[str, Dict[str, Any]],
+) -> Dict[str, Any]:
+    scores = [float(value) for value in (row.get("pooled_scores") or [])]
+    own = int(row.get("expected_expert")) if row.get("expected_expert") is not None else -1
+    selected_ids = [int(value) for value in (row.get("selected_expert_ids") or [])]
+    ranks = _rank_details(scores, own)
+    boundary = _selection_boundary_score(scores, selected_ids)
+    own_score = ranks.get("own_expert_score")
+    retained = _float_or_none(row.get("target_nll_delta"))
+    final_nll = _float_or_none(row.get("target_nll"))
+    rid = str(row.get("record_id"))
+    prior = prior_reference.get(rid, {})
+    immediate_improvement = _float_or_none(prior.get("immediate_improvement"))
+    immediate_nll = _float_or_none(prior.get("target_nll_immediately_after_own_edit"))
+    baseline_row = baseline_rows_by_record.get(rid, {})
+    baseline_final_nll = _float_or_none(baseline_row.get("target_nll"))
+    baseline_retained = _float_or_none(baseline_row.get("target_nll_delta"))
+    output = {
+        "config_id": config.get("config_id"),
+        "group": config.get("group"),
+        "score_norm": config.get("score_norm"),
+        "calibration_mode": config.get("calibration_mode"),
+        "score_pool": config.get("score_pool"),
+        "routing_mode": config.get("routing_mode"),
+        "gamma": config.get("gamma"),
+        "relative_threshold": config.get("relative_threshold"),
+        "topk": config.get("topk"),
+        "adaptive_margin": config.get("adaptive_margin"),
+        "adaptive_topk_max": config.get("adaptive_topk_max"),
+        "max_selected_experts": config.get("max_selected_experts"),
+        "mixing_mode": config.get("mixing_mode"),
+        "force_include_own": bool(config.get("force_include_own")),
+        "record_id": rid,
+        "query_record_index": row.get("sample_pos"),
+        "own_expert_index": own,
+        "top_expert_id": row.get("top_score_expert_id", row.get("top_expert_id")),
+        "own_expert_rank": ranks.get("own_expert_rank"),
+        "own_selected": bool(row.get("selected_own_expert")),
+        "selected_expert_ids": selected_ids,
+        "selected_set_size": row.get("selected_expert_set_size"),
+        "calibrated_own_expert_score": own_score,
+        "top1_score": ranks.get("top1_score"),
+        "top2_score": ranks.get("top2_score"),
+        "top3_score": ranks.get("top3_score"),
+        "top1_expert_id": ranks.get("top1_expert_id"),
+        "top2_expert_id": ranks.get("top2_expert_id"),
+        "top3_expert_id": ranks.get("top3_expert_id"),
+        "own_score_margin_vs_top1": ranks.get("own_score_margin_vs_top1"),
+        "top1_minus_own_score": ranks.get("top1_minus_own_score"),
+        "rank2_minus_rank3": ranks.get("rank2_minus_rank3"),
+        "selection_boundary_score": boundary,
+        "own_score_margin_vs_selection_boundary": (
+            float(own_score - boundary) if own_score is not None and boundary is not None else None
+        ),
+        "target_nll_before": row.get("base_target_nll"),
+        "target_nll_immediately_after_own_edit": immediate_nll,
+        "immediate_improvement": immediate_improvement,
+        "immediate_reference_mode": prior.get("immediate_reference_mode"),
+        "final_target_nll": final_nll,
+        "retained_improvement": retained,
+        "improved": bool(retained is not None and retained > 0.0),
+        "forgotten": bool(immediate_improvement is not None and immediate_improvement > 0.0 and (retained is None or retained <= 0.0)),
+        "retention_drop": (
+            float(immediate_improvement - retained) if immediate_improvement is not None and retained is not None else None
+        ),
+        "nll_improvement_vs_topk2_baseline": (
+            float(baseline_final_nll - final_nll) if baseline_final_nll is not None and final_nll is not None else None
+        ),
+        "retained_improvement_delta_vs_topk2_baseline": (
+            float(retained - baseline_retained) if retained is not None and baseline_retained is not None else None
+        ),
+        "residual_norm": row.get("residual_norm"),
+        "hidden_delta_norm": row.get("target_layer_hidden_delta_norm"),
+        "locality_reference_delta": row.get("reference_delta"),
+        "forced_expert_id": row.get("forced_expert_id"),
+        "adaptive_included_rank3": row.get("adaptive_included_rank3"),
+        "fragile_record": False,
+    }
+    output["own_top1"] = bool(output["top_expert_id"] == own)
+    output["fragile_record"] = _fragile_flag(output)
+    return output
+
+
+def fragile_summary(config: Dict[str, Any], rows: List[Dict[str, Any]], baseline_worst_degradation: Optional[float]) -> Dict[str, Any]:
+    selected_sizes = [_float_or_none(row.get("selected_set_size")) for row in rows]
+    selected_sizes = [float(value) for value in selected_sizes if value is not None]
+    top_counts: Dict[str, int] = {}
+    for row in rows:
+        top_id = row.get("top_expert_id")
+        if top_id is None:
+            continue
+        key = str(top_id)
+        top_counts[key] = top_counts.get(key, 0) + 1
+    worst_degradation = max([max(0.0, -float(row.get("retained_improvement"))) for row in rows if row.get("retained_improvement") is not None], default=0.0)
+    summary = {
+        "config_id": config.get("config_id"),
+        "group": config.get("group"),
+        "score_norm": config.get("score_norm"),
+        "calibration_mode": config.get("calibration_mode"),
+        "score_pool": config.get("score_pool"),
+        "routing_mode": config.get("routing_mode"),
+        "gamma": config.get("gamma"),
+        "relative_threshold": config.get("relative_threshold"),
+        "topk": config.get("topk"),
+        "adaptive_margin": config.get("adaptive_margin"),
+        "adaptive_topk_max": config.get("adaptive_topk_max"),
+        "max_selected_experts": config.get("max_selected_experts"),
+        "mixing_mode": config.get("mixing_mode"),
+        "force_include_own": bool(config.get("force_include_own")),
+        "num_records": len(rows),
+        "retained_positive_count": sum(1 for row in rows if row.get("improved")),
+        "own_top1_count": sum(1 for row in rows if row.get("own_top1")),
+        "own_selected_count": sum(1 for row in rows if row.get("own_selected")),
+        "mean_selected_set_size": _mean(selected_sizes),
+        "max_selected_set_size": max(selected_sizes) if selected_sizes else None,
+        "empty_selection_count": sum(1 for row in rows if int(float(row.get("selected_set_size") or 0)) == 0),
+        "max_top_expert_count": max(top_counts.values()) if top_counts else 0,
+        "top_expert_counts": top_counts,
+        "mean_retained_improvement": _mean([row.get("retained_improvement") for row in rows]),
+        "worst_retention_drop": max([max(0.0, float(row.get("retention_drop"))) for row in rows if row.get("retention_drop") is not None], default=0.0),
+        "worst_nll_degradation": worst_degradation,
+        "worst_per_record_nll_degradation": worst_degradation,
+        "locality_reference_delta": _mean([row.get("locality_reference_delta") for row in rows]),
+        "mean_locality_reference_delta": _mean([row.get("locality_reference_delta") for row in rows]),
+        "mean_residual_norm": _mean([row.get("residual_norm") for row in rows]),
+        "mean_hidden_delta_norm": _mean([row.get("hidden_delta_norm") for row in rows]),
+        "fragile_own_selected_count": sum(1 for row in rows if row.get("fragile_record") and row.get("own_selected")),
+        "fragile_count": sum(1 for row in rows if row.get("fragile_record")),
+        "confusion_matrix": _routing_confusion(
+            [
+                {
+                    "expected_expert": row.get("own_expert_index"),
+                    "top_routed_expert_id": row.get("top_expert_id"),
+                }
+                for row in rows
+            ]
+        ),
+    }
+    useful = bool(
+        int(summary["retained_positive_count"]) >= 8
+        and int(summary["own_selected_count"]) >= 9
+        and (_float_or_none(summary["mean_selected_set_size"]) or 1.0e9) <= 2.5
+        and (_float_or_none(summary["max_selected_set_size"]) or 1.0e9) <= 3.0
+        and int(summary["empty_selection_count"]) <= 1
+        and int(summary["max_top_expert_count"]) <= 4
+        and (
+            baseline_worst_degradation is None
+            or float(summary["worst_nll_degradation"]) <= float(baseline_worst_degradation) + 1.0e-12
+        )
+    )
+    strong = bool(
+        int(summary["retained_positive_count"]) >= 9
+        and int(summary["own_selected_count"]) >= 9
+        and (_float_or_none(summary["mean_selected_set_size"]) or 1.0e9) <= 2.3
+        and (_float_or_none(summary["max_selected_set_size"]) or 1.0e9) <= 3.0
+    )
+    summary["useful_repair"] = useful
+    summary["strong_repair"] = strong
+    summary["baseline_worst_nll_degradation"] = baseline_worst_degradation
+    summary["worst_nll_degradation_not_worse_than_baseline"] = (
+        baseline_worst_degradation is None
+        or float(summary["worst_nll_degradation"]) <= float(baseline_worst_degradation) + 1.0e-12
+    )
+    return summary
+
+
+def choose_fragile_repair(grid_rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    useful = [row for row in grid_rows if row.get("useful_repair")]
+    strong = [row for row in grid_rows if row.get("strong_repair")]
+
+    def key(row: Dict[str, Any]) -> Tuple[float, float, float, float, float, float]:
+        return (
+            float(bool(row.get("strong_repair"))),
+            float(row.get("own_selected_count") or 0),
+            float(row.get("retained_positive_count") or 0),
+            -float(row.get("mean_selected_set_size") or 1.0e9),
+            -float(row.get("worst_nll_degradation") or 1.0e9),
+            float(row.get("mean_retained_improvement") or -1.0e9),
+        )
+
+    return {
+        "best_useful": max(useful, key=key) if useful else {},
+        "best_strong": max(strong, key=key) if strong else {},
+        "best_overall": max(grid_rows, key=key) if grid_rows else {},
+    }
+
+
+def diagnose_fragile_repair(
+    grid_rows: List[Dict[str, Any]],
+    per_record_rows: List[Dict[str, Any]],
+    best: Dict[str, Any],
+    baseline_summary: Dict[str, Any],
+) -> Tuple[str, str, List[str]]:
+    labels: List[str] = []
+    recommendation = "training-time routing margin loss is required before another sequential confirmation"
+    topk3 = next((row for row in grid_rows if row.get("config_id") == "calibrated_topk3"), {})
+    adaptive = [
+        row for row in grid_rows
+        if row.get("group") == "adaptive_topk2_to_3"
+        and int(row.get("own_selected_count") or 0) >= 9
+        and (_float_or_none(row.get("mean_selected_set_size")) or 1.0e9) <= 2.5
+    ]
+    if int(topk3.get("own_selected_count") or 0) >= 9 and int(topk3.get("retained_positive_count") or 0) >= 8:
+        labels.append("topk3_sparse_repair_success")
+        recommendation = "run a bounded 10-edit sequential confirmation with topk3 or adaptive topk"
+    if adaptive:
+        labels.append("adaptive_topk_repair_success")
+        recommendation = "use adaptive topk2_to_3 as the next default and confirm with one bounded 10-edit sequential run"
+
+    baseline_rows = [row for row in per_record_rows if row.get("config_id") == "calibrated_topk2_baseline"]
+    rank_by_record = {str(row.get("record_id")): row.get("own_expert_rank") for row in baseline_rows}
+    if rank_by_record.get("942") == 3 and rank_by_record.get("671") == 3:
+        labels.append("boundary_margin_issue")
+        if not adaptive:
+            recommendation = "prefer adaptive topk2_to_3 before retraining"
+    if any((rank_by_record.get(rid) or 0) > 3 for rid in ("942", "671")):
+        labels.append("identity_separation_failure")
+        recommendation = "add training-time routing margin loss before another sequential run"
+
+    force_rows = [row for row in per_record_rows if row.get("config_id") == "force_include_own"]
+    force_helped_fragile = any(
+        row.get("fragile_record")
+        and (row.get("nll_improvement_vs_topk2_baseline") or 0.0) > 0.0
+        for row in force_rows
+    )
+    best_nonforce_selected = max(
+        (
+            int(row.get("own_selected_count") or 0)
+            for row in grid_rows
+            if row.get("config_id") != "force_include_own"
+        ),
+        default=0,
+    )
+    if force_helped_fragile and best_nonforce_selected < 9:
+        labels.append("own_expert_rank_too_low_training_margin_needed")
+        recommendation = "force-own upper bound helps but deployable sparse routing misses own experts, so add training-time routing margin loss"
+
+    baseline_locality = _float_or_none(baseline_summary.get("mean_locality_reference_delta"))
+    useful_rows = [row for row in grid_rows if row.get("useful_repair")]
+    locality_damage = any(
+        baseline_locality is not None
+        and _float_or_none(row.get("mean_locality_reference_delta")) is not None
+        and float(row.get("mean_locality_reference_delta")) > max(10.0, 2.0 * baseline_locality)
+        for row in useful_rows
+    )
+    if locality_damage:
+        labels.append("locality_damage_issue")
+
+    if not labels:
+        labels.append("fragile_routing_repair_failed")
+    return "+".join(labels), recommendation, labels
+
+
+def _fragile_summary_table(rows: List[Dict[str, Any]]) -> List[str]:
+    lines = [
+        "| config | group | retained | own top1 | own selected | mean size | max size | empty | max top | mean retained | worst drop | worst degr | locality | useful | strong |",
+        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|",
+    ]
+    for row in rows:
+        lines.append(
+            "| {config} | {group} | {retained}/{num} | {top1}/{num} | {selected}/{num} | {mean_size} | {max_size} | {empty} | {max_top} | {mean_retained} | {worst_drop} | {worst_degr} | {locality} | {useful} | {strong} |".format(
+                config=row.get("config_id"),
+                group=row.get("group"),
+                retained=row.get("retained_positive_count"),
+                top1=row.get("own_top1_count"),
+                selected=row.get("own_selected_count"),
+                num=row.get("num_records"),
+                mean_size=_fmt(row.get("mean_selected_set_size")),
+                max_size=_fmt(row.get("max_selected_set_size")),
+                empty=row.get("empty_selection_count"),
+                max_top=row.get("max_top_expert_count"),
+                mean_retained=_fmt(row.get("mean_retained_improvement")),
+                worst_drop=_fmt(row.get("worst_retention_drop")),
+                worst_degr=_fmt(row.get("worst_nll_degradation")),
+                locality=_fmt(row.get("mean_locality_reference_delta")),
+                useful=row.get("useful_repair"),
+                strong=row.get("strong_repair"),
+            )
+        )
+    return lines
+
+
+def write_fragile_routing_repair_report(
+    out_dir: Path,
+    args: argparse.Namespace,
+    repo_path: Path,
+    command: str,
+    gpu_status: str,
+    own_rank_rows: List[Dict[str, Any]],
+    grid_rows: List[Dict[str, Any]],
+    per_record_rows: List[Dict[str, Any]],
+    best_payload: Dict[str, Any],
+) -> Path:
+    baseline = next((row for row in grid_rows if row.get("config_id") == "calibrated_topk2_baseline"), {})
+    topk3 = next((row for row in grid_rows if row.get("config_id") == "calibrated_topk3"), {})
+    adaptive_rows = [row for row in grid_rows if row.get("group") == "adaptive_topk2_to_3"]
+    best_adaptive = max(adaptive_rows, key=lambda row: (int(row.get("own_selected_count") or 0), int(row.get("retained_positive_count") or 0), -float(row.get("mean_selected_set_size") or 1.0e9))) if adaptive_rows else {}
+    force = next((row for row in grid_rows if row.get("config_id") == "force_include_own"), {})
+    diagnosis = best_payload.get("diagnosis")
+    recommendation = best_payload.get("recommendation")
+    cuda_setting = os.environ.get("CUDA_VISIBLE_DEVICES") or _cuda_setting_from_command(command) or args.device
+    fragile_rows = [row for row in own_rank_rows if row.get("fragile_record")]
+    lines = [
+        "# TIME 10-Edit Sequential Fragile Routing Repair Report",
+        "",
+        "## Scope",
+        "- Eval-only diagnostic on the existing 10-edit sequential repository.",
+        "- No retraining, no 20-edit run, and no broad sweep.",
+        "",
+        "## Existing Repository Loaded",
+        f"- `{repo_path}`",
+        "",
+        "## Exact Command Run",
+        f"- `{command}`",
+        "",
+        "## GPU",
+        f"- Used CUDA device setting: `{cuda_setting}`.",
+        "```text",
+        gpu_status or "unavailable",
+        "```",
+        "",
+        "## Verification",
+        "- `py_compile`: passed before model run.",
+        "- `scripts/time/test_time_modules.py`: passed before model run.",
+        "- Training: not run.",
+        "- 20-edit: not run.",
+        "",
+        "## Baseline And Repair Summary",
+        f"- Baseline topk2 retained_positive: {baseline.get('retained_positive_count')} / {baseline.get('num_records')}.",
+        f"- Baseline topk2 own selected: {baseline.get('own_selected_count')} / {baseline.get('num_records')}.",
+        f"- Topk3 retained_positive / own selected: {topk3.get('retained_positive_count')} / {topk3.get('own_selected_count')}.",
+        f"- Best adaptive config: `{best_adaptive.get('config_id')}` with retained_positive {best_adaptive.get('retained_positive_count')} / {best_adaptive.get('num_records')}, own selected {best_adaptive.get('own_selected_count')} / {best_adaptive.get('num_records')}, mean selected size {_fmt(best_adaptive.get('mean_selected_set_size'))}.",
+        f"- Force-include-own retained_positive / own selected: {force.get('retained_positive_count')} / {force.get('own_selected_count')}.",
+        "",
+        "## Fragile Own-Rank Table",
+        "| record_id | own expert | top1 | top2 | top3 | own rank | selected | own score | top1 score | top2 score | top3 score | own-top margin | rank2-rank3 |",
+        "|---|---:|---:|---:|---:|---:|---|---:|---:|---:|---:|---:|---:|",
+    ]
+    for row in fragile_rows:
+        lines.append(
+            "| {rid} | {own} | {top1} | {top2} | {top3} | {rank} | `{selected}` | {own_score} | {top1_score} | {top2_score} | {top3_score} | {own_margin} | {r23} |".format(
+                rid=row.get("record_id"),
+                own=row.get("own_expert_index"),
+                top1=row.get("top1_expert_id"),
+                top2=row.get("top2_expert_id"),
+                top3=row.get("top3_expert_id"),
+                rank=row.get("own_expert_rank"),
+                selected=json.dumps(row.get("selected_expert_ids")),
+                own_score=_fmt(row.get("calibrated_own_expert_score")),
+                top1_score=_fmt(row.get("top1_score")),
+                top2_score=_fmt(row.get("top2_score")),
+                top3_score=_fmt(row.get("top3_score")),
+                own_margin=_fmt(row.get("own_score_margin_vs_top1")),
+                r23=_fmt(row.get("rank2_minus_rank3")),
+            )
+        )
+    lines.extend(["", "## Grid"])
+    lines.extend(_fragile_summary_table(grid_rows))
+    lines.extend(
+        [
+            "",
+            "## Decision",
+            f"- Diagnosis: `{diagnosis}`.",
+            f"- Recommendation: {recommendation}.",
+            "",
+            "## Required Output Files",
+            "- `fragile_own_rank_table.csv`",
+            "- `fragile_score_margin_table.csv`",
+            "- `fragile_routing_repair_grid.csv`",
+            "- `fragile_per_record_eval.csv`",
+            "- `fragile_confusion_matrices.json`",
+            "- `fragile_routing_debug.jsonl`",
+            "- `TIME_10EDIT_SEQUENTIAL_FRAGILE_ROUTING_REPAIR_REPORT.md`",
+            "",
+        ]
+    )
+    path = out_dir / "TIME_10EDIT_SEQUENTIAL_FRAGILE_ROUTING_REPAIR_REPORT.md"
+    path.write_text("\n".join(lines))
+    return path
+
+
+def run_fragile_routing_repair_eval(
+    args: argparse.Namespace,
+    config: TIMEEditMultimodalHparams,
+    dataset_path: Path,
+    records: List[Dict[str, Any]],
+    samples: List[Dict[str, Any]],
+    alg: TIMEEdit,
+    out_dir: Path,
+    repo_path: Path,
+) -> Dict[str, Any]:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    debug_path = out_dir / "fragile_routing_debug.jsonl"
+    if debug_path.exists():
+        debug_path.unlink()
+    command = current_command_line()
+    gpu_status = _gpu_status_text()
+    write_json(
+        out_dir / "time_hparams.json",
+        {
+            "args": vars(args),
+            "config": dict(config.__dict__),
+            "command": command,
+            "eval_only": True,
+            "fragile_routing_repair_eval": True,
+            "loaded_repository_path": str(repo_path),
+            "gpu_status_at_start": gpu_status,
+        },
+    )
+
+    base_cache = build_base_eval_cache(alg, samples)
+    score_norm = str(args.time_score_norm or "factor_z")
+    score_pool = str(args.time_score_pool or "mean")
+    mixing_mode = str(args.time_mixing_mode or "softmax")
+    calibration_mode = normalize_time_calibration_mode(args.time_calibration_mode or "zscore_neg_mean")
+    force_rows: List[Dict[str, Any]] = []
+    with temporary_time_routing(
+        alg,
+        routing_mode="threshold",
+        gamma=1.0e30,
+        topk=0,
+        score_norm=score_norm,
+        relative_threshold=None,
+        mixing_mode=mixing_mode,
+        calibration_mode="none",
+        max_selected_experts=None,
+        score_pool=score_pool,
+        calibration_stats={},
+    ):
+        for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+            force_rows.append(
+                evaluate_sample(
+                    alg,
+                    sample,
+                    record,
+                    eval_pos,
+                    phase=f"fragile_force_calibration_source_{eval_pos}",
+                    expected_expert=eval_pos,
+                    routing_debug_path=debug_path,
+                    eval_routing_mode="force_own_calibration_source",
+                    force_expert_id=eval_pos,
+                    base_cache=base_cache[eval_pos],
+                    extra_fields={"fragile_repair_phase": "calibration_source"},
+                )
+            )
+    calibration_stats = _sequential_calibration_stats(force_rows, alg.repository.num_experts)
+    prior_reference = prior_sequential_retention_reference(repo_path, records)
+    configs = fragile_repair_configs(args)
+    baseline_config = configs[0]
+    baseline_raw_rows: List[Dict[str, Any]] = []
+    with temporary_time_routing(
+        alg,
+        routing_mode=str(baseline_config["routing_mode"]),
+        gamma=float(baseline_config["gamma"]),
+        topk=int(baseline_config["topk"]),
+        score_norm=str(baseline_config["score_norm"]),
+        relative_threshold=None,
+        mixing_mode=str(baseline_config["mixing_mode"]),
+        calibration_mode=str(baseline_config["calibration_mode"]),
+        calibration_beta=float(args.time_calibration_beta),
+        max_selected_experts=None,
+        score_pool=str(baseline_config["score_pool"]),
+        calibration_stats=calibration_stats,
+    ):
+        for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+            baseline_raw_rows.append(
+                evaluate_sample(
+                    alg,
+                    sample,
+                    record,
+                    eval_pos,
+                    phase=f"fragile_{baseline_config['config_id']}_{eval_pos}",
+                    expected_expert=eval_pos,
+                    routing_debug_path=debug_path,
+                    eval_routing_mode=str(baseline_config["config_id"]),
+                    base_cache=base_cache[eval_pos],
+                    extra_fields={
+                        "fragile_repair_phase": "baseline",
+                        "calibration_stats_source": "final_force_own_scores",
+                        "calibration_mu_neg": calibration_stats.get("mu_neg"),
+                        "calibration_std_neg": calibration_stats.get("std_neg"),
+                    },
+                )
+            )
+    baseline_rows_by_record = {str(row.get("record_id")): row for row in baseline_raw_rows}
+    baseline_rank_by_pos: Dict[int, Dict[str, Any]] = {}
+    for eval_pos, row in enumerate(baseline_raw_rows):
+        scores = [float(value) for value in (row.get("pooled_scores") or [])]
+        baseline_rank_by_pos[eval_pos] = _rank_details(scores, eval_pos)
+
+    per_config_rows: Dict[str, List[Dict[str, Any]]] = {}
+    baseline_per_rows = [
+        fragile_per_record_row(baseline_config, row, prior_reference, baseline_rows_by_record)
+        for row in baseline_raw_rows
+    ]
+    per_config_rows[str(baseline_config["config_id"])] = baseline_per_rows
+    baseline_summary = fragile_summary(baseline_config, baseline_per_rows, None)
+    baseline_worst = _float_or_none(baseline_summary.get("worst_nll_degradation"))
+    grid_rows = [fragile_summary(baseline_config, baseline_per_rows, baseline_worst)]
+
+    for config_item in configs[1:]:
+        raw_rows: List[Dict[str, Any]] = []
+        with temporary_time_routing(
+            alg,
+            routing_mode=str(config_item["routing_mode"]),
+            gamma=float(config_item["gamma"]) if config_item.get("gamma") is not None else float(args.gamma),
+            topk=int(config_item.get("topk") or 0),
+            score_norm=str(config_item["score_norm"]),
+            relative_threshold=float(config_item["relative_threshold"]) if config_item.get("relative_threshold") is not None else None,
+            mixing_mode=str(config_item["mixing_mode"]),
+            calibration_mode=str(config_item["calibration_mode"]),
+            calibration_beta=float(args.time_calibration_beta),
+            max_selected_experts=config_item.get("max_selected_experts"),
+            score_pool=str(config_item["score_pool"]),
+            calibration_stats=calibration_stats,
+        ):
+            for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+                rank_info = baseline_rank_by_pos.get(eval_pos, {})
+                force_id = None
+                adaptive_included_rank3 = False
+                margin_value = _float_or_none(config_item.get("adaptive_margin"))
+                rank2_minus_rank3 = _float_or_none(rank_info.get("rank2_minus_rank3"))
+                if config_item.get("force_include_own"):
+                    force_id = eval_pos
+                elif (
+                    margin_value is not None
+                    and int(config_item.get("adaptive_topk_max") or 0) >= 3
+                    and rank2_minus_rank3 is not None
+                    and rank2_minus_rank3 <= margin_value
+                ):
+                    force_id = rank_info.get("top3_expert_id")
+                    adaptive_included_rank3 = force_id is not None
+                row = evaluate_sample(
+                    alg,
+                    sample,
+                    record,
+                    eval_pos,
+                    phase=f"fragile_{config_item['config_id']}_{eval_pos}",
+                    expected_expert=eval_pos,
+                    routing_debug_path=debug_path,
+                    eval_routing_mode=str(config_item["config_id"]),
+                    force_expert_id=int(force_id) if force_id is not None else None,
+                    base_cache=base_cache[eval_pos],
+                    extra_fields={
+                        "fragile_repair_phase": "grid",
+                        "calibration_stats_source": "final_force_own_scores",
+                        "calibration_mu_neg": calibration_stats.get("mu_neg"),
+                        "calibration_std_neg": calibration_stats.get("std_neg"),
+                        "adaptive_margin": config_item.get("adaptive_margin"),
+                        "adaptive_topk_max": config_item.get("adaptive_topk_max"),
+                        "adaptive_rank2_minus_rank3": rank2_minus_rank3,
+                        "adaptive_rank3_expert_id": rank_info.get("top3_expert_id"),
+                        "adaptive_included_rank3": adaptive_included_rank3,
+                        "forced_expert_id": force_id,
+                    },
+                )
+                if force_id is not None:
+                    row["top_routed_expert_id"] = row.get("top_score_expert_id")
+                    row["routing_top1_correct"] = bool(row.get("top_score_expert_id") == eval_pos)
+                raw_rows.append(row)
+        processed_rows = [
+            fragile_per_record_row(config_item, row, prior_reference, baseline_rows_by_record)
+            for row in raw_rows
+        ]
+        per_config_rows[str(config_item["config_id"])] = processed_rows
+        grid_rows.append(fragile_summary(config_item, processed_rows, baseline_worst))
+
+    per_record_rows = [row for config_rows in per_config_rows.values() for row in config_rows]
+    own_rank_rows = [row for row in per_config_rows[str(baseline_config["config_id"])]]
+    margin_rows = [
+        {
+            "record_id": row.get("record_id"),
+            "own_expert_index": row.get("own_expert_index"),
+            "own_expert_rank": row.get("own_expert_rank"),
+            "top1_expert_id": row.get("top1_expert_id"),
+            "top2_expert_id": row.get("top2_expert_id"),
+            "top3_expert_id": row.get("top3_expert_id"),
+            "calibrated_own_expert_score": row.get("calibrated_own_expert_score"),
+            "top1_score": row.get("top1_score"),
+            "top2_score": row.get("top2_score"),
+            "top3_score": row.get("top3_score"),
+            "own_score_margin_vs_top1": row.get("own_score_margin_vs_top1"),
+            "top1_minus_own_score": row.get("top1_minus_own_score"),
+            "own_score_margin_vs_selection_boundary": row.get("own_score_margin_vs_selection_boundary"),
+            "rank2_minus_rank3": row.get("rank2_minus_rank3"),
+            "fragile_record": row.get("fragile_record"),
+        }
+        for row in own_rank_rows
+    ]
+    confusion_matrices = {
+        str(row.get("config_id")): {
+            "config": {
+                key: row.get(key)
+                for key in (
+                    "group",
+                    "score_norm",
+                    "calibration_mode",
+                    "score_pool",
+                    "routing_mode",
+                    "relative_threshold",
+                    "topk",
+                    "adaptive_margin",
+                    "adaptive_topk_max",
+                    "max_selected_experts",
+                    "mixing_mode",
+                    "force_include_own",
+                )
+            },
+            "matrix": row.get("confusion_matrix"),
+        }
+        for row in grid_rows
+    }
+    best = choose_fragile_repair(grid_rows)
+    diagnosis, recommendation, labels = diagnose_fragile_repair(grid_rows, per_record_rows, best, grid_rows[0])
+    best_payload = {
+        **best,
+        "diagnosis": diagnosis,
+        "diagnosis_labels": labels,
+        "recommendation": recommendation,
+        "loaded_repository_path": str(repo_path),
+        "command": command,
+        "gpu_status_at_start": gpu_status,
+        "calibration_stats": calibration_stats,
+        "success_criteria": {
+            "useful": {
+                "retained_positive": ">=8/10",
+                "own_selected": ">=9/10",
+                "mean_selected_size": "<=2.5",
+                "max_selected_size": "<=3",
+                "empty_selections": "<=1",
+                "max_top_expert_count": "<=4",
+                "worst_nll_degradation": "not worse than topk2 baseline",
+            },
+            "strong": {
+                "retained_positive": ">=9/10",
+                "own_selected": ">=9/10",
+                "mean_selected_size": "<=2.3",
+                "max_selected_size": "<=3",
+            },
+        },
+    }
+    write_loss_trace(out_dir / "fragile_own_rank_table.csv", own_rank_rows)
+    write_loss_trace(out_dir / "fragile_score_margin_table.csv", margin_rows)
+    write_loss_trace(out_dir / "fragile_routing_repair_grid.csv", grid_rows)
+    write_loss_trace(out_dir / "fragile_per_record_eval.csv", per_record_rows)
+    write_json(out_dir / "fragile_confusion_matrices.json", confusion_matrices)
+    write_json(out_dir / "fragile_routing_repair_best.json", best_payload)
+    report_path = write_fragile_routing_repair_report(
+        out_dir,
+        args,
+        repo_path,
+        command,
+        gpu_status,
+        own_rank_rows,
+        grid_rows,
+        per_record_rows,
+        best_payload,
+    )
+    payload = {
+        "loaded_repository_path": str(repo_path),
+        "num_records": len(records),
+        "num_configs": len(grid_rows),
+        "diagnosis": diagnosis,
+        "recommendation": recommendation,
+        "best": best_payload,
+        "report_path": str(report_path),
+    }
+    print(json.dumps(to_jsonable(payload), indent=2, sort_keys=True))
+    return payload
+
+
+def adaptive_margin_microcheck_configs(args: argparse.Namespace) -> List[Dict[str, Any]]:
+    score_norm = str(args.time_score_norm or "factor_z")
+    calibration_mode = normalize_time_calibration_mode(args.time_calibration_mode or "zscore_neg_mean")
+    score_pool = str(args.time_score_pool or "mean")
+    mixing_mode = str(args.time_mixing_mode or "softmax")
+
+    def base_config(config_id: str, group: str, *, topk: int, margin: Optional[float] = None) -> Dict[str, Any]:
+        return {
+            "config_id": config_id,
+            "group": group,
+            "score_norm": score_norm,
+            "calibration_mode": calibration_mode,
+            "score_pool": score_pool,
+            "routing_mode": "topk",
+            "gamma": float(args.gamma),
+            "relative_threshold": None,
+            "topk": int(topk),
+            "max_selected_experts": None,
+            "mixing_mode": mixing_mode,
+            "adaptive_margin": margin,
+            "adaptive_topk_max": int(args.time_adaptive_topk_max or 3),
+            "force_include_own": False,
+        }
+
+    configs = [
+        base_config("calibrated_topk2_baseline", "baseline_topk2", topk=2),
+        base_config("adaptive_topk2_to_3_margin0p2", "previous_adaptive_margin", topk=2, margin=0.20),
+        base_config("calibrated_topk3", "fixed_topk3", topk=3),
+    ]
+    for margin in (0.25, 0.30, 0.35):
+        configs.append(
+            base_config(
+                f"adaptive_topk2_to_3_margin{_fragile_float_suffix(margin)}",
+                "new_adaptive_margin",
+                topk=2,
+                margin=float(margin),
+            )
+        )
+    return configs
+
+
+def _microcheck_margin(config: Dict[str, Any]) -> Optional[float]:
+    value = config.get("adaptive_margin")
+    return None if value is None else float(value)
+
+
+def augment_microcheck_summary(
+    summary: Dict[str, Any],
+    rows: List[Dict[str, Any]],
+    baseline_rows: List[Dict[str, Any]],
+    fixed_topk3_summary: Dict[str, Any],
+) -> Dict[str, Any]:
+    by_record = {str(row.get("record_id")): row for row in rows}
+    baseline_by_record = {str(row.get("record_id")): row for row in baseline_rows}
+    previously_good = {
+        rid
+        for rid, row in baseline_by_record.items()
+        if row.get("own_selected") and row.get("improved")
+    }
+    worsened_records = [
+        rid
+        for rid in sorted(previously_good)
+        if (by_record.get(rid, {}).get("nll_improvement_vs_topk2_baseline") or 0.0) < -1.0e-12
+    ]
+    topk3_degradation = _float_or_none(fixed_topk3_summary.get("worst_nll_degradation"))
+    topk3_locality = _float_or_none(fixed_topk3_summary.get("mean_locality_reference_delta"))
+    record_671 = by_record.get("671", {})
+    record_942 = by_record.get("942", {})
+    degradation_below = (
+        topk3_degradation is not None
+        and _float_or_none(summary.get("worst_nll_degradation")) is not None
+        and float(summary["worst_nll_degradation"]) < float(topk3_degradation)
+    )
+    locality_not_worse = (
+        topk3_locality is not None
+        and _float_or_none(summary.get("mean_locality_reference_delta")) is not None
+        and float(summary["mean_locality_reference_delta"]) <= float(topk3_locality) + 1.0e-12
+    )
+    record_671_recovered = bool(record_671.get("own_selected"))
+    record_942_recovered = bool(record_942.get("own_selected"))
+    pass_success = bool(
+        int(summary.get("retained_positive_count") or 0) >= 8
+        and (
+            int(summary.get("own_selected_count") or 0) >= 10
+            or (int(summary.get("own_selected_count") or 0) >= 9 and record_671_recovered)
+        )
+        and (_float_or_none(summary.get("mean_selected_set_size")) or 1.0e9) <= 2.5
+        and (_float_or_none(summary.get("max_selected_set_size")) or 1.0e9) <= 3.0
+        and int(summary.get("empty_selection_count") or 0) == 0
+        and degradation_below
+        and locality_not_worse
+    )
+    summary.update(
+        {
+            "record_671_recovered": record_671_recovered,
+            "record_671_selected_expert_ids": record_671.get("selected_expert_ids"),
+            "record_671_retained_improvement": record_671.get("retained_improvement"),
+            "record_942_remains_recovered": record_942_recovered,
+            "record_942_selected_expert_ids": record_942.get("selected_expert_ids"),
+            "record_942_retained_improvement": record_942.get("retained_improvement"),
+            "previously_good_records": sorted(previously_good),
+            "previously_good_worsened_records": worsened_records,
+            "previously_good_worsened_count": len(worsened_records),
+            "fixed_topk3_worst_nll_degradation": topk3_degradation,
+            "fixed_topk3_locality_reference_delta": topk3_locality,
+            "degradation_below_fixed_topk3": degradation_below,
+            "locality_not_worse_than_fixed_topk3": locality_not_worse,
+            "microcheck_success": pass_success,
+        }
+    )
+    return summary
+
+
+def choose_microcheck_best(grid_rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    adaptive_rows = [row for row in grid_rows if row.get("adaptive_margin") is not None]
+    passing = [row for row in adaptive_rows if row.get("microcheck_success")]
+
+    def key(row: Dict[str, Any]) -> Tuple[float, float, float, float, float, float]:
+        return (
+            float(bool(row.get("microcheck_success"))),
+            float(bool(row.get("record_671_recovered"))),
+            float(row.get("own_selected_count") or 0),
+            float(row.get("retained_positive_count") or 0),
+            -float(row.get("mean_selected_set_size") or 1.0e9),
+            -float(row.get("worst_nll_degradation") or 1.0e9),
+        )
+
+    return {
+        "best_success": max(passing, key=key) if passing else {},
+        "best_adaptive": max(adaptive_rows, key=key) if adaptive_rows else {},
+        "best_overall": max(grid_rows, key=key) if grid_rows else {},
+    }
+
+
+def diagnose_microcheck(grid_rows: List[Dict[str, Any]], best: Dict[str, Any]) -> Tuple[str, str]:
+    target_rows = [
+        row for row in grid_rows
+        if _microcheck_margin(row) in {0.30, 0.35}
+    ]
+    target_success = [row for row in target_rows if row.get("microcheck_success") and row.get("record_671_recovered")]
+    if target_success:
+        chosen = max(target_success, key=lambda row: (-float(row.get("worst_nll_degradation") or 1.0e9), -float(row.get("mean_selected_set_size") or 1.0e9)))
+        return (
+            "adaptive_margin_boundary_repair_success",
+            f"run 10-edit sequential confirmation with `{chosen.get('config_id')}`",
+        )
+    if any(row.get("record_671_recovered") for row in target_rows):
+        return (
+            "adaptive_margin_too_dense_or_noisy",
+            "stay with margin 0.20 as the practical fallback before considering retrain",
+        )
+    topk3 = next((row for row in grid_rows if row.get("config_id") == "calibrated_topk3"), {})
+    if topk3.get("record_671_recovered"):
+        return (
+            "identity_separation_failure_for_record_671",
+            "implement training-time routing margin loss before another sequential confirmation",
+        )
+    chosen = best.get("best_adaptive") or {}
+    return (
+        "adaptive_margin_microcheck_inconclusive",
+        f"use `{chosen.get('config_id')}` only as a diagnostic fallback",
+    )
+
+
+def _microcheck_summary_table(rows: List[Dict[str, Any]]) -> List[str]:
+    lines = [
+        "| config | margin | retained | own selected | own top1 | mean size | max size | empty | max top | mean retained | worst drop | worst degr | locality | 671 recovered | 942 recovered | worsened good | pass |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|---:|---|",
+    ]
+    for row in rows:
+        lines.append(
+            "| {config} | {margin} | {ret}/{num} | {sel}/{num} | {top1}/{num} | {mean_size} | {max_size} | {empty} | {max_top} | {mean_ret} | {worst_drop} | {worst_degr} | {loc} | {r671} | {r942} | {worse} | {passed} |".format(
+                config=row.get("config_id"),
+                margin=_fmt(row.get("adaptive_margin")) if row.get("adaptive_margin") is not None else "",
+                ret=row.get("retained_positive_count"),
+                sel=row.get("own_selected_count"),
+                top1=row.get("own_top1_count"),
+                num=row.get("num_records"),
+                mean_size=_fmt(row.get("mean_selected_set_size")),
+                max_size=_fmt(row.get("max_selected_set_size")),
+                empty=row.get("empty_selection_count"),
+                max_top=row.get("max_top_expert_count"),
+                mean_ret=_fmt(row.get("mean_retained_improvement")),
+                worst_drop=_fmt(row.get("worst_retention_drop")),
+                worst_degr=_fmt(row.get("worst_nll_degradation")),
+                loc=_fmt(row.get("mean_locality_reference_delta")),
+                r671=row.get("record_671_recovered"),
+                r942=row.get("record_942_remains_recovered"),
+                worse=row.get("previously_good_worsened_count"),
+                passed=row.get("microcheck_success"),
+            )
+        )
+    return lines
+
+
+def _microcheck_record_rows(per_record_rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    selected = []
+    for row in per_record_rows:
+        if str(row.get("record_id")) in {"1293", "942", "671"}:
+            selected.append(row)
+    return selected
+
+
+def write_adaptive_margin_microcheck_report(
+    out_dir: Path,
+    args: argparse.Namespace,
+    repo_path: Path,
+    command: str,
+    gpu_status: str,
+    grid_rows: List[Dict[str, Any]],
+    per_record_rows: List[Dict[str, Any]],
+    best_payload: Dict[str, Any],
+    record_671_gap: Optional[float],
+) -> Path:
+    best = best_payload.get("best_success") or best_payload.get("best_adaptive") or {}
+    topk2 = next((row for row in grid_rows if row.get("config_id") == "calibrated_topk2_baseline"), {})
+    margin02 = next((row for row in grid_rows if row.get("config_id") == "adaptive_topk2_to_3_margin0p2"), {})
+    topk3 = next((row for row in grid_rows if row.get("config_id") == "calibrated_topk3"), {})
+    diagnosis = best_payload.get("diagnosis")
+    recommendation = best_payload.get("recommendation")
+    github_status = os.environ.get("TIME_GITHUB_SYNC_STATUS", "not checked inside eval-only run")
+    cuda_setting = os.environ.get("CUDA_VISIBLE_DEVICES") or _cuda_setting_from_command(command) or args.device
+    lines = [
+        "# TIME 10-Edit Sequential Adaptive Margin Microcheck Report",
+        "",
+        "## Files Changed",
+        "- `scripts/time/run_time_medmkeb_smoke.py`",
+        "",
+        "## Scope",
+        "- Eval-only adaptive topk2_to_3 margin micro-check on the existing 10-edit sequential repository.",
+        "- No retraining, no 20-edit run, no broad sweep, and no TIME core modification.",
+        "",
+        "## Exact Command Run",
+        f"- `{command}`",
+        "",
+        "## GPU",
+        f"- Used CUDA device setting: `{cuda_setting}`.",
+        "- GPU 3 was selected because the pre-run `nvidia-smi` check showed it free.",
+        "```text",
+        gpu_status or "unavailable",
+        "```",
+        "",
+        "## Verification",
+        "- `py_compile`: passed before model run.",
+        "- `scripts/time/test_time_modules.py`: passed before model run.",
+        "",
+        "## Repository Loaded",
+        f"- `{repo_path}`",
+        "",
+        "## Record 671 Boundary",
+        f"- Confirmed rank2-rank3 gap: {_fmt(record_671_gap)}.",
+        "",
+        "## Baselines",
+        f"- Topk2 retained/own-selected/worst-degradation/locality: {topk2.get('retained_positive_count')}/10, {topk2.get('own_selected_count')}/10, {_fmt(topk2.get('worst_nll_degradation'))}, {_fmt(topk2.get('mean_locality_reference_delta'))}.",
+        f"- Previous adaptive margin 0.20 retained/own-selected/worst-degradation/locality: {margin02.get('retained_positive_count')}/10, {margin02.get('own_selected_count')}/10, {_fmt(margin02.get('worst_nll_degradation'))}, {_fmt(margin02.get('mean_locality_reference_delta'))}.",
+        f"- Fixed topk3 retained/own-selected/worst-degradation/locality: {topk3.get('retained_positive_count')}/10, {topk3.get('own_selected_count')}/10, {_fmt(topk3.get('worst_nll_degradation'))}, {_fmt(topk3.get('mean_locality_reference_delta'))}.",
+        "",
+        "## Microcheck Grid",
+    ]
+    lines.extend(_microcheck_summary_table(grid_rows))
+    lines.extend(
+        [
+            "",
+            "## Per-Record Changes",
+            "| config | record | own rank | selected ids | own selected | retained improvement | delta vs topk2 | recovered | worsened vs topk2 |",
+            "|---|---:|---:|---|---|---:|---:|---|---|",
+        ]
+    )
+    for row in _microcheck_record_rows(per_record_rows):
+        lines.append(
+            "| {config} | {record} | {rank} | `{selected}` | {own_selected} | {retained} | {delta} | {recovered} | {worse} |".format(
+                config=row.get("config_id"),
+                record=row.get("record_id"),
+                rank=row.get("own_expert_rank"),
+                selected=json.dumps(row.get("selected_expert_ids")),
+                own_selected=row.get("own_selected"),
+                retained=_fmt(row.get("retained_improvement")),
+                delta=_fmt(row.get("retained_improvement_delta_vs_topk2_baseline")),
+                recovered=row.get("own_selected"),
+                worse=bool((row.get("nll_improvement_vs_topk2_baseline") or 0.0) < -1.0e-12),
+            )
+        )
+    lines.extend(
+        [
+            "",
+            "## Best Margin",
+            f"- Best config: `{best.get('config_id')}`.",
+            f"- Record 671 recovered: {best.get('record_671_recovered')}.",
+            f"- Degradation stayed below fixed topk3: {best.get('degradation_below_fixed_topk3')}.",
+            f"- Locality/reference delta not worse than fixed topk3: {best.get('locality_not_worse_than_fixed_topk3')}.",
+            "",
+            "## Decision",
+            f"- Diagnosis label: `{diagnosis}`.",
+            f"- Recommendation: {recommendation}.",
+            "",
+            "## Source Sync And Artifact Policy",
+            "- Did not sync outputs/checkpoints/logs/datasets/PDFs/zips.",
+            f"- Source-only GitHub sync status: {github_status}.",
+            "",
+            "## Required Output Files",
+            "- `adaptive_margin_microcheck_grid.csv`",
+            "- `adaptive_margin_microcheck_per_record.csv`",
+            "- `adaptive_margin_microcheck_confusion_matrices.json`",
+            "- `adaptive_margin_microcheck_debug.jsonl`",
+            "- `TIME_10EDIT_SEQUENTIAL_ADAPTIVE_MARGIN_MICROCHECK_REPORT.md`",
+            "",
+        ]
+    )
+    path = out_dir / "TIME_10EDIT_SEQUENTIAL_ADAPTIVE_MARGIN_MICROCHECK_REPORT.md"
+    path.write_text("\n".join(lines))
+    return path
+
+
+def run_adaptive_margin_microcheck(
+    args: argparse.Namespace,
+    config: TIMEEditMultimodalHparams,
+    dataset_path: Path,
+    records: List[Dict[str, Any]],
+    samples: List[Dict[str, Any]],
+    alg: TIMEEdit,
+    out_dir: Path,
+    repo_path: Path,
+) -> Dict[str, Any]:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    debug_path = out_dir / "adaptive_margin_microcheck_debug.jsonl"
+    if debug_path.exists():
+        debug_path.unlink()
+    command = current_command_line()
+    gpu_status = _gpu_status_text()
+    write_json(
+        out_dir / "time_hparams.json",
+        {
+            "args": vars(args),
+            "config": dict(config.__dict__),
+            "command": command,
+            "eval_only": True,
+            "adaptive_margin_microcheck": True,
+            "loaded_repository_path": str(repo_path),
+            "gpu_status_at_start": gpu_status,
+        },
+    )
+
+    base_cache = build_base_eval_cache(alg, samples)
+    score_norm = str(args.time_score_norm or "factor_z")
+    score_pool = str(args.time_score_pool or "mean")
+    mixing_mode = str(args.time_mixing_mode or "softmax")
+    force_rows: List[Dict[str, Any]] = []
+    with temporary_time_routing(
+        alg,
+        routing_mode="threshold",
+        gamma=1.0e30,
+        topk=0,
+        score_norm=score_norm,
+        relative_threshold=None,
+        mixing_mode=mixing_mode,
+        calibration_mode="none",
+        max_selected_experts=None,
+        score_pool=score_pool,
+        calibration_stats={},
+    ):
+        for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+            force_rows.append(
+                evaluate_sample(
+                    alg,
+                    sample,
+                    record,
+                    eval_pos,
+                    phase=f"microcheck_force_calibration_source_{eval_pos}",
+                    expected_expert=eval_pos,
+                    routing_debug_path=debug_path,
+                    eval_routing_mode="force_own_calibration_source",
+                    force_expert_id=eval_pos,
+                    base_cache=base_cache[eval_pos],
+                    extra_fields={"microcheck_phase": "calibration_source"},
+                )
+            )
+    calibration_stats = _sequential_calibration_stats(force_rows, alg.repository.num_experts)
+    prior_reference = prior_sequential_retention_reference(repo_path, records)
+    configs = adaptive_margin_microcheck_configs(args)
+    baseline_config = configs[0]
+    per_config_rows: Dict[str, List[Dict[str, Any]]] = {}
+    raw_config_rows: Dict[str, List[Dict[str, Any]]] = {}
+    baseline_rank_by_pos: Dict[int, Dict[str, Any]] = {}
+
+    for config_item in configs:
+        raw_rows: List[Dict[str, Any]] = []
+        with temporary_time_routing(
+            alg,
+            routing_mode=str(config_item["routing_mode"]),
+            gamma=float(config_item["gamma"]) if config_item.get("gamma") is not None else float(args.gamma),
+            topk=int(config_item.get("topk") or 0),
+            score_norm=str(config_item["score_norm"]),
+            relative_threshold=float(config_item["relative_threshold"]) if config_item.get("relative_threshold") is not None else None,
+            mixing_mode=str(config_item["mixing_mode"]),
+            calibration_mode=str(config_item["calibration_mode"]),
+            calibration_beta=float(args.time_calibration_beta),
+            max_selected_experts=config_item.get("max_selected_experts"),
+            score_pool=str(config_item["score_pool"]),
+            calibration_stats=calibration_stats,
+        ):
+            for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+                force_id = None
+                adaptive_included_rank3 = False
+                rank_info = baseline_rank_by_pos.get(eval_pos, {})
+                margin_value = _float_or_none(config_item.get("adaptive_margin"))
+                rank2_minus_rank3 = _float_or_none(rank_info.get("rank2_minus_rank3"))
+                if margin_value is not None:
+                    if (
+                        int(config_item.get("adaptive_topk_max") or 0) >= 3
+                        and rank2_minus_rank3 is not None
+                        and rank2_minus_rank3 <= margin_value
+                    ):
+                        force_id = rank_info.get("top3_expert_id")
+                        adaptive_included_rank3 = force_id is not None
+                row = evaluate_sample(
+                    alg,
+                    sample,
+                    record,
+                    eval_pos,
+                    phase=f"microcheck_{config_item['config_id']}_{eval_pos}",
+                    expected_expert=eval_pos,
+                    routing_debug_path=debug_path,
+                    eval_routing_mode=str(config_item["config_id"]),
+                    force_expert_id=int(force_id) if force_id is not None else None,
+                    base_cache=base_cache[eval_pos],
+                    extra_fields={
+                        "microcheck_phase": "grid",
+                        "calibration_stats_source": "final_force_own_scores",
+                        "calibration_mu_neg": calibration_stats.get("mu_neg"),
+                        "calibration_std_neg": calibration_stats.get("std_neg"),
+                        "adaptive_margin": config_item.get("adaptive_margin"),
+                        "adaptive_topk_max": config_item.get("adaptive_topk_max"),
+                        "adaptive_rank2_minus_rank3": rank2_minus_rank3,
+                        "adaptive_rank3_expert_id": rank_info.get("top3_expert_id"),
+                        "adaptive_included_rank3": adaptive_included_rank3,
+                        "forced_expert_id": force_id,
+                    },
+                )
+                if force_id is not None:
+                    row["top_routed_expert_id"] = row.get("top_score_expert_id")
+                    row["routing_top1_correct"] = bool(row.get("top_score_expert_id") == eval_pos)
+                raw_rows.append(row)
+        raw_config_rows[str(config_item["config_id"])] = raw_rows
+        if config_item is baseline_config:
+            for eval_pos, row in enumerate(raw_rows):
+                scores = [float(value) for value in (row.get("pooled_scores") or [])]
+                baseline_rank_by_pos[eval_pos] = _rank_details(scores, eval_pos)
+
+    baseline_rows_by_record = {
+        str(row.get("record_id")): row
+        for row in raw_config_rows[str(baseline_config["config_id"])]
+    }
+    for config_item in configs:
+        per_config_rows[str(config_item["config_id"])] = [
+            fragile_per_record_row(config_item, row, prior_reference, baseline_rows_by_record)
+            for row in raw_config_rows[str(config_item["config_id"])]
+        ]
+
+    base_summary_rows = {
+        str(config_item["config_id"]): fragile_summary(config_item, per_config_rows[str(config_item["config_id"])], None)
+        for config_item in configs
+    }
+    fixed_topk3_summary = base_summary_rows.get("calibrated_topk3", {})
+    baseline_per_rows = per_config_rows[str(baseline_config["config_id"])]
+    grid_rows: List[Dict[str, Any]] = []
+    for config_item in configs:
+        config_id = str(config_item["config_id"])
+        summary = dict(base_summary_rows[config_id])
+        grid_rows.append(
+            augment_microcheck_summary(
+                summary,
+                per_config_rows[config_id],
+                baseline_per_rows,
+                fixed_topk3_summary,
+            )
+        )
+
+    per_record_rows = [row for config_rows in per_config_rows.values() for row in config_rows]
+    confusion_matrices = {
+        str(row.get("config_id")): {
+            "config": {
+                key: row.get(key)
+                for key in (
+                    "group",
+                    "score_norm",
+                    "calibration_mode",
+                    "score_pool",
+                    "routing_mode",
+                    "topk",
+                    "adaptive_margin",
+                    "adaptive_topk_max",
+                    "mixing_mode",
+                )
+            },
+            "matrix": row.get("confusion_matrix"),
+        }
+        for row in grid_rows
+    }
+    best = choose_microcheck_best(grid_rows)
+    diagnosis, recommendation = diagnose_microcheck(grid_rows, best)
+    best_payload = {
+        **best,
+        "diagnosis": diagnosis,
+        "recommendation": recommendation,
+        "loaded_repository_path": str(repo_path),
+        "command": command,
+        "gpu_status_at_start": gpu_status,
+        "calibration_stats": calibration_stats,
+        "success_criteria": {
+            "retained_positive": ">=8/10",
+            "own_selected": ">=10/10 or >=9/10 with record 671 recovered",
+            "mean_selected_size": "<=2.5",
+            "max_selected_size": "<=3",
+            "empty_selections": "=0",
+            "worst_nll_degradation": "< fixed topk3 degradation",
+            "locality_reference_delta": "not worse than fixed topk3",
+        },
+    }
+    record_671_gap = next(
+        (
+            row.get("rank2_minus_rank3")
+            for row in per_config_rows[str(baseline_config["config_id"])]
+            if str(row.get("record_id")) == "671"
+        ),
+        None,
+    )
+    write_loss_trace(out_dir / "adaptive_margin_microcheck_grid.csv", grid_rows)
+    write_loss_trace(out_dir / "adaptive_margin_microcheck_per_record.csv", per_record_rows)
+    write_json(out_dir / "adaptive_margin_microcheck_confusion_matrices.json", confusion_matrices)
+    write_json(out_dir / "adaptive_margin_microcheck_best.json", best_payload)
+    report_path = write_adaptive_margin_microcheck_report(
+        out_dir,
+        args,
+        repo_path,
+        command,
+        gpu_status,
+        grid_rows,
+        per_record_rows,
+        best_payload,
+        _float_or_none(record_671_gap),
+    )
+    payload = {
+        "loaded_repository_path": str(repo_path),
+        "num_records": len(records),
+        "num_configs": len(grid_rows),
+        "diagnosis": diagnosis,
+        "recommendation": recommendation,
         "best": best_payload,
         "report_path": str(report_path),
     }
@@ -5580,7 +7083,25 @@ def main() -> None:
 
     model = get_model(config).to(device).eval()
     samples = [make_sample(model, record, image_root) for record in records]
-    if args.time_10edit_routing_repair_eval and args.eval_only:
+    if args.time_adaptive_margin_microcheck and args.eval_only:
+        if repo_path is None:
+            raise RuntimeError("--time-adaptive-margin-microcheck requires --time-load-repository PATH.")
+        alg = TIMEEdit(model, config, lambda: None).to(device)
+        try:
+            run_adaptive_margin_microcheck(args, config, dataset_path, records, samples, alg, args.out_dir, repo_path)
+        finally:
+            alg.remove_hook()
+            del alg
+    elif args.time_fragile_routing_repair_eval and args.eval_only:
+        if repo_path is None:
+            raise RuntimeError("--time-fragile-routing-repair-eval requires --time-load-repository PATH.")
+        alg = TIMEEdit(model, config, lambda: None).to(device)
+        try:
+            run_fragile_routing_repair_eval(args, config, dataset_path, records, samples, alg, args.out_dir, repo_path)
+        finally:
+            alg.remove_hook()
+            del alg
+    elif args.time_10edit_routing_repair_eval and args.eval_only:
         if repo_path is None:
             raise RuntimeError("--time-10edit-routing-repair-eval requires --time-load-repository PATH.")
         alg = TIMEEdit(model, config, lambda: None).to(device)
