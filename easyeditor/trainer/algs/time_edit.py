@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 from contextlib import contextmanager
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -87,6 +88,10 @@ class TIMEEdit(EditableModel):
             calibration_beta=float(_cfg(self.config, "time_calibration_beta", 0.0)),
             max_selected_experts=_cfg(self.config, "time_max_selected_experts", None),
             score_pool=str(_cfg(self.config, "time_score_pool", "token")),
+            enable_adaptive_rank_margin_rescue=bool(_cfg(self.config, "time_enable_adaptive_rank_margin_rescue", False)),
+            adaptive_rank_margin=float(_cfg(self.config, "time_adaptive_rank_margin", 0.02)),
+            adaptive_rank_margin_use_rank3=bool(_cfg(self.config, "time_adaptive_rank_margin_use_rank3", True)),
+            adaptive_rank_margin_debug=bool(_cfg(self.config, "time_adaptive_rank_margin_debug", False)),
         )
         self._optimizer_anchor = nn.Parameter(torch.zeros(1))
         self._time_context: Optional[TIMEInterventionContext] = None
@@ -96,6 +101,9 @@ class TIMEEdit(EditableModel):
         self._time_anti_collapse_batches: List[Dict[str, Any]] = []
         self._time_anti_collapse_expected_ids: List[int] = []
         self._last_anti_collapse_trace: Dict[str, Any] = {}
+        self._time_routing_margin_batches: List[Dict[str, Any]] = []
+        self._time_routing_margin_expected_ids: List[int] = []
+        self._last_routing_margin_trace: Dict[str, Any] = {}
         self.global_step = 0
         self.current_expert_index: Optional[int] = None
         self._install_hook()
@@ -249,7 +257,7 @@ class TIMEEdit(EditableModel):
         }
         row_selected = pooled_selected[0].tolist() if pooled_selected.numel() else []
         row_weights = route_weights[0].tolist() if route_weights.numel() else []
-        return {
+        event = {
             "call_label": context.call_label,
             "layer_path": getattr(self, "time_layer_path", None),
             "hidden_shape": list(hidden.shape),
@@ -282,6 +290,17 @@ class TIMEEdit(EditableModel):
             "expert_gain": float(self.time_residual.expert_gain),
             "force_expert_ids": list(context.force_expert_ids),
         }
+        if bool(_cfg(self.config, "time_adaptive_rank_margin_debug", False)):
+            if debug.adaptive_rank_margin_gap is not None:
+                pooled_gap = self._pooled_scores(debug.adaptive_rank_margin_gap.unsqueeze(-1), self._last_token_mask).detach().float().cpu()
+                event["adaptive_rank_margin_gap"] = float(pooled_gap[0, 0].item()) if pooled_gap.numel() else None
+            if debug.adaptive_rank_margin_triggered is not None:
+                pooled_trigger = self._pooled_selected(debug.adaptive_rank_margin_triggered.unsqueeze(-1), self._last_token_mask).detach().cpu()
+                event["adaptive_rank_margin_triggered"] = bool(pooled_trigger[0, 0].item()) if pooled_trigger.numel() else None
+            if debug.adaptive_rank_margin_rank3_ids is not None:
+                rank3 = debug.adaptive_rank_margin_rank3_ids.detach().cpu()
+                event["adaptive_rank_margin_rank3_expert_id"] = int(rank3.reshape(-1)[0].item()) if rank3.numel() else None
+        return event
 
     @staticmethod
     def _pooled_scores(scores: torch.Tensor, mask: Optional[torch.Tensor]) -> torch.Tensor:
@@ -451,6 +470,106 @@ class TIMEEdit(EditableModel):
             return torch.tensor(0.0, device=next(self.parameters()).device)
         return torch.stack(losses).mean()
 
+    def _routing_margin_loss(self, current_index: Optional[int]) -> torch.Tensor:
+        trace: Dict[str, Any] = {
+            "active": bool(_cfg(self.config, "time_routing_margin_loss", False)),
+            "score_norm": str(_cfg(self.config, "time_routing_margin_score_norm", "factor_z")),
+            "current_margin": float(_cfg(self.config, "time_routing_margin_current", 0.10)),
+            "prev_margin": float(_cfg(self.config, "time_routing_margin_prev", 0.15)),
+            "num_previous_batches": float(len(self._time_routing_margin_batches)),
+            "current_expert_score": None,
+            "max_previous_expert_score": None,
+            "current_margin_gap": None,
+            "previous_query_current_scores": [],
+            "previous_query_own_scores": [],
+            "mean_current_score_on_previous_queries": None,
+            "max_current_score_on_previous_queries": None,
+            "mean_previous_own_score_on_previous_queries": None,
+            "previous_query_margin_violations_count": 0.0,
+            "loss_current": 0.0,
+            "loss_prev": 0.0,
+        }
+        self._last_routing_margin_trace = trace
+        if not bool(_cfg(self.config, "time_routing_margin_loss", False)) or current_index is None:
+            return torch.tensor(0.0, device=next(self.parameters()).device)
+
+        device = next(self.parameters()).device
+        current_idx = int(current_index)
+        score_norm = str(trace["score_norm"])
+        current_margin = float(trace["current_margin"])
+        prev_margin = float(trace["prev_margin"])
+        zero = torch.tensor(0.0, device=device)
+        loss_current = zero
+        loss_prev = zero
+
+        edit_debug = self._last_debug
+        edit_mask = self._last_token_mask
+        if edit_debug is not None:
+            pooled = self._pooled_debug_scores(edit_debug, edit_mask, score_norm)
+            if pooled.numel() > 0 and current_idx < pooled.shape[-1]:
+                current_score = pooled[:, current_idx]
+                trace["current_expert_score"] = float(current_score.detach().mean().cpu())
+                previous_ids = [idx for idx in range(current_idx) if idx < pooled.shape[-1]]
+                if previous_ids:
+                    previous_scores = pooled[:, previous_ids].detach()
+                    max_previous = previous_scores.max(dim=-1).values
+                    loss_current = F.relu(max_previous - current_score + current_margin).mean()
+                    trace["max_previous_expert_score"] = float(max_previous.detach().mean().cpu())
+                    trace["current_margin_gap"] = float((current_score.detach() - max_previous.detach()).mean().cpu())
+                    trace["loss_current"] = float(loss_current.detach().cpu())
+
+        old_debug = self._last_debug
+        old_mask = self._last_token_mask
+        prev_losses: List[torch.Tensor] = []
+        prev_current_scores: List[float] = []
+        prev_own_scores: List[float] = []
+        violation_count = 0.0
+        for prev_idx, prev_batch in zip(self._time_routing_margin_expected_ids, self._time_routing_margin_batches):
+            outputs = self._forward_with_time(
+                prev_batch,
+                call_label="routing_margin_prev",
+                force_current=True,
+                debug_events=None,
+            )
+            del outputs
+            if self._last_debug is None:
+                continue
+            pooled = self._pooled_debug_scores(self._last_debug, self._last_token_mask, score_norm)
+            if pooled.numel() == 0 or current_idx >= pooled.shape[-1]:
+                continue
+            current_score = pooled[:, current_idx]
+            if 0 <= int(prev_idx) < pooled.shape[-1]:
+                previous_own = pooled[:, int(prev_idx)].detach()
+                margin_terms = current_score - previous_own + prev_margin
+                prev_losses.append(F.relu(margin_terms).mean())
+                violation_count += float((margin_terms.detach() > 0).sum().cpu())
+                prev_own_scores.append(float(previous_own.detach().mean().cpu()))
+            else:
+                margin_terms = current_score + prev_margin
+                prev_losses.append(F.relu(margin_terms).mean())
+                violation_count += float((margin_terms.detach() > 0).sum().cpu())
+                prev_own_scores.append(float("nan"))
+            prev_current_scores.append(float(current_score.detach().mean().cpu()))
+        self._last_debug = old_debug
+        self._last_token_mask = old_mask
+
+        if prev_losses:
+            loss_prev = torch.stack(prev_losses).mean()
+            trace["loss_prev"] = float(loss_prev.detach().cpu())
+        trace["previous_query_current_scores"] = prev_current_scores
+        trace["previous_query_own_scores"] = prev_own_scores
+        trace["mean_current_score_on_previous_queries"] = (
+            float(sum(prev_current_scores) / len(prev_current_scores)) if prev_current_scores else None
+        )
+        trace["max_current_score_on_previous_queries"] = max(prev_current_scores) if prev_current_scores else None
+        finite_prev_own = [value for value in prev_own_scores if math.isfinite(value)]
+        trace["mean_previous_own_score_on_previous_queries"] = (
+            float(sum(finite_prev_own) / len(finite_prev_own)) if finite_prev_own else None
+        )
+        trace["previous_query_margin_violations_count"] = violation_count
+        self._last_routing_margin_trace = trace
+        return loss_current + loss_prev
+
     def edit(self, batch, condition=None, detach_history=False):
         record_id = "unknown"
         if isinstance(condition, dict):
@@ -491,6 +610,7 @@ class TIMEEdit(EditableModel):
                 l_loc = self._reference_kl(reference_batch)
 
             l_align = self._alignment_loss(self.current_expert_index)
+            l_routing_margin = self._routing_margin_loss(self.current_expert_index)
             l_anti = self._anti_collapse_loss(self.current_expert_index)
             l_factor_norm = self._factor_norm_regularizer()
             l_total = (
@@ -498,6 +618,7 @@ class TIMEEdit(EditableModel):
                 + float(_cfg(self.config, "time_lambda_gen", 1.0)) * l_gen
                 + float(_cfg(self.config, "time_lambda_loc", 1.0)) * l_loc
                 + float(_cfg(self.config, "time_lambda_align", 0.5)) * l_align
+                + float(_cfg(self.config, "time_lambda_routing_margin", 0.0)) * l_routing_margin
                 + float(_cfg(self.config, "time_lambda_anti_collapse", 0.0)) * l_anti
                 + float(_cfg(self.config, "time_lambda_factor_norm_reg", 0.0)) * l_factor_norm
             )
@@ -517,6 +638,9 @@ class TIMEEdit(EditableModel):
             "loss/time_gen": _to_float(l_gen),
             "loss/time_loc": _to_float(l_loc),
             "loss/time_align": _to_float(l_align),
+            "loss/time_routing_margin": _to_float(l_routing_margin),
+            "loss/time_routing_margin_current": float((self._last_routing_margin_trace or {}).get("loss_current", 0.0) or 0.0),
+            "loss/time_routing_margin_prev": float((self._last_routing_margin_trace or {}).get("loss_prev", 0.0) or 0.0),
             "loss/time_anti_collapse": _to_float(l_anti),
             "loss/time_factor_norm_reg": _to_float(l_factor_norm),
             "loss/total": _to_float(l_total),
@@ -535,6 +659,18 @@ class TIMEEdit(EditableModel):
             "time/score_norm_is_none": float(str(self.time_residual.score_norm) == "none"),
             "time/score_norm": str(self.time_residual.score_norm),
             "time/align_score_norm": str(_cfg(self.config, "time_align_score_norm", _cfg(self.config, "time_score_norm", "none"))),
+            "time/routing_margin_active": float(bool(_cfg(self.config, "time_routing_margin_loss", False))),
+            "time/routing_margin_score_norm": str(_cfg(self.config, "time_routing_margin_score_norm", "factor_z")),
+            "time/routing_margin_current_margin": float(_cfg(self.config, "time_routing_margin_current", 0.10)),
+            "time/routing_margin_prev_margin": float(_cfg(self.config, "time_routing_margin_prev", 0.15)),
+            "time/routing_margin_prev_batches": float((self._last_routing_margin_trace or {}).get("num_previous_batches", 0.0) or 0.0),
+            "time/routing_margin_current_expert_score": float((self._last_routing_margin_trace or {}).get("current_expert_score") or 0.0),
+            "time/routing_margin_max_prev_expert_score": float((self._last_routing_margin_trace or {}).get("max_previous_expert_score") or 0.0),
+            "time/routing_margin_current_gap": float((self._last_routing_margin_trace or {}).get("current_margin_gap") or 0.0),
+            "time/routing_margin_prev_current_mean": float((self._last_routing_margin_trace or {}).get("mean_current_score_on_previous_queries") or 0.0),
+            "time/routing_margin_prev_current_max": float((self._last_routing_margin_trace or {}).get("max_current_score_on_previous_queries") or 0.0),
+            "time/routing_margin_prev_own_mean": float((self._last_routing_margin_trace or {}).get("mean_previous_own_score_on_previous_queries") or 0.0),
+            "time/routing_margin_prev_violations": float((self._last_routing_margin_trace or {}).get("previous_query_margin_violations_count", 0.0) or 0.0),
             "time/anti_collapse_active": float(bool(_cfg(self.config, "time_anti_collapse_loss", False))),
             "time/anti_collapse_prev_batches": float((self._last_anti_collapse_trace or {}).get("num_previous_batches", 0.0) or 0.0),
             "time/anti_collapse_current_prev_mean": float((self._last_anti_collapse_trace or {}).get("mean_current_score", 0.0) or 0.0),
@@ -586,7 +722,7 @@ class TIMEEdit(EditableModel):
             }
             weights = pooled_weights[0].tolist()
             selected_ids = [idx for idx, flag in enumerate(pooled_selected[0].tolist()) if bool(flag)]
-        return {
+        summary = {
             "top_expert_id": top_id,
             "top_score": top_score,
             "selected_expert_ids": selected_ids,
@@ -611,6 +747,17 @@ class TIMEEdit(EditableModel):
             "residual_sign": str(self.time_residual.residual_sign),
             "expert_gain": float(self.time_residual.expert_gain),
         }
+        if bool(_cfg(self.config, "time_adaptive_rank_margin_debug", False)):
+            if debug.adaptive_rank_margin_gap is not None:
+                pooled_gap = self._pooled_scores(debug.adaptive_rank_margin_gap.unsqueeze(-1), self._last_token_mask).detach().float().cpu()
+                summary["adaptive_rank_margin_gap"] = float(pooled_gap[0, 0].item()) if pooled_gap.numel() else None
+            if debug.adaptive_rank_margin_triggered is not None:
+                pooled_trigger = self._pooled_selected(debug.adaptive_rank_margin_triggered.unsqueeze(-1), self._last_token_mask).detach().cpu()
+                summary["adaptive_rank_margin_triggered"] = bool(pooled_trigger[0, 0].item()) if pooled_trigger.numel() else None
+            if debug.adaptive_rank_margin_rank3_ids is not None:
+                rank3 = debug.adaptive_rank_margin_rank3_ids.detach().cpu()
+                summary["adaptive_rank_margin_rank3_expert_id"] = int(rank3.reshape(-1)[0].item()) if rank3.numel() else None
+        return summary
 
     def state_dict(self, destination=None, prefix="", keep_vars=False):
         return {

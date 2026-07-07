@@ -194,6 +194,93 @@ def test_post_retrain_calibration_controls() -> None:
         raise AssertionError(f"zscore_neg calibration should rerank top expert to 1, got {top}.")
 
 
+def test_adaptive_rank_margin_defaults_do_not_change_threshold() -> None:
+    scores = torch.tensor([[[0.1, 0.2, 0.3]]], dtype=torch.float32)
+    repo = make_repo(num_experts=3)
+    repo.gamma = 0.15
+    base = TIMECPResidual(repo, routing_mode="threshold")
+    experimental_defaults = TIMECPResidual(repo, routing_mode="threshold")
+    expected = base._selection(scores, None)
+    observed = experimental_defaults._selection(scores, None)
+    if not torch.equal(expected, observed):
+        raise AssertionError("Adaptive rank-margin defaults changed threshold routing.")
+
+
+def test_adaptive_rank_margin_disabled_matches_topk() -> None:
+    scores = torch.tensor([[[0.9, 0.8, 0.79, 0.1]]], dtype=torch.float32)
+    repo = make_repo(num_experts=4)
+    base = TIMECPResidual(repo, routing_mode="topk", topk=2)
+    disabled = TIMECPResidual(
+        repo,
+        routing_mode="adaptive_rank_margin_topk2",
+        topk=2,
+        enable_adaptive_rank_margin_rescue=False,
+    )
+    if not torch.equal(base._selection(scores, None), disabled._selection(scores, None)):
+        raise AssertionError("Disabled adaptive rank-margin mode must match existing top-k selection.")
+
+
+def test_adaptive_rank_margin_rank3_gap_and_trigger() -> None:
+    scores = torch.tensor([[[0.9, 0.8, 0.79, 0.1]]], dtype=torch.float32)
+    repo = make_repo(num_experts=4)
+    module = TIMECPResidual(
+        repo,
+        routing_mode="adaptive_rank_margin_topk2",
+        enable_adaptive_rank_margin_rescue=True,
+        adaptive_rank_margin=0.02,
+        adaptive_rank_margin_debug=True,
+    )
+    selected = module._selection(scores, None)
+    if selected[0, 0].nonzero(as_tuple=False).flatten().tolist() != [0, 1, 2]:
+        raise AssertionError(f"Close rank2/rank3 gap should rescue rank3, got {selected[0, 0].tolist()}.")
+    gap = module._last_adaptive_rank_margin_debug.get("gap")
+    trigger = module._last_adaptive_rank_margin_debug.get("triggered")
+    rank3_ids = module._last_adaptive_rank_margin_debug.get("rank3_ids")
+    if gap is None or abs(float(gap[0, 0].item()) - 0.01) > 1.0e-6:
+        raise AssertionError(f"Rank2-rank3 gap not computed correctly: {gap}.")
+    if trigger is None or not bool(trigger[0, 0].item()):
+        raise AssertionError("Close rank2/rank3 gap did not trigger adaptive rescue.")
+    if rank3_ids is None or int(rank3_ids[0, 0].item()) != 2:
+        raise AssertionError(f"Rank3 expert id not recorded correctly: {rank3_ids}.")
+
+
+def test_adaptive_rank_margin_no_trigger_when_clear() -> None:
+    scores = torch.tensor([[[0.9, 0.8, 0.7, 0.1]]], dtype=torch.float32)
+    repo = make_repo(num_experts=4)
+    module = TIMECPResidual(
+        repo,
+        routing_mode="adaptive_rank_margin_topk2",
+        enable_adaptive_rank_margin_rescue=True,
+        adaptive_rank_margin=0.02,
+        adaptive_rank_margin_debug=True,
+    )
+    selected = module._selection(scores, None)
+    if selected[0, 0].nonzero(as_tuple=False).flatten().tolist() != [0, 1]:
+        raise AssertionError(f"Clear rank2/rank3 gap should keep top-2 only, got {selected[0, 0].tolist()}.")
+    trigger = module._last_adaptive_rank_margin_debug.get("triggered")
+    if trigger is None or bool(trigger[0, 0].item()):
+        raise AssertionError("Clear rank2/rank3 gap unexpectedly triggered adaptive rescue.")
+
+
+def test_adaptive_rank_margin_fallback_with_fewer_than_three_experts() -> None:
+    scores = torch.tensor([[[0.9, 0.8]]], dtype=torch.float32)
+    repo = make_repo(num_experts=2)
+    module = TIMECPResidual(
+        repo,
+        routing_mode="adaptive_rank_margin_topk2",
+        enable_adaptive_rank_margin_rescue=True,
+        adaptive_rank_margin=0.02,
+        adaptive_rank_margin_debug=True,
+    )
+    selected = module._selection(scores, None)
+    if selected[0, 0].nonzero(as_tuple=False).flatten().tolist() != [0, 1]:
+        raise AssertionError(f"Fewer than three experts should fall back to top-2, got {selected[0, 0].tolist()}.")
+    if module._last_adaptive_rank_margin_debug:
+        raise AssertionError("Fewer-than-three fallback should not emit rank3 diagnostics.")
+    if selected.device != scores.device:
+        raise AssertionError("Adaptive rank-margin selection changed tensor device.")
+
+
 def test_gradient_isolation() -> None:
     torch.manual_seed(3)
     base = torch.nn.Linear(16, 16)
@@ -243,6 +330,11 @@ def main() -> None:
         test_routing_synthetic,
         test_score_variants_and_relative_threshold,
         test_post_retrain_calibration_controls,
+        test_adaptive_rank_margin_defaults_do_not_change_threshold,
+        test_adaptive_rank_margin_disabled_matches_topk,
+        test_adaptive_rank_margin_rank3_gap_and_trigger,
+        test_adaptive_rank_margin_no_trigger_when_clear,
+        test_adaptive_rank_margin_fallback_with_fewer_than_three_experts,
         test_gradient_isolation,
         test_no_dense_tensor_saved,
     ]

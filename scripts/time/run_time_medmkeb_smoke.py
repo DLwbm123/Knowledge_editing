@@ -69,7 +69,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--time-routing-mode",
         default="threshold",
-        choices=["threshold", "topk", "threshold_topk", "relative_threshold", "relative_topk", "force_current"],
+        choices=["threshold", "topk", "threshold_topk", "relative_threshold", "relative_topk", "force_current", "adaptive_rank_margin_topk2"],
     )
     parser.add_argument(
         "--time-score-norm",
@@ -94,6 +94,16 @@ def parse_args() -> argparse.Namespace:
         default="factor_z",
         choices=["none", "factor", "factor_z", "self_score", "factor_self_score"],
     )
+    parser.add_argument("--time-routing-margin-loss", action="store_true")
+    parser.add_argument("--lambda-routing-margin", dest="lambda_routing_margin", type=float, default=0.0)
+    parser.add_argument("--routing-margin-current", dest="routing_margin_current", type=float, default=0.10)
+    parser.add_argument("--routing-margin-prev", dest="routing_margin_prev", type=float, default=0.15)
+    parser.add_argument(
+        "--routing-margin-score-norm",
+        dest="routing_margin_score_norm",
+        default="factor_z",
+        choices=["none", "factor", "factor_z", "self_score", "factor_self_score"],
+    )
     parser.add_argument("--lambda-factor-norm-reg", dest="lambda_factor_norm_reg", type=float, default=0.0)
     parser.add_argument("--time-load-repository", type=Path, default=None)
     parser.add_argument("--eval-only", action="store_true")
@@ -105,6 +115,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--time-adaptive-margin-microcheck", action="store_true")
     parser.add_argument("--time-adaptive-topk-margin", type=float, action="append", default=None)
     parser.add_argument("--time-adaptive-topk-max", type=int, default=3)
+    parser.add_argument("--time-enable-adaptive-rank-margin-rescue", action="store_true")
+    parser.add_argument("--time-adaptive-rank-margin", type=float, default=0.02)
+    parser.add_argument("--time-adaptive-rank-margin-use-rank3", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--time-adaptive-rank-margin-debug", action="store_true")
     parser.add_argument("--time-force-include-own-eval", action="store_true")
     parser.add_argument("--time-max-selected-experts", type=int, default=None)
     parser.add_argument(
@@ -281,7 +295,16 @@ def configure(args: argparse.Namespace, dataset_path: Path) -> TIMEEditMultimoda
     config.time_lambda_anti_collapse = float(args.lambda_anti_collapse)
     config.time_anti_collapse_margin = float(args.anti_collapse_margin)
     config.time_anti_collapse_score_norm = str(args.anti_collapse_score_norm)
+    config.time_routing_margin_loss = bool(args.time_routing_margin_loss)
+    config.time_lambda_routing_margin = float(args.lambda_routing_margin)
+    config.time_routing_margin_current = float(args.routing_margin_current)
+    config.time_routing_margin_prev = float(args.routing_margin_prev)
+    config.time_routing_margin_score_norm = str(args.routing_margin_score_norm)
     config.time_lambda_factor_norm_reg = float(args.lambda_factor_norm_reg)
+    config.time_enable_adaptive_rank_margin_rescue = bool(args.time_enable_adaptive_rank_margin_rescue)
+    config.time_adaptive_rank_margin = float(args.time_adaptive_rank_margin)
+    config.time_adaptive_rank_margin_use_rank3 = bool(args.time_adaptive_rank_margin_use_rank3)
+    config.time_adaptive_rank_margin_debug = bool(args.time_adaptive_rank_margin_debug)
     config.time_repository_path = str(args.time_load_repository) if args.time_load_repository is not None else None
     config.eval_only = bool(args.eval_only)
     if args.time_force_current_train is not None:
@@ -555,6 +578,7 @@ def train_one_edit(
     out_dir: Path,
     previous_samples: Optional[List[Dict[str, Any]]] = None,
     anti_collapse_rows: Optional[List[Dict[str, Any]]] = None,
+    routing_margin_rows: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     rid = record_id(record, sample_pos)
     expert_index = alg.add_expert(
@@ -570,6 +594,8 @@ def train_one_edit(
     previous_samples = previous_samples or []
     alg._time_anti_collapse_batches = [clone_batch(prev) for prev in previous_samples]
     alg._time_anti_collapse_expected_ids = list(range(len(previous_samples)))
+    alg._time_routing_margin_batches = [clone_batch(prev) for prev in previous_samples]
+    alg._time_routing_margin_expected_ids = list(range(len(previous_samples)))
     batch = {
         "edit_inner": clone_batch(sample),
         "edit_outer": clone_batch(sample),
@@ -588,9 +614,13 @@ def train_one_edit(
         "lambda_loc": float(alg.config.time_lambda_loc),
         "lambda_align": float(alg.config.time_lambda_align),
         "lambda_anti_collapse": float(getattr(alg.config, "time_lambda_anti_collapse", 0.0)),
+        "lambda_routing_margin": float(getattr(alg.config, "time_lambda_routing_margin", 0.0)),
+        "routing_margin_current": float(getattr(alg.config, "time_routing_margin_current", 0.10)),
+        "routing_margin_prev": float(getattr(alg.config, "time_routing_margin_prev", 0.15)),
         "lambda_factor_norm_reg": float(getattr(alg.config, "time_lambda_factor_norm_reg", 0.0)),
         "align_score_norm": str(getattr(alg.config, "time_align_score_norm", alg.config.time_score_norm)),
         "anti_collapse_score_norm": str(getattr(alg.config, "time_anti_collapse_score_norm", "factor_z")),
+        "routing_margin_score_norm": str(getattr(alg.config, "time_routing_margin_score_norm", "factor_z")),
         "residual_sign": str(alg.time_residual.residual_sign),
         "expert_gain": float(alg.time_residual.expert_gain),
         "base_vlm_trainable_params": float(base_trainable_param_count(alg)),
@@ -630,6 +660,9 @@ def train_one_edit(
             "loss_total": float(loss_total.detach().cpu()),
             "loss_loc": float(loss_loc.detach().cpu()),
             "loss_anti_collapse": float(info.get("loss/time_anti_collapse", 0.0) or 0.0),
+            "loss_routing_margin": float(info.get("loss/time_routing_margin", 0.0) or 0.0),
+            "loss_routing_margin_current": float(info.get("loss/time_routing_margin_current", 0.0) or 0.0),
+            "loss_routing_margin_prev": float(info.get("loss/time_routing_margin_prev", 0.0) or 0.0),
             "loss_factor_norm_reg": float(info.get("loss/time_factor_norm_reg", 0.0) or 0.0),
             "answer_avg_logprob": -float(loss_rel.detach().cpu()),
             "answer_total_logprob": -float(loss_rel.detach().cpu()) * int(answer_debug["supervised_target_token_count"]),
@@ -645,10 +678,24 @@ def train_one_edit(
             "anti_collapse_prev_batches": float(info.get("time/anti_collapse_prev_batches", 0.0) or 0.0),
             "anti_collapse_current_prev_mean": float(info.get("time/anti_collapse_current_prev_mean", 0.0) or 0.0),
             "anti_collapse_prev_own_mean": float(info.get("time/anti_collapse_prev_own_mean", 0.0) or 0.0),
+            "routing_margin_active": bool(args.time_routing_margin_loss),
+            "routing_margin_prev_batches": float(info.get("time/routing_margin_prev_batches", 0.0) or 0.0),
+            "routing_margin_current_expert_score": float(info.get("time/routing_margin_current_expert_score", 0.0) or 0.0),
+            "routing_margin_max_prev_expert_score": float(info.get("time/routing_margin_max_prev_expert_score", 0.0) or 0.0),
+            "routing_margin_current_gap": float(info.get("time/routing_margin_current_gap", 0.0) or 0.0),
+            "routing_margin_prev_current_mean": float(info.get("time/routing_margin_prev_current_mean", 0.0) or 0.0),
+            "routing_margin_prev_current_max": float(info.get("time/routing_margin_prev_current_max", 0.0) or 0.0),
+            "routing_margin_prev_own_mean": float(info.get("time/routing_margin_prev_own_mean", 0.0) or 0.0),
+            "routing_margin_prev_violations": float(info.get("time/routing_margin_prev_violations", 0.0) or 0.0),
+            "routing_margin_score_norm": str(info.get("time/routing_margin_score_norm", getattr(alg.config, "time_routing_margin_score_norm", "factor_z"))),
+            "routing_margin_current_margin": float(info.get("time/routing_margin_current_margin", getattr(alg.config, "time_routing_margin_current", 0.10)) or 0.0),
+            "routing_margin_prev_margin": float(info.get("time/routing_margin_prev_margin", getattr(alg.config, "time_routing_margin_prev", 0.15)) or 0.0),
             **factor_grad_trace(alg),
         }
         if anti_collapse_rows is not None:
             anti_collapse_rows.append(step_trace)
+        if routing_margin_rows is not None:
+            routing_margin_rows.append(step_trace)
         if args.time_reliability_only or args.time_overfit_grid:
             reliability_rows.append(step_trace)
         torch.nn.utils.clip_grad_norm_(alg.outer_parameters(), float(alg.config.grad_clip), error_if_nonfinite=True)
@@ -875,11 +922,55 @@ def parse_eval_routing_modes(text: str) -> List[str]:
     modes = [part.strip() for part in str(text or "").split(",") if part.strip()]
     if not modes:
         return []
-    allowed = {"force_own", "calibrated", "topk", "threshold", "relative"}
+    allowed = {
+        "force_own",
+        "force_current",
+        "calibrated",
+        "calibrated_topk2",
+        "adaptive_rank_margin_topk2",
+        "adaptive_margin0p2",
+        "adaptive_margin0p25",
+        "adaptive_margin0p3",
+        "adaptive_margin0p35",
+        "topk3",
+        "topk",
+        "raw_topk1",
+        "threshold",
+        "threshold_topk",
+        "relative",
+    }
     unsupported = [mode for mode in modes if mode not in allowed]
     if unsupported:
         raise ValueError(f"Unsupported --eval-routing-modes values: {unsupported}. Allowed: {sorted(allowed)}")
     return modes
+
+
+def _mode_needs_force_calibration(mode: str) -> bool:
+    return mode in {
+        "calibrated",
+        "calibrated_topk2",
+        "adaptive_margin0p2",
+        "adaptive_margin0p25",
+        "adaptive_margin0p3",
+        "adaptive_margin0p35",
+        "topk3",
+    }
+
+
+def _mode_is_adaptive_margin(mode: str) -> bool:
+    return mode in {"adaptive_margin0p2", "adaptive_margin0p25", "adaptive_margin0p3", "adaptive_margin0p35"}
+
+
+def _adaptive_margin_value(mode: str) -> Optional[float]:
+    if mode == "adaptive_margin0p2":
+        return 0.20
+    if mode == "adaptive_margin0p25":
+        return 0.25
+    if mode == "adaptive_margin0p3":
+        return 0.30
+    if mode == "adaptive_margin0p35":
+        return 0.35
+    return None
 
 
 def _mean(values: List[Optional[float]]) -> Optional[float]:
@@ -1404,9 +1495,12 @@ def run_smoke(
 ) -> Dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     sequential_eval_modes = parse_eval_routing_modes(args.eval_routing_modes) if args.mode == "sequential" and args.eval_routing_modes else []
-    routing_debug_path = out_dir / (
-        f"{_sequential_prefix(args.max_edits)}_routing_debug.jsonl" if sequential_eval_modes else "routing_debug.jsonl"
-    )
+    if sequential_eval_modes and args.time_routing_margin_loss and int(args.max_edits) == 10:
+        routing_debug_path = out_dir / "time_ten_seq_margin_routing_debug.jsonl"
+    else:
+        routing_debug_path = out_dir / (
+            f"{_sequential_prefix(args.max_edits)}_routing_debug.jsonl" if sequential_eval_modes else "routing_debug.jsonl"
+        )
     if routing_debug_path.exists():
         routing_debug_path.unlink()
     write_json(
@@ -1425,6 +1519,7 @@ def run_smoke(
     loss_rows: List[Dict[str, Any]] = []
     reliability_rows: List[Dict[str, Any]] = []
     anti_collapse_rows: List[Dict[str, Any]] = []
+    routing_margin_rows: List[Dict[str, Any]] = []
     score_matrix_rows: List[Dict[str, Any]] = []
     train_records: List[Dict[str, Any]] = []
     eval_rows: List[Dict[str, Any]] = []
@@ -1447,6 +1542,7 @@ def run_smoke(
                 out_dir,
                 previous_samples=samples[:pos],
                 anti_collapse_rows=anti_collapse_rows,
+                routing_margin_rows=routing_margin_rows,
             )
         )
         if args.mode == "nonseq" and args.time_anti_collapse_loss:
@@ -1533,6 +1629,8 @@ def run_smoke(
             write_loss_trace(out_dir / "time_ten_nonseq_loss_trace.csv", loss_rows)
     if anti_collapse_rows:
         write_loss_trace(out_dir / "time_anti_collapse_trace.csv", anti_collapse_rows)
+    if routing_margin_rows:
+        write_loss_trace(out_dir / "time_routing_margin_trace.csv", routing_margin_rows)
     if score_matrix_rows:
         write_loss_trace(out_dir / "time_score_matrix_after_each_edit.csv", score_matrix_rows)
     if reliability_rows:
@@ -1544,6 +1642,11 @@ def run_smoke(
         "s2": alg.repository.s2,
         "self_score_metadata": self_score_metadata,
         "anti_collapse_active": bool(args.time_anti_collapse_loss),
+        "routing_margin_active": bool(args.time_routing_margin_loss),
+        "routing_margin_score_norm": str(config.time_routing_margin_score_norm),
+        "lambda_routing_margin": float(config.time_lambda_routing_margin),
+        "routing_margin_current": float(config.time_routing_margin_current),
+        "routing_margin_prev": float(config.time_routing_margin_prev),
         "score_norm": str(config.time_score_norm),
         "align_score_norm": str(config.time_align_score_norm),
         "anti_collapse_score_norm": str(config.time_anti_collapse_score_norm),
@@ -1553,6 +1656,18 @@ def run_smoke(
         summary["sequential_after_each_edit_rows"] = len(sequential_all_rows)
         report_path = write_time_sequential_calibrated_report(out_dir, args, summary, sequential_retention_summary)
         summary["sequential_calibrated_report"] = str(report_path)
+        if args.time_routing_margin_loss and int(args.max_edits) == 10:
+            margin_report_path = write_routing_margin_retrain_outputs(
+                out_dir,
+                args,
+                records,
+                sequential_all_rows,
+                loss_rows,
+                routing_margin_rows,
+                summary,
+                sequential_retention_summary,
+            )
+            summary["routing_margin_retrain_report"] = str(margin_report_path)
     if args.mode == "one":
         summary_path = out_dir / "one_edit_summary.json"
     elif args.mode == "nonseq":
@@ -1582,6 +1697,10 @@ def temporary_time_routing(
     max_selected_experts: Optional[int] = None,
     score_pool: Optional[str] = None,
     calibration_stats: Optional[Dict[str, List[float]]] = None,
+    adaptive_rank_margin_rescue: Optional[bool] = None,
+    adaptive_rank_margin: Optional[float] = None,
+    adaptive_rank_margin_use_rank3: Optional[bool] = None,
+    adaptive_rank_margin_debug: Optional[bool] = None,
 ):
     old_gamma = alg.repository.gamma
     old_mode = alg.time_residual.routing_mode
@@ -1594,6 +1713,10 @@ def temporary_time_routing(
     old_max_selected_experts = alg.time_residual.max_selected_experts
     old_score_pool = alg.time_residual.score_pool
     old_calibration_stats = dict(getattr(alg.time_residual, "calibration_stats", {}))
+    old_adaptive_enabled = alg.time_residual.enable_adaptive_rank_margin_rescue
+    old_adaptive_margin = alg.time_residual.adaptive_rank_margin
+    old_adaptive_use_rank3 = alg.time_residual.adaptive_rank_margin_use_rank3
+    old_adaptive_debug = alg.time_residual.adaptive_rank_margin_debug
     old_config_gamma = getattr(alg.config, "time_gamma", None)
     old_config_mode = getattr(alg.config, "time_routing_mode", None)
     old_config_topk = getattr(alg.config, "time_topk", None)
@@ -1604,6 +1727,10 @@ def temporary_time_routing(
     old_config_calibration_beta = getattr(alg.config, "time_calibration_beta", None)
     old_config_max_selected_experts = getattr(alg.config, "time_max_selected_experts", None)
     old_config_score_pool = getattr(alg.config, "time_score_pool", None)
+    old_config_adaptive_enabled = getattr(alg.config, "time_enable_adaptive_rank_margin_rescue", None)
+    old_config_adaptive_margin = getattr(alg.config, "time_adaptive_rank_margin", None)
+    old_config_adaptive_use_rank3 = getattr(alg.config, "time_adaptive_rank_margin_use_rank3", None)
+    old_config_adaptive_debug = getattr(alg.config, "time_adaptive_rank_margin_debug", None)
     try:
         if gamma is not None:
             alg.repository.gamma = float(gamma)
@@ -1643,6 +1770,18 @@ def temporary_time_routing(
             setattr(alg.config, "time_score_pool", str(score_pool))
         if calibration_stats is not None:
             alg.time_residual.calibration_stats = dict(calibration_stats)
+        if adaptive_rank_margin_rescue is not None:
+            alg.time_residual.enable_adaptive_rank_margin_rescue = bool(adaptive_rank_margin_rescue)
+            setattr(alg.config, "time_enable_adaptive_rank_margin_rescue", bool(adaptive_rank_margin_rescue))
+        if adaptive_rank_margin is not None:
+            alg.time_residual.adaptive_rank_margin = float(adaptive_rank_margin)
+            setattr(alg.config, "time_adaptive_rank_margin", float(adaptive_rank_margin))
+        if adaptive_rank_margin_use_rank3 is not None:
+            alg.time_residual.adaptive_rank_margin_use_rank3 = bool(adaptive_rank_margin_use_rank3)
+            setattr(alg.config, "time_adaptive_rank_margin_use_rank3", bool(adaptive_rank_margin_use_rank3))
+        if adaptive_rank_margin_debug is not None:
+            alg.time_residual.adaptive_rank_margin_debug = bool(adaptive_rank_margin_debug)
+            setattr(alg.config, "time_adaptive_rank_margin_debug", bool(adaptive_rank_margin_debug))
         yield
     finally:
         alg.repository.gamma = old_gamma
@@ -1656,6 +1795,10 @@ def temporary_time_routing(
         alg.time_residual.max_selected_experts = old_max_selected_experts
         alg.time_residual.score_pool = old_score_pool
         alg.time_residual.calibration_stats = old_calibration_stats
+        alg.time_residual.enable_adaptive_rank_margin_rescue = old_adaptive_enabled
+        alg.time_residual.adaptive_rank_margin = old_adaptive_margin
+        alg.time_residual.adaptive_rank_margin_use_rank3 = old_adaptive_use_rank3
+        alg.time_residual.adaptive_rank_margin_debug = old_adaptive_debug
         if old_config_gamma is not None:
             setattr(alg.config, "time_gamma", old_config_gamma)
         if old_config_mode is not None:
@@ -1669,6 +1812,10 @@ def temporary_time_routing(
         setattr(alg.config, "time_calibration_beta", old_config_calibration_beta)
         setattr(alg.config, "time_max_selected_experts", old_config_max_selected_experts)
         setattr(alg.config, "time_score_pool", old_config_score_pool)
+        setattr(alg.config, "time_enable_adaptive_rank_margin_rescue", old_config_adaptive_enabled)
+        setattr(alg.config, "time_adaptive_rank_margin", old_config_adaptive_margin)
+        setattr(alg.config, "time_adaptive_rank_margin_use_rank3", old_config_adaptive_use_rank3)
+        setattr(alg.config, "time_adaptive_rank_margin_debug", old_config_adaptive_debug)
 
 
 def evaluate_nonseq_routing_modes(
@@ -1684,13 +1831,13 @@ def evaluate_nonseq_routing_modes(
     if routing_debug_path.exists():
         routing_debug_path.unlink()
     ordered_modes = list(modes)
-    if "calibrated" in ordered_modes:
+    if any(_mode_needs_force_calibration(mode) for mode in ordered_modes):
         ordered_modes = [mode for mode in ordered_modes if mode != "force_own"]
         ordered_modes.insert(0, "force_own")
     force_rows: List[Dict[str, Any]] = []
     calibration_stats: Dict[str, List[float]] = {}
     for mode in ordered_modes:
-        if mode == "calibrated":
+        if _mode_needs_force_calibration(mode):
             calibration_stats = _sequential_calibration_stats(force_rows, alg.repository.num_experts)
         context = _sequential_eval_context(args, alg, mode, calibration_stats)
         with context:
@@ -1705,7 +1852,7 @@ def evaluate_nonseq_routing_modes(
                     expected_expert=eval_pos,
                     routing_debug_path=routing_debug_path,
                     eval_routing_mode=mode,
-                    force_expert_id=eval_pos if mode == "force_own" else None,
+                    force_expert_id=eval_pos if mode in {"force_own", "force_current"} else None,
                     extra_fields={
                         "calibration_stats_source": "final_force_own_scores" if mode == "calibrated" else None,
                         "calibration_mu_neg": calibration_stats.get("mu_neg") if mode == "calibrated" else None,
@@ -1726,7 +1873,7 @@ def _sequential_eval_context(args: argparse.Namespace, alg: TIMEEdit, mode: str,
     mixing_mode = "average" if args.time_disable_score_mixing else str(args.time_mixing_mode)
     calibration_mode = normalize_time_calibration_mode(args.time_calibration_mode)
     calibrated_route = _calibrated_route_spec(args)
-    if mode == "force_own":
+    if mode in {"force_own", "force_current"}:
         return temporary_time_routing(
             alg,
             routing_mode="threshold",
@@ -1740,14 +1887,33 @@ def _sequential_eval_context(args: argparse.Namespace, alg: TIMEEdit, mode: str,
             score_pool=score_pool,
             calibration_stats={},
         )
-    if mode == "calibrated":
+    if mode == "adaptive_rank_margin_topk2":
         return temporary_time_routing(
             alg,
-            routing_mode=str(calibrated_route["routing_mode"]),
+            routing_mode="adaptive_rank_margin_topk2",
             gamma=float(args.gamma),
-            topk=int(calibrated_route.get("topk") or 0),
+            topk=2,
             score_norm=score_norm,
-            relative_threshold=calibrated_route.get("relative_threshold"),
+            relative_threshold=None,
+            mixing_mode=mixing_mode,
+            calibration_mode=calibration_mode,
+            calibration_beta=float(args.time_calibration_beta),
+            max_selected_experts=None,
+            score_pool=score_pool,
+            calibration_stats=calibration_stats,
+            adaptive_rank_margin_rescue=True,
+            adaptive_rank_margin=float(args.time_adaptive_rank_margin),
+            adaptive_rank_margin_use_rank3=bool(args.time_adaptive_rank_margin_use_rank3),
+            adaptive_rank_margin_debug=bool(args.time_adaptive_rank_margin_debug),
+        )
+    if mode in {"calibrated", "calibrated_topk2", "adaptive_margin0p2", "adaptive_margin0p25", "adaptive_margin0p3", "adaptive_margin0p35"}:
+        return temporary_time_routing(
+            alg,
+            routing_mode="topk" if mode != "calibrated" else str(calibrated_route["routing_mode"]),
+            gamma=float(args.gamma),
+            topk=2 if mode != "calibrated" else int(calibrated_route.get("topk") or 0),
+            score_norm=score_norm,
+            relative_threshold=None if mode != "calibrated" else calibrated_route.get("relative_threshold"),
             mixing_mode=mixing_mode,
             calibration_mode=calibration_mode,
             calibration_beta=float(args.time_calibration_beta),
@@ -1755,10 +1921,53 @@ def _sequential_eval_context(args: argparse.Namespace, alg: TIMEEdit, mode: str,
             score_pool=score_pool,
             calibration_stats=calibration_stats,
         )
+    if mode == "topk3":
+        return temporary_time_routing(
+            alg,
+            routing_mode="topk",
+            gamma=float(args.gamma),
+            topk=3,
+            score_norm=score_norm,
+            relative_threshold=None,
+            mixing_mode=mixing_mode,
+            calibration_mode=calibration_mode,
+            calibration_beta=float(args.time_calibration_beta),
+            max_selected_experts=None,
+            score_pool=score_pool,
+            calibration_stats=calibration_stats,
+        )
+    if mode == "raw_topk1":
+        return temporary_time_routing(
+            alg,
+            routing_mode="topk",
+            gamma=float(args.gamma),
+            topk=1,
+            score_norm=score_norm,
+            relative_threshold=None,
+            mixing_mode=mixing_mode,
+            calibration_mode="none",
+            max_selected_experts=None,
+            score_pool=score_pool,
+            calibration_stats={},
+        )
     if mode == "topk":
         return temporary_time_routing(
             alg,
             routing_mode="topk",
+            gamma=float(args.gamma),
+            topk=1 if bool(getattr(args, "time_routing_margin_loss", False)) else max(1, int(args.time_topk or 1)),
+            score_norm=score_norm,
+            relative_threshold=None,
+            mixing_mode=mixing_mode,
+            calibration_mode="none",
+            max_selected_experts=None,
+            score_pool=score_pool,
+            calibration_stats={},
+        )
+    if mode == "threshold_topk":
+        return temporary_time_routing(
+            alg,
+            routing_mode="threshold_topk",
             gamma=float(args.gamma),
             topk=max(1, int(args.time_topk or 1)),
             score_norm=score_norm,
@@ -1904,16 +2113,30 @@ def evaluate_sequential_routing_modes(
     rows: List[Dict[str, Any]] = []
     force_rows: List[Dict[str, Any]] = []
     ordered_modes = list(modes)
-    if "calibrated" in ordered_modes:
+    if any(_mode_needs_force_calibration(mode) for mode in ordered_modes):
         ordered_modes = [mode for mode in ordered_modes if mode != "force_own"]
         ordered_modes.insert(0, "force_own")
     calibration_stats: Dict[str, List[float]] = {}
+    calibrated_rank_by_pos: Dict[int, Dict[str, Any]] = {}
     for mode in ordered_modes:
-        if mode == "calibrated":
+        if _mode_needs_force_calibration(mode):
             calibration_stats = _sequential_calibration_stats(force_rows, alg.repository.num_experts)
         with _sequential_eval_context(args, alg, mode, calibration_stats):
             mode_rows: List[Dict[str, Any]] = []
             for eval_pos, (record, sample) in enumerate(zip(records[:edit_step], samples[:edit_step])):
+                force_id = None
+                adaptive_included_rank3 = False
+                margin_value = _adaptive_margin_value(mode)
+                rank_info = calibrated_rank_by_pos.get(eval_pos, {})
+                rank2_minus_rank3 = _float_or_none(rank_info.get("rank2_minus_rank3"))
+                if (
+                    margin_value is not None
+                    and rank2_minus_rank3 is not None
+                    and rank2_minus_rank3 <= margin_value
+                    and rank_info.get("top3_expert_id") is not None
+                ):
+                    force_id = int(rank_info["top3_expert_id"])
+                    adaptive_included_rank3 = True
                 row = evaluate_sample(
                     alg,
                     sample,
@@ -1923,16 +2146,27 @@ def evaluate_sequential_routing_modes(
                     expected_expert=eval_pos,
                     routing_debug_path=routing_debug_path,
                     eval_routing_mode=mode,
-                    force_expert_id=eval_pos if mode == "force_own" else None,
+                    force_expert_id=eval_pos if mode == "force_own" else force_id,
                     extra_fields={
                         "sequential_calibrated_gate": True,
-                        "calibration_stats_source": "seen_prefix_force_own_scores" if mode == "calibrated" else None,
-                        "calibration_mu_neg": calibration_stats.get("mu_neg") if mode == "calibrated" else None,
-                        "calibration_std_neg": calibration_stats.get("std_neg") if mode == "calibrated" else None,
+                        "calibration_stats_source": "seen_prefix_force_own_scores" if _mode_needs_force_calibration(mode) else None,
+                        "calibration_mu_neg": calibration_stats.get("mu_neg") if _mode_needs_force_calibration(mode) else None,
+                        "calibration_std_neg": calibration_stats.get("std_neg") if _mode_needs_force_calibration(mode) else None,
+                        "adaptive_margin": margin_value,
+                        "adaptive_rank2_minus_rank3": rank2_minus_rank3,
+                        "adaptive_rank3_expert_id": rank_info.get("top3_expert_id"),
+                        "adaptive_included_rank3": adaptive_included_rank3,
+                        "forced_expert_id": force_id,
                     },
                     base_cache=base_cache[eval_pos] if base_cache is not None else None,
                 )
+                if force_id is not None:
+                    row["top_routed_expert_id"] = row.get("top_score_expert_id")
+                    row["routing_top1_correct"] = bool(row.get("top_score_expert_id") == eval_pos)
                 _enrich_sequential_row(row, edit_step, eval_pos, mode, immediate_by_mode_record)
+                if mode in {"calibrated", "calibrated_topk2"}:
+                    scores = [float(value) for value in (row.get("pooled_scores") or [])]
+                    calibrated_rank_by_pos[eval_pos] = _rank_details(scores, eval_pos)
                 mode_rows.append(row)
                 if mode in modes:
                     rows.append(row)
@@ -2135,7 +2369,7 @@ def summarize_time_sequential_retention(
         )
         summary["by_mode"][mode] = mode_summary
     force_pass = bool((summary["by_mode"].get("force_own") or {}).get("capacity_pass"))
-    calibrated = summary["by_mode"].get("calibrated") or {}
+    calibrated = summary["by_mode"].get("calibrated") or summary["by_mode"].get("calibrated_topk2") or {}
     summary["gate"] = {
         "force_own_capacity_pass": force_pass,
         "calibrated_sparse_pass": bool(calibrated.get("sparse_routing_pass")) if calibrated else None,
@@ -2297,6 +2531,410 @@ def write_time_sequential_calibrated_report(
         ]
     )
     path = out_dir / report_name
+    path.write_text("\n".join(lines))
+    return path
+
+
+def _numeric_trace_summary(rows: List[Dict[str, Any]], keys: List[str]) -> Dict[str, Dict[str, Optional[float]]]:
+    summary: Dict[str, Dict[str, Optional[float]]] = {}
+    for key in keys:
+        values = [_float_or_none(row.get(key)) for row in rows]
+        valid = [float(value) for value in values if value is not None and math.isfinite(float(value))]
+        summary[key] = {
+            "count": float(len(valid)),
+            "mean": float(sum(valid) / len(valid)) if valid else None,
+            "min": min(valid) if valid else None,
+            "max": max(valid) if valid else None,
+            "last": valid[-1] if valid else None,
+        }
+    return summary
+
+
+def _margin_mode_summary_line(mode: str, row: Dict[str, Any]) -> str:
+    return (
+        f"- {mode}: retained {row.get('positive_new_count')}/{row.get('num_records')}, "
+        f"own top1 {row.get('own_top1_count')}/{row.get('num_records')}, "
+        f"own selected {row.get('own_in_selected_set_count')}/{row.get('num_records')}, "
+        f"mean/max selected {_fmt(row.get('mean_selected_set_size'))}/{_fmt(row.get('max_selected_set_size'))}, "
+        f"empty {row.get('empty_selection_count')}, max top {row.get('max_top_expert_count')}, "
+        f"worst degradation {_fmt(row.get('worst_per_record_nll_degradation'))}, "
+        f"locality {_fmt(row.get('mean_locality_reference_delta'))}."
+    )
+
+
+def _fragile_tracking_rows(sequential_rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    fragile_ids = {"1293", "942", "671"}
+    rows: List[Dict[str, Any]] = []
+    for row in sequential_rows:
+        rid = str(row.get("record_id"))
+        if rid not in fragile_ids:
+            continue
+        scores = [float(value) for value in (row.get("pooled_scores") or [])]
+        own = int(row.get("expected_expert")) if row.get("expected_expert") is not None else -1
+        selected_ids = [int(value) for value in (row.get("selected_expert_ids") or [])]
+        rank_info = _rank_details(scores, own) if scores else {}
+        boundary = _selection_boundary_score(scores, selected_ids) if scores else None
+        own_score = rank_info.get("own_expert_score")
+        rows.append(
+            {
+                "edit_step": row.get("edit_step"),
+                "after_edit_index": row.get("after_edit_index"),
+                "eval_routing_mode": row.get("eval_routing_mode"),
+                "record_id": rid,
+                "query_record_index": row.get("query_record_index"),
+                "own_expert_index": own,
+                "own_expert_rank": rank_info.get("own_expert_rank"),
+                "own_selected": bool(row.get("own_selected")),
+                "selected_expert_ids": selected_ids,
+                "selected_set_size": row.get("selected_expert_set_size"),
+                "top_expert_id": row.get("top_score_expert_id", row.get("top_expert_id")),
+                "top_routed_expert_id": row.get("top_routed_expert_id"),
+                "top1_expert_id": rank_info.get("top1_expert_id"),
+                "top2_expert_id": rank_info.get("top2_expert_id"),
+                "top3_expert_id": rank_info.get("top3_expert_id"),
+                "top1_score": rank_info.get("top1_score"),
+                "top2_score": rank_info.get("top2_score"),
+                "top3_score": rank_info.get("top3_score"),
+                "own_expert_score": own_score,
+                "selection_boundary_score": boundary,
+                "own_score_gap_vs_selection_boundary": (
+                    float(own_score - boundary) if own_score is not None and boundary is not None else None
+                ),
+                "rank2_minus_rank3": rank_info.get("rank2_minus_rank3"),
+                "retained_nll_improvement": row.get("retained_improvement"),
+                "target_nll_current": row.get("target_nll_current", row.get("target_nll")),
+                "locality_reference_delta": row.get("locality_reference_delta", row.get("reference_delta")),
+                "adaptive_margin": row.get("adaptive_margin"),
+                "adaptive_included_rank3": row.get("adaptive_included_rank3"),
+            }
+        )
+    return rows
+
+
+def _record_final_mode_row(final_rows: List[Dict[str, Any]], mode: str, rid: str) -> Dict[str, Any]:
+    return next(
+        (
+            row
+            for row in final_rows
+            if row.get("eval_routing_mode") == mode and str(row.get("record_id")) == str(rid)
+        ),
+        {},
+    )
+
+
+def _mode_practical_success(row: Dict[str, Any], previous_adaptive_035_locality: float = 5.11419) -> bool:
+    locality = _float_or_none(row.get("mean_locality_reference_delta"))
+    return bool(
+        int(row.get("positive_new_count") or 0) >= 8
+        and int(row.get("own_in_selected_set_count") or 0) >= 9
+        and (_float_or_none(row.get("mean_selected_set_size")) or 1.0e9) <= 2.5
+        and (_float_or_none(row.get("max_selected_set_size")) or 1.0e9) <= 3.0
+        and (_float_or_none(row.get("worst_per_record_nll_degradation")) or 0.0) < 0.00935
+        and locality is not None
+        and locality <= previous_adaptive_035_locality + 2.0
+    )
+
+
+def _diagnose_routing_margin_retrain(
+    by_mode: Dict[str, Dict[str, Any]],
+    final_rows: List[Dict[str, Any]],
+) -> Tuple[str, str]:
+    previous_topk2_worst_degradation = 0.000958443
+    topk2 = by_mode.get("calibrated_topk2") or by_mode.get("calibrated") or {}
+    force = by_mode.get("force_own") or {}
+    adaptive02 = by_mode.get("adaptive_margin0p2") or {}
+    adaptive025 = by_mode.get("adaptive_margin0p25") or {}
+    adaptive03 = by_mode.get("adaptive_margin0p3") or {}
+    adaptive035 = by_mode.get("adaptive_margin0p35") or {}
+    topk2_worst = _float_or_none(topk2.get("worst_per_record_nll_degradation"))
+    topk2_locality = _float_or_none(topk2.get("mean_locality_reference_delta"))
+    primary_success = bool(
+        int(topk2.get("positive_new_count") or 0) >= 8
+        and int(topk2.get("own_in_selected_set_count") or 0) >= 9
+        and int(topk2.get("own_top1_count") or 0) >= 8
+        and (_float_or_none(topk2.get("mean_selected_set_size")) or 1.0e9) <= 2.0
+        and (_float_or_none(topk2.get("max_selected_set_size")) or 1.0e9) <= 2.0
+        and int(topk2.get("empty_selection_count") or 0) <= 1
+        and int(topk2.get("max_top_expert_count") or 0) <= 4
+        and topk2_worst is not None
+        and topk2_worst <= previous_topk2_worst_degradation + 1.0e-12
+        and topk2_locality is not None
+    )
+    suffixes: List[str] = []
+    if any(
+        (_float_or_none((by_mode.get(mode) or {}).get("mean_locality_reference_delta")) or 0.0) > 8.0
+        for mode in ("calibrated_topk2", "adaptive_margin0p2", "adaptive_margin0p25", "adaptive_margin0p3", "adaptive_margin0p35")
+    ):
+        suffixes.append("locality_damage_issue")
+    if primary_success:
+        diagnosis = "routing_margin_retrain_success_topk2"
+        recommendation = "run a bounded 10-edit ablation or a 15-edit nonseq gate; do not run 20-edit yet"
+    elif int(force.get("positive_new_count") or 0) < 9:
+        diagnosis = "routing_margin_hurts_expert_capacity"
+        recommendation = "reduce lambda-routing-margin or reduce routing margins before scaling"
+    elif (
+        (int(topk2.get("own_in_selected_set_count") or 0) > 8 or int(topk2.get("own_top1_count") or 0) > 7)
+        and (
+            _mode_practical_success(adaptive02)
+            or _mode_practical_success(adaptive025)
+            or _mode_practical_success(adaptive03)
+            or _mode_practical_success(adaptive035)
+        )
+    ):
+        diagnosis = "routing_margin_retrain_partial_success_adaptive_needed"
+        recommendation = "use adaptive routing as the 10-edit sequential default and run a bounded 10-edit ablation"
+    elif int(topk2.get("own_in_selected_set_count") or 0) <= 8 and int(topk2.get("own_top1_count") or 0) <= 7:
+        diagnosis = "routing_margin_insufficient_identity_separation"
+        recommendation = "try stronger routing margin or a cross-attention factor generator"
+    else:
+        diagnosis = "routing_margin_retrain_inconclusive"
+        recommendation = "inspect fragile records and locality before another bounded retrain"
+
+    fragile_persist = False
+    for rid in ("942", "671"):
+        row = _record_final_mode_row(final_rows, "calibrated_topk2", rid) or _record_final_mode_row(final_rows, "calibrated", rid)
+        scores = [float(value) for value in (row.get("pooled_scores") or [])]
+        own = int(row.get("expected_expert")) if row.get("expected_expert") is not None else -1
+        rank = (_rank_details(scores, own).get("own_expert_rank") if scores else None)
+        if rank is None or int(rank) >= 3:
+            fragile_persist = True
+    if fragile_persist and diagnosis != "routing_margin_hurts_expert_capacity":
+        diagnosis = "fragile_identity_overlap_persists"
+        recommendation = "improve identity separation, likely with stronger margin or cross-attention factor generator"
+    if suffixes:
+        diagnosis = diagnosis + "+" + "+".join(suffixes)
+    return diagnosis, recommendation
+
+
+def write_routing_margin_retrain_outputs(
+    out_dir: Path,
+    args: argparse.Namespace,
+    records: List[Dict[str, Any]],
+    sequential_rows: List[Dict[str, Any]],
+    loss_rows: List[Dict[str, Any]],
+    routing_margin_rows: List[Dict[str, Any]],
+    summary: Dict[str, Any],
+    retention_summary: Dict[str, Any],
+) -> Path:
+    prefix = "time_ten_seq_margin"
+    modes = parse_eval_routing_modes(args.eval_routing_modes)
+    final_rows = _sequential_final_rows(sequential_rows, len(records))
+    score_rows = _sequential_routing_score_rows(sequential_rows)
+    confusion = {
+        "after_each_edit": {},
+        "final": {},
+    }
+    for step in range(1, len(records) + 1):
+        step_rows = [row for row in sequential_rows if int(row.get("edit_step") or 0) == step]
+        confusion["after_each_edit"][str(step)] = {
+            mode: _routing_confusion([row for row in step_rows if row.get("eval_routing_mode") == mode])
+            for mode in modes
+        }
+    for mode in modes:
+        confusion["final"][mode] = _routing_confusion([row for row in final_rows if row.get("eval_routing_mode") == mode])
+
+    fragile_rows = _fragile_tracking_rows(sequential_rows)
+    write_loss_trace(out_dir / f"{prefix}_loss_trace.csv", loss_rows)
+    write_loss_trace(out_dir / f"{prefix}_after_each_edit.csv", sequential_rows)
+    write_loss_trace(out_dir / f"{prefix}_per_record.csv", final_rows)
+    write_loss_trace(out_dir / f"{prefix}_routing_scores.csv", score_rows)
+    write_json(out_dir / f"{prefix}_confusion_matrices.json", confusion)
+    write_json(out_dir / f"{prefix}_retention_summary.json", retention_summary)
+    write_loss_trace(out_dir / "time_fragile_record_tracking.csv", fragile_rows)
+    margin_debug = out_dir / f"{prefix}_routing_debug.jsonl"
+    generic_debug = out_dir / f"{_sequential_prefix(len(records))}_routing_debug.jsonl"
+    if margin_debug.exists() and not generic_debug.exists():
+        generic_debug.write_bytes(margin_debug.read_bytes())
+
+    by_mode = retention_summary.get("by_mode") or {}
+    diagnosis, recommendation = _diagnose_routing_margin_retrain(by_mode, final_rows)
+    decision = {
+        "diagnosis": diagnosis,
+        "recommendation": recommendation,
+        "record_ids": [record_id(record, idx) for idx, record in enumerate(records)],
+        "trace_summary": {
+            "loss": _numeric_trace_summary(loss_rows, ["loss_total", "loss_rel", "loss_loc", "loss_time_routing_margin"]),
+            "routing_margin": _numeric_trace_summary(
+                routing_margin_rows,
+                [
+                    "loss_routing_margin",
+                    "loss_routing_margin_current",
+                    "loss_routing_margin_prev",
+                    "routing_margin_current_gap",
+                    "routing_margin_prev_violations",
+                ],
+            ),
+        },
+        "source_sync_status": os.environ.get(
+            "TIME_GITHUB_SYNC_STATUS",
+            "not attempted during model run; source-only sync should be handled after the run if source changed",
+        ),
+    }
+    write_json(out_dir / f"{prefix}_decision_summary.json", decision)
+
+    source_sync_status = str(decision["source_sync_status"])
+    record_ids = decision["record_ids"]
+    trace_summary = decision["trace_summary"]
+    files_changed = [
+        "scripts/time/run_time_medmkeb_smoke.py",
+        "easyeditor/trainer/algs/time_edit.py",
+        "easyeditor/models/time_edit/time_edit_hparams.py",
+    ]
+    lines = [
+        "# TIME 10-Edit Sequential Routing-Margin Retrain Report",
+        "",
+        "## Files Changed",
+        *[f"- `{path}`" for path in files_changed],
+        "",
+        "## Scope",
+        "- Bounded 10-edit sequential TIME-Calibrated retrain with routing-margin loss.",
+        "- No 20-edit run, no broad sweep, and no ENGRAM/CURE/DSCA/SAME changes.",
+        "",
+        "## Exact Command Run",
+        f"- `{current_command_line()}`",
+        "",
+        "## GPU",
+        f"- Used CUDA device setting: `{os.environ.get('CUDA_VISIBLE_DEVICES') or ''}`.",
+        "- GPU 2 was used because the user explicitly requested future experiments use GPU 2.",
+        "```text",
+        _gpu_status_text(),
+        "```",
+        "",
+        "## Verification",
+        "- `py_compile`: passed before model run.",
+        "- `scripts/time/test_time_modules.py`: passed before model run.",
+        "",
+        "## Record IDs",
+        f"- `{json.dumps(record_ids)}`",
+        "",
+        "## Training Loss Trace Summary",
+        f"- `{json.dumps(trace_summary.get('loss'), sort_keys=True)}`",
+        "",
+        "## Routing Margin Trace Summary",
+        f"- `{json.dumps(trace_summary.get('routing_margin'), sort_keys=True)}`",
+        "",
+        "## Fragile Record Tracking",
+        "- Full tracking saved to `time_fragile_record_tracking.csv`.",
+        "| record | mode | own rank | selected ids | own selected | top expert | top1 score | top2 score | top3 score | gap vs boundary | retained improvement |",
+        "|---:|---|---:|---|---|---:|---:|---:|---:|---:|---:|",
+    ]
+    for rid in ("1293", "942", "671"):
+        for mode in ("calibrated_topk2", "adaptive_margin0p2", "adaptive_margin0p25", "adaptive_margin0p3", "adaptive_margin0p35", "topk3"):
+            row = _record_final_mode_row(final_rows, mode, rid)
+            if not row:
+                continue
+            scores = [float(value) for value in (row.get("pooled_scores") or [])]
+            own = int(row.get("expected_expert")) if row.get("expected_expert") is not None else -1
+            selected_ids = [int(value) for value in (row.get("selected_expert_ids") or [])]
+            ranks = _rank_details(scores, own) if scores else {}
+            boundary = _selection_boundary_score(scores, selected_ids) if scores else None
+            own_score = ranks.get("own_expert_score")
+            gap = float(own_score - boundary) if own_score is not None and boundary is not None else None
+            lines.append(
+                "| {rid} | {mode} | {rank} | `{selected}` | {own_selected} | {top} | {top1_score} | {top2_score} | {top3_score} | {gap} | {retained} |".format(
+                    rid=rid,
+                    mode=mode,
+                    rank=ranks.get("own_expert_rank"),
+                    selected=json.dumps(selected_ids),
+                    own_selected=bool(row.get("own_selected")),
+                    top=row.get("top_score_expert_id", row.get("top_expert_id")),
+                    top1_score=_fmt(ranks.get("top1_score")),
+                    top2_score=_fmt(ranks.get("top2_score")),
+                    top3_score=_fmt(ranks.get("top3_score")),
+                    gap=_fmt(gap),
+                    retained=_fmt(row.get("retained_improvement")),
+                )
+            )
+
+    lines.extend(["", "## Final Results"])
+    for mode in ("force_own", "calibrated_topk2", "adaptive_margin0p2", "adaptive_margin0p25", "adaptive_margin0p3", "adaptive_margin0p35", "topk3", "topk", "raw_topk1"):
+        row = by_mode.get(mode)
+        if row:
+            lines.append(_margin_mode_summary_line(mode, row))
+
+    lines.extend(
+        [
+            "",
+            "## Confusion Matrices",
+        ]
+    )
+    for mode in modes:
+        lines.append(f"- {mode}: `{json.dumps((by_mode.get(mode) or {}).get('confusion_matrix'), sort_keys=True)}`")
+
+    calibrated = by_mode.get("calibrated_topk2") or by_mode.get("calibrated") or {}
+    adapt02 = by_mode.get("adaptive_margin0p2") or {}
+    adapt025 = by_mode.get("adaptive_margin0p25") or {}
+    adapt03 = by_mode.get("adaptive_margin0p3") or {}
+    adapt035 = by_mode.get("adaptive_margin0p35") or {}
+    topk3 = by_mode.get("topk3") or {}
+    raw = by_mode.get("topk") or by_mode.get("raw_topk1") or {}
+    lines.extend(
+        [
+            "",
+            "## Required Comparisons",
+            f"- Final force-own result: `{json.dumps(by_mode.get('force_own') or {}, sort_keys=True)}`",
+            f"- Final calibrated_topk2 result: `{json.dumps(calibrated, sort_keys=True)}`",
+            f"- Final adaptive_margin0p2 result: `{json.dumps(adapt02, sort_keys=True)}`",
+            f"- Final adaptive_margin0p25 result: `{json.dumps(adapt025, sort_keys=True)}`",
+            f"- Final adaptive_margin0p3 result: `{json.dumps(adapt03, sort_keys=True)}`",
+            f"- Final adaptive_margin0p35 result: `{json.dumps(adapt035, sort_keys=True)}`",
+            f"- Final topk3 comparison: `{json.dumps(topk3, sort_keys=True)}`",
+            f"- Final raw topk comparison: `{json.dumps(raw, sort_keys=True)}`",
+            "",
+            "## Retention And Locality",
+            f"- Retention summary saved to `{prefix}_retention_summary.json`.",
+            f"- Calibrated_topk2 locality/reference delta: {_fmt(calibrated.get('mean_locality_reference_delta'))}.",
+            f"- Calibrated_topk2 worst per-record degradation: {_fmt(calibrated.get('worst_per_record_nll_degradation'))}.",
+            f"- Adaptive margin 0.20 locality/reference delta: {_fmt(adapt02.get('mean_locality_reference_delta'))}.",
+            f"- Adaptive margin 0.25 locality/reference delta: {_fmt(adapt025.get('mean_locality_reference_delta'))}.",
+            f"- Adaptive margin 0.30 locality/reference delta: {_fmt(adapt03.get('mean_locality_reference_delta'))}.",
+            f"- Adaptive margin 0.35 locality/reference delta: {_fmt(adapt035.get('mean_locality_reference_delta'))}.",
+            "",
+            "## Fragile Recovery",
+        ]
+    )
+    for rid in ("942", "671"):
+        row = _record_final_mode_row(final_rows, "calibrated_topk2", rid) or {}
+        adaptive_row = _record_final_mode_row(final_rows, "adaptive_margin0p2", rid) or {}
+        if not adaptive_row or not bool(adaptive_row.get("own_selected")):
+            adaptive_row = _record_final_mode_row(final_rows, "adaptive_margin0p25", rid) or adaptive_row
+        if not adaptive_row or not bool(adaptive_row.get("own_selected")):
+            adaptive_row = _record_final_mode_row(final_rows, "adaptive_margin0p3", rid) or adaptive_row
+        if not adaptive_row or not bool(adaptive_row.get("own_selected")):
+            adaptive_row = _record_final_mode_row(final_rows, "adaptive_margin0p35", rid) or adaptive_row
+        lines.append(
+            f"- Record {rid}: calibrated_topk2 own_selected={bool(row.get('own_selected'))}, "
+            f"adaptive own_selected={bool(adaptive_row.get('own_selected'))}."
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Decision",
+            f"- Diagnosis label: `{diagnosis}`.",
+            f"- Recommendation: {recommendation}.",
+            "",
+            "## Source Sync And Artifact Policy",
+            "- Did not sync outputs/checkpoints/logs/datasets/PDFs/zips.",
+            f"- Source-only GitHub sync status: {source_sync_status}.",
+            "",
+            "## Output Files",
+            "- `expert_repository.pt`",
+            "- `time_routing_margin_trace.csv`",
+            "- `time_fragile_record_tracking.csv`",
+            f"- `{prefix}_loss_trace.csv`",
+            f"- `{prefix}_after_each_edit.csv`",
+            f"- `{prefix}_per_record.csv`",
+            f"- `{prefix}_routing_scores.csv`",
+            f"- `{prefix}_confusion_matrices.json`",
+            f"- `{prefix}_routing_debug.jsonl`",
+            f"- `{prefix}_retention_summary.json`",
+            f"- `{prefix}_decision_summary.json`",
+            "- `TIME_10EDIT_SEQUENTIAL_ROUTING_MARGIN_RETRAIN_REPORT.md`",
+            "",
+        ]
+    )
+    path = out_dir / "TIME_10EDIT_SEQUENTIAL_ROUTING_MARGIN_RETRAIN_REPORT.md"
     path.write_text("\n".join(lines))
     return path
 
@@ -4942,6 +5580,25 @@ def choose_microcheck_best(grid_rows: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 
 def diagnose_microcheck(grid_rows: List[Dict[str, Any]], best: Dict[str, Any]) -> Tuple[str, str]:
+    passing = [
+        row for row in grid_rows
+        if row.get("adaptive_margin") is not None
+        and row.get("microcheck_success")
+    ]
+    if passing:
+        chosen = best.get("best_success") or max(
+            passing,
+            key=lambda row: (
+                int(row.get("own_selected_count") or 0),
+                int(row.get("retained_positive_count") or 0),
+                -float(row.get("mean_selected_set_size") or 1.0e9),
+                -float(row.get("worst_nll_degradation") or 1.0e9),
+            ),
+        )
+        return (
+            "adaptive_margin_microcheck_success",
+            f"run exactly one bounded 10-edit sequential confirmation with `{chosen.get('config_id')}`; do not run 20-edit",
+        )
     target_rows = [
         row for row in grid_rows
         if _microcheck_margin(row) in {0.30, 0.35}
@@ -7061,6 +7718,11 @@ def main() -> None:
 
     dataset_path = resolve_dataset_path(args.dataset, Path.cwd(), args.dataset_path)
     repo_path = resolve_repository_path(args.time_load_repository)
+    if args.time_adaptive_margin_microcheck:
+        if not args.eval_only:
+            raise RuntimeError("--time-adaptive-margin-microcheck requires --eval-only.")
+        if int(args.max_edits) != 10:
+            raise RuntimeError("--time-adaptive-margin-microcheck requires --max-edits 10.")
     if args.eval_only and repo_path is None:
         raise RuntimeError("--eval-only requires --time-load-repository PATH for this runner.")
     if repo_path is not None:

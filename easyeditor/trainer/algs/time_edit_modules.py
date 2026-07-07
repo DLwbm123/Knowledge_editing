@@ -346,6 +346,9 @@ class TIMEForwardDebug:
     top_expert_ids: torch.Tensor
     top_scores: torch.Tensor
     selected_counts: torch.Tensor
+    adaptive_rank_margin_gap: Optional[torch.Tensor] = None
+    adaptive_rank_margin_triggered: Optional[torch.Tensor] = None
+    adaptive_rank_margin_rank3_ids: Optional[torch.Tensor] = None
 
 
 class TIMECPResidual(nn.Module):
@@ -367,6 +370,10 @@ class TIMECPResidual(nn.Module):
         score_pool: str = "token",
         score_eps: float = 1.0e-8,
         layer_norm: bool = True,
+        enable_adaptive_rank_margin_rescue: bool = False,
+        adaptive_rank_margin: float = 0.02,
+        adaptive_rank_margin_use_rank3: bool = True,
+        adaptive_rank_margin_debug: bool = False,
     ) -> None:
         super().__init__()
         self.repository = repository
@@ -389,6 +396,11 @@ class TIMECPResidual(nn.Module):
         if self.disable_score_mixing:
             requested_mixing = "average"
         self.mixing_mode = requested_mixing
+        self.enable_adaptive_rank_margin_rescue = bool(enable_adaptive_rank_margin_rescue)
+        self.adaptive_rank_margin = float(adaptive_rank_margin)
+        self.adaptive_rank_margin_use_rank3 = bool(adaptive_rank_margin_use_rank3)
+        self.adaptive_rank_margin_debug = bool(adaptive_rank_margin_debug)
+        self._last_adaptive_rank_margin_debug: Dict[str, torch.Tensor] = {}
         if self.residual_sign not in {"plus", "minus"}:
             raise ValueError(f"Unsupported TIME residual_sign: {self.residual_sign}")
         if self.score_norm not in {"none", "factor", "factor_z", "self_score", "factor_self_score"}:
@@ -565,7 +577,38 @@ class TIMECPResidual(nn.Module):
         capped.scatter_(-1, top_indices, top_valid)
         return selected & capped
 
+    def _adaptive_rank_margin_topk2_selection(self, scores: torch.Tensor) -> torch.Tensor:
+        """Experimental inference-only top-2 routing with rank-3 rescue."""
+        num_experts = int(scores.shape[-1])
+        base_k = min(2, num_experts)
+        selected = torch.zeros_like(scores, dtype=torch.bool)
+        if base_k <= 0:
+            return selected
+        top_values, top_indices = torch.topk(scores, k=base_k, dim=-1)
+        selected.scatter_(-1, top_indices, torch.isfinite(top_values))
+
+        debug: Dict[str, torch.Tensor] = {}
+        if num_experts < 3:
+            self._last_adaptive_rank_margin_debug = debug
+            return selected
+
+        top3_values, top3_indices = torch.topk(scores, k=3, dim=-1)
+        gap = top3_values[..., 1] - top3_values[..., 2]
+        trigger = torch.isfinite(gap) & (gap < float(self.adaptive_rank_margin))
+        rank3_ids = top3_indices[..., 2]
+        if self.adaptive_rank_margin_use_rank3:
+            selected.scatter_(-1, rank3_ids.unsqueeze(-1), trigger.unsqueeze(-1))
+        if self.adaptive_rank_margin_debug:
+            debug = {
+                "gap": gap.detach(),
+                "triggered": trigger.detach(),
+                "rank3_ids": rank3_ids.detach(),
+            }
+        self._last_adaptive_rank_margin_debug = debug
+        return selected
+
     def _selection(self, scores: torch.Tensor, force_expert_ids: Optional[Iterable[int]]) -> torch.Tensor:
+        self._last_adaptive_rank_margin_debug = {}
         if self.repository.num_experts == 0:
             return torch.zeros_like(scores, dtype=torch.bool)
         if self.disable_selection:
@@ -589,6 +632,11 @@ class TIMECPResidual(nn.Module):
             elif mode == "force_current":
                 selected = torch.zeros_like(scores, dtype=torch.bool)
                 selected[..., self.repository.num_experts - 1] = True
+            elif mode == "adaptive_rank_margin_topk2":
+                if self.enable_adaptive_rank_margin_rescue:
+                    selected = self._adaptive_rank_margin_topk2_selection(scores)
+                else:
+                    selected = self._topk_mask(scores)
             else:
                 raise ValueError(f"Unsupported TIME routing_mode: {self.routing_mode}")
         selected = self._cap_selection(selected, scores)
@@ -675,6 +723,9 @@ class TIMECPResidual(nn.Module):
             top_expert_ids=top_expert_ids,
             top_scores=top_scores,
             selected_counts=selected_counts,
+            adaptive_rank_margin_gap=self._last_adaptive_rank_margin_debug.get("gap"),
+            adaptive_rank_margin_triggered=self._last_adaptive_rank_margin_debug.get("triggered"),
+            adaptive_rank_margin_rank3_ids=self._last_adaptive_rank_margin_debug.get("rank3_ids"),
         )
         return (residual, debug) if return_debug else residual
 
@@ -685,7 +736,17 @@ class TIMECPResidual(nn.Module):
         top_ids = torch.full(hidden.shape[:2], -1, device=hidden.device, dtype=torch.long)
         top_scores = torch.zeros(hidden.shape[:2], device=hidden.device, dtype=torch.float32)
         selected_counts = torch.zeros(hidden.shape[:2], device=hidden.device, dtype=torch.long)
-        return TIMEForwardDebug(scores, scores, {"none": scores}, selected, weights, residual, top_ids, top_scores, selected_counts)
+        return TIMEForwardDebug(
+            scores=scores,
+            raw_scores=scores,
+            score_variants={"none": scores},
+            selected=selected,
+            weights=weights,
+            residual=residual,
+            top_expert_ids=top_ids,
+            top_scores=top_scores,
+            selected_counts=selected_counts,
+        )
 
 
 def extract_first_tensor(output: Any) -> torch.Tensor:

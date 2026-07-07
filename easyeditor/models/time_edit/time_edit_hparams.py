@@ -104,7 +104,16 @@ class TIMEEditMultimodalHparams(HyperParams):
     time_lambda_anti_collapse: float = 0.0
     time_anti_collapse_margin: float = 0.05
     time_anti_collapse_score_norm: str = "factor_z"
+    time_routing_margin_loss: bool = False
+    time_lambda_routing_margin: float = 0.0
+    time_routing_margin_current: float = 0.10
+    time_routing_margin_prev: float = 0.15
+    time_routing_margin_score_norm: str = "factor_z"
     time_lambda_factor_norm_reg: float = 0.0
+    time_enable_adaptive_rank_margin_rescue: bool = False
+    time_adaptive_rank_margin: float = 0.02
+    time_adaptive_rank_margin_use_rank3: bool = True
+    time_adaptive_rank_margin_debug: bool = False
     time_force_current_during_training: bool = True
     time_residual_sign: str = "plus"
     time_expert_gain: float = 1.0
