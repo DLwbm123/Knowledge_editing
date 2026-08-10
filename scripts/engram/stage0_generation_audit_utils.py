@@ -122,18 +122,22 @@ def _competitor_and_rank(logits: torch.Tensor, target_id: int) -> Dict[str, Any]
 
 def eos_diagnostics(logits: torch.Tensor, eos_ids: Sequence[int]) -> Dict[str, Any]:
     if not eos_ids:
-        return {"eos_probability": None, "eos_rank": None}
+        return {"eos_probability": None, "eos_rank": None, "eos_logit": None}
     values = logits.float()
     log_probs = torch.log_softmax(values, dim=-1)
     candidates = []
     for eos_id in eos_ids:
         eos_id = int(eos_id)
         if 0 <= eos_id < values.numel():
-            candidates.append((float(log_probs[eos_id].exp().item()), int(values.gt(values[eos_id]).sum().item()) + 1))
+            candidates.append((
+                float(log_probs[eos_id].exp().item()),
+                int(values.gt(values[eos_id]).sum().item()) + 1,
+                float(values[eos_id].item()),
+            ))
     if not candidates:
-        return {"eos_probability": None, "eos_rank": None}
-    probability, rank = max(candidates, key=lambda item: item[0])
-    return {"eos_probability": probability, "eos_rank": rank}
+        return {"eos_probability": None, "eos_rank": None, "eos_logit": None}
+    probability, rank, logit = max(candidates, key=lambda item: item[0])
+    return {"eos_probability": probability, "eos_rank": rank, "eos_logit": logit}
 
 
 @torch.inference_mode()
@@ -279,6 +283,90 @@ def manual_greedy_trace(
         "raw_output": tokenizer.decode(generated, skip_special_tokens=True).strip(),
         "trajectory": trace,
         "first_divergence": first_divergence,
+        "first_repeated_bigram_step": first_repeated_ngram_step(generated, 2),
+        "first_repeated_trigram_step": first_repeated_ngram_step(generated, 3),
+        "repeated_trigram_count": _repeated_ngram_count(generated, 3),
+        **termination,
+    }
+
+
+def _cache_length(past_key_values: Any) -> Optional[int]:
+    try:
+        if hasattr(past_key_values, "get_seq_length"):
+            return int(past_key_values.get_seq_length())
+        return int(past_key_values[0][0].shape[-2])
+    except Exception:
+        return None
+
+
+@torch.inference_mode()
+def manual_cached_greedy_trace(
+    model: Any,
+    canonical: CanonicalInputs,
+    max_new_tokens: int,
+    eos_ids: Sequence[int],
+    *,
+    top_k: int = 5,
+) -> Dict[str, Any]:
+    """Deterministic batch-one greedy decoding with the model's real KV cache."""
+    assert_no_gold_leakage(canonical.prompt_ids, canonical)
+    tokenizer = model.llava_tokenizer
+    eos_set = {int(item) for item in eos_ids}
+    generated: List[int] = []
+    trace: List[Dict[str, Any]] = []
+    attention = torch.ones_like(canonical.prompt_ids, dtype=torch.long, device=canonical.prompt_ids.device)
+    output = model.llava_model(
+        input_ids=canonical.prompt_ids,
+        images=canonical.image,
+        attention_mask=attention,
+        return_dict=True,
+        use_cache=True,
+    )
+    past = output.past_key_values
+    logits = output.logits[0, -1].float()
+    for step in range(int(max_new_tokens)):
+        selected_id = int(torch.argmax(logits).item())
+        target_id = int(canonical.target_ids[step].item()) if step < canonical.target_ids.numel() else None
+        row: Dict[str, Any] = {
+            "step": step,
+            "selected_id": selected_id,
+            "selected_text": tokenizer.decode([selected_id], skip_special_tokens=False),
+            "target_id": target_id,
+            "cache_position": _cache_length(past),
+            **eos_diagnostics(logits, eos_ids),
+        }
+        if target_id is not None:
+            row.update(_competitor_and_rank(logits, target_id))
+        top_values, top_ids = torch.topk(logits, min(int(top_k), logits.numel()))
+        row["top_k"] = [
+            {"token_id": int(token_id), "token_text": tokenizer.decode([int(token_id)], skip_special_tokens=False), "logit": float(value)}
+            for value, token_id in zip(top_values.tolist(), top_ids.tolist())
+        ]
+        trace.append(row)
+        generated.append(selected_id)
+        if selected_id in eos_set:
+            break
+        step_ids = torch.tensor([[selected_id]], device=canonical.prompt_ids.device, dtype=canonical.prompt_ids.dtype)
+        attention = torch.ones(
+            (1, canonical.answer_start + len(generated)),
+            dtype=torch.long,
+            device=canonical.prompt_ids.device,
+        )
+        output = model.llava_model(
+            input_ids=step_ids,
+            images=None,
+            attention_mask=attention,
+            past_key_values=past,
+            return_dict=True,
+            use_cache=True,
+        )
+        past = output.past_key_values
+        logits = output.logits[0, -1].float()
+    termination = classify_termination(generated, canonical.target_ids.tolist(), eos_ids, max_new_tokens)
+    return {
+        "token_ids": generated,
+        "raw_output": tokenizer.decode(generated, skip_special_tokens=True).strip(),
+        "trajectory": trace,
         "first_repeated_bigram_step": first_repeated_ngram_step(generated, 2),
         "first_repeated_trigram_step": first_repeated_ngram_step(generated, 3),
         "repeated_trigram_count": _repeated_ngram_count(generated, 3),
