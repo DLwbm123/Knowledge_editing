@@ -72,6 +72,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--mode", required=True, choices=("primary", "fresh", "finalize"))
     parser.add_argument("--out-dir", required=True, type=Path)
     parser.add_argument("--physical-gpu", default=0, type=int)
+    parser.add_argument(
+        "--uniform-cap",
+        default=None,
+        type=int,
+        help="Optional predeclared uniform cap for every record/view; never target-dependent.",
+    )
     return parser.parse_args()
 
 
@@ -547,7 +553,10 @@ def primary(args: argparse.Namespace) -> None:
     for record_id in ORDER:
         aliases_and_targets.append(str(records[record_id]["alt"]))
         aliases_and_targets.extend(str(item) for item in (records[record_id].get("accepted_answers") or []))
-    budget = shared_generation_budget(model.llava_tokenizer, aliases_and_targets)
+    computed_budget = shared_generation_budget(model.llava_tokenizer, aliases_and_targets)
+    budget = int(args.uniform_cap) if args.uniform_cap is not None else computed_budget
+    if budget < computed_budget:
+        raise ValueError(f"Uniform cap {budget} is below the preregistered minimum {computed_budget}")
     initialize_manifest(args.out_dir, args.physical_gpu, budget, records)
 
     checks: List[Dict[str, Any]] = []
