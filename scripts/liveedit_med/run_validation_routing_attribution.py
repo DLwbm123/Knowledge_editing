@@ -55,7 +55,7 @@ def worker(args):
     model, _bank = load_clean_model(args.physical_gpu); _name, block = resolve_layer21_block(model)
     modules = LiveEditMedicalModules(LiveEditMedicalConfig()).to(model.lm_device).float()
     state, manifest = load_safe_state(args.checkpoint)
-    if int(manifest["step"]) != 3000: raise RuntimeError("LIVEEDIT_MED_STAGE_C_REQUIRES_STEP3000")
+    checkpoint_step = int(manifest["step"])
     modules.load_state_dict(state, strict=True); modules.eval(); experts = build_experts(model, block, modules, records)
     by_id = {str(row["record_id"]): row for row in records}; ids = list(by_id)
     nearest = {}
@@ -101,12 +101,16 @@ def worker(args):
             write_new(args.progress_dir / f"record_{rid}_repo_{size}.json",
                       {"record_id": rid, "repository_size": size, "rows": rows[-8:]})
     write_new(args.out, {"protocol": PROTOCOL, "worker_index": args.worker_index, "physical_gpu": args.physical_gpu,
-                         "checkpoint_step": 3000, "rows": rows})
+                         "checkpoint_step": checkpoint_step, "rows": rows})
 
 
 def finalize(args):
-    rows = []
-    for path in args.shard: rows.extend(json.loads(path.read_text())["rows"])
+    rows = []; checkpoint_steps = set()
+    for path in args.shard:
+        shard = json.loads(path.read_text()); rows.extend(shard["rows"])
+        checkpoint_steps.add(int(shard["checkpoint_step"]))
+    if len(checkpoint_steps) != 1: raise RuntimeError("LIVEEDIT_MED_STAGE_C_CHECKPOINT_DRIFT")
+    checkpoint_step = checkpoint_steps.pop()
     expected = 64 * 5 * 8
     if len(rows) != expected or len({(r["record_id"],r["repository_size"],r["category"]) for r in rows}) != expected:
         raise RuntimeError(f"LIVEEDIT_MED_STAGE_C_INCOMPLETE:{len(rows)}!={expected}")
@@ -118,7 +122,7 @@ def finalize(args):
             "positive_generation_success":sum(r["generation_result"]["match"]["success"] for r in subset if r["positive"]),
             "negative_exact_s0":sum(r["exact_s0_preservation"] is True for r in subset),
             "negative_count":sum(not r["positive"] for r in subset), "failure_classes":dict(Counter(r["failure_class"] for r in subset))}
-    write_new(args.out_dir/"routing_attribution.json",{"protocol":PROTOCOL,"split":"validation","edit_count":64,
+    write_new(args.out_dir/"routing_attribution.json",{"protocol":PROTOCOL,"split":"validation","edit_count":64,"checkpoint_step":checkpoint_step,
         "repository_sizes":[1,4,8,16,32],"rows":rows,"scaling":scaling,"adaptation_or_threshold_change":False})
     lines=["# Validation-only routing attribution","","No parameter, threshold, checkpoint, or repository tensor was modified.","",
            "| Repo | Visual recall | Positive generation | Negative exact S0 | Mean candidates |","|---:|---:|---:|---:|---:|"]

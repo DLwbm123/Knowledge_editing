@@ -11,6 +11,7 @@ from .source_ops import (apply_low_rank_expert_residual, compute_text_soft_weigh
                          deterministic_source_masks, generate_expert_and_keys,
                          source_routing_losses, source_soft_losses)
 from .upstream_modules import LowRankGenerator, QVExtractor, reset_layer_norm
+from .source_training_continuation import SourceTrainingContinuationMode
 
 
 @dataclass(frozen=True)
@@ -25,6 +26,9 @@ class LiveEditMedicalConfig:
     learning_rate: float = 1e-4
     lr_cut_it: tuple[int, ...] = (10000,)
     lr_cut_rate: float = .1
+    source_training_continuation_mode: SourceTrainingContinuationMode = (
+        SourceTrainingContinuationMode.CORRECTED_SEMANTICS_CONTINUE_LAYER22
+    )
 
 
 class LiveEditMedicalModules(nn.Module):

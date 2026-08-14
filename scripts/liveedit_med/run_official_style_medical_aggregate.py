@@ -96,17 +96,33 @@ def repository_for(members, experts):
     return repo
 
 
+def load_progress(path: Path, *, record_id: str, repository_size: int):
+    """Load a completed row without recomputing or overwriting it."""
+    if not path.is_file():
+        return None
+    value = json.loads(path.read_text())
+    if str(value.get("record_id")) != record_id or int(value.get("repository_size", -1)) != repository_size:
+        raise RuntimeError(f"LIVEEDIT_MED_STAGE_B_PROGRESS_MISMATCH:{path}")
+    return value
+
+
 def worker(args) -> None:
     source = json.loads(args.source_records.read_text()); records = source["records"]["heldout"]
     assigned = [row for index, row in enumerate(records) if index % args.worker_count == args.worker_index]
     model, _bank = load_clean_model(args.physical_gpu); _name, block = resolve_layer21_block(model)
     modules = LiveEditMedicalModules(LiveEditMedicalConfig()).to(model.lm_device).float()
     state, manifest = load_safe_state(args.checkpoint)
-    if int(manifest["step"]) != 3000: raise RuntimeError("LIVEEDIT_MED_STAGE_B_REQUIRES_STEP3000")
+    checkpoint_step = int(manifest["step"])
     modules.load_state_dict(state, strict=True); modules.eval(); experts = build_experts(model, block, modules, records)
     rows = []
     for record in assigned:
         rid = str(record["record_id"]); own = experts[rid]
+        progress = {size: load_progress(args.progress_dir / f"record_{rid}_repo_{size}.json",
+                                        record_id=rid, repository_size=size)
+                    for size in (1, 10, 32)}
+        if all(value is not None for value in progress.values()):
+            rows.extend(progress[size] for size in (1, 10, 32))
+            continue
         other = records[(records.index(record) + 1) % len(records)]
         native, other_native = native_sample(record), native_sample(other)
         safety_samples = {
@@ -117,6 +133,9 @@ def worker(args) -> None:
         forced = {name: forced_generation(model, block, modules, sample, own["moe_c"], own["moe_r"])
                   for name, sample in views(record).items()}
         for size in (1, 10, 32):
+            if progress[size] is not None:
+                rows.append(progress[size])
+                continue
             members = stable_repository(records, rid, size); repo = repository_for(members, experts)
             result = {"record_id": rid, "repository_size": size, "repository_ids": repo["ids"],
                       "forced_on": forced, "views": {}, "locality": {}, "hard_medical_safety": {}}
@@ -145,15 +164,18 @@ def worker(args) -> None:
             rows.append(result)
             write_new(args.progress_dir / f"record_{rid}_repo_{size}.json", result)
     write_new(args.out, {"protocol": PROTOCOL, "worker_index": args.worker_index, "worker_count": args.worker_count,
-                         "physical_gpu": args.physical_gpu, "checkpoint_step": 3000, "rows": rows})
+                         "physical_gpu": args.physical_gpu, "checkpoint_step": checkpoint_step, "rows": rows})
 
 
 def finalize(args) -> None:
-    rows = []
+    rows = []; checkpoint_steps = set()
     for path in args.shard:
         value = json.loads(path.read_text())
         if value.get("protocol") != PROTOCOL: raise RuntimeError("LIVEEDIT_MED_STAGE_B_SHARD_PROTOCOL")
+        checkpoint_steps.add(int(value["checkpoint_step"]))
         rows.extend(value["rows"])
+    if len(checkpoint_steps) != 1: raise RuntimeError("LIVEEDIT_MED_STAGE_B_CHECKPOINT_DRIFT")
+    checkpoint_step = checkpoint_steps.pop()
     if len(rows) != 64 * 3 or len({(r["record_id"], r["repository_size"]) for r in rows}) != len(rows):
         raise RuntimeError(f"LIVEEDIT_MED_STAGE_B_INCOMPLETE:{len(rows)}")
     aggregate = {}
@@ -174,7 +196,7 @@ def finalize(args) -> None:
             entry["target_contamination"] for r in subset for entry in r["hard_medical_safety"].values())}
         aggregate[str(size)] = item
     output = {"protocol": PROTOCOL, "claim_scope": "MEDICAL_DOMAIN_NOT_OFFICIAL_BENCHMARK_REPRODUCTION",
-              "checkpoint_step": 3000, "split": "heldout", "edit_count": 64, "repository_sizes": [1, 10, 32],
+              "checkpoint_step": checkpoint_step, "split": "heldout", "edit_count": 64, "repository_sizes": [1, 10, 32],
               "aggregate": aggregate, "rows": rows, "canonical_bank_sha256": bank_manifest()["sha256"]}
     write_new(args.out_dir / "official_style_medical_aggregate.json", output)
     lines = ["# LiveEdit-Med official-style medical aggregate", "", f"Protocol: `{PROTOCOL}`", "",

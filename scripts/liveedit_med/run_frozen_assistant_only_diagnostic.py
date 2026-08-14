@@ -59,7 +59,7 @@ def worker(args):
     model, _bank = load_clean_model(args.physical_gpu); _name, block = resolve_layer21_block(model)
     modules = LiveEditMedicalModules(LiveEditMedicalConfig()).to(model.lm_device).float()
     state, manifest = load_safe_state(args.checkpoint)
-    if int(manifest["step"]) != 3000: raise RuntimeError("LIVEEDIT_MED_STAGE_D_REQUIRES_STEP3000")
+    checkpoint_step = int(manifest["step"])
     modules.load_state_dict(state, strict=True); modules.eval(); rows=[]
     if args.dataset == "validation":
         records=json.loads(args.source_records.read_text())["records"]["validation"]
@@ -83,15 +83,18 @@ def worker(args):
             rows.append({"dataset":"record953_development_regression","input_id":row["input_id"],"category":category,
                          "target_is_placeholder":row.get("canonical_answer") is None,**compare_modes(model,block,modules,sample,repo)})
     write_new(args.out,{"protocol":PROTOCOL,"worker_index":args.worker_index,"dataset":args.dataset,
-                        "physical_gpu":args.physical_gpu,"checkpoint_step":3000,"rows":rows})
+                        "physical_gpu":args.physical_gpu,"checkpoint_step":checkpoint_step,"rows":rows})
 
 
 def finalize(args):
-    rows=[]
-    for path in args.shard: rows.extend(json.loads(path.read_text())["rows"])
+    rows=[]; checkpoint_steps=set()
+    for path in args.shard:
+        shard=json.loads(path.read_text()); rows.extend(shard["rows"]); checkpoint_steps.add(int(shard["checkpoint_step"]))
+    if len(checkpoint_steps)!=1: raise RuntimeError("LIVEEDIT_MED_STAGE_D_CHECKPOINT_DRIFT")
+    checkpoint_step=checkpoint_steps.pop()
     validation=[r for r in rows if r["dataset"]=="validation"]; dev=[r for r in rows if r["dataset"]!="validation"]
     if len(validation)!=256 or len(dev)!=50: raise RuntimeError(f"LIVEEDIT_MED_STAGE_D_INCOMPLETE:{len(validation)}:{len(dev)}")
-    summary={"protocol":PROTOCOL,"checkpoint_step":3000,"route_parameters_and_decisions_reused":True,
+    summary={"protocol":PROTOCOL,"checkpoint_step":checkpoint_step,"route_parameters_and_decisions_reused":True,
       "validation":{"count":len(validation),"source_full_success":sum(r["source_full"]["match"]["success"] for r in validation),
         "assistant_only_success":sum(r["assistant_only"]["match"]["success"] for r in validation),
         "outputs_identical":sum(r["outputs_identical"] for r in validation)},

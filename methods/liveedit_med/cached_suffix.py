@@ -2,27 +2,22 @@
 from __future__ import annotations
 
 import torch
-from torch.utils.checkpoint import checkpoint
+
+from .source_training_continuation import (
+    SourceTrainingContinuationMode,
+    forward_source_training_hidden,
+)
 
 
 def forward_suffix_hidden(llava_model, layer21_hidden: torch.Tensor, attention_mask: torch.Tensor, *, gradient_checkpointing: bool = False) -> torch.Tensor:
     """Run decoder layers 22..31 and final norm exactly as HF Mistral."""
-    core = llava_model.model
-    hidden = layer21_hidden
-    batch, length, _ = hidden.shape
-    cache_position = torch.arange(length, device=hidden.device)
-    position_ids = cache_position.unsqueeze(0).expand(batch, -1)
-    causal_mask = core._update_causal_mask(attention_mask, hidden, cache_position, None, False)
-    position_embeddings = core.rotary_emb(hidden, position_ids)
-    for layer in core.layers[22: core.config.num_hidden_layers]:
-        def layer_forward(value, current_layer=layer):
-            return current_layer(
-                value, attention_mask=causal_mask, position_ids=position_ids, past_key_value=None,
-                output_attentions=False, use_cache=False, cache_position=cache_position,
-                position_embeddings=position_embeddings,
-            )[0]
-        hidden = checkpoint(layer_forward, hidden, use_reentrant=False) if gradient_checkpointing else layer_forward(hidden)
-    return core.norm(hidden)
+    return forward_source_training_hidden(
+        llava_model,
+        layer21_hidden,
+        attention_mask,
+        mode=SourceTrainingContinuationMode.CORRECTED_SEMANTICS_CONTINUE_LAYER22,
+        gradient_checkpointing=gradient_checkpointing,
+    )
 
 
 def forward_suffix(llava_model, layer21_hidden: torch.Tensor, attention_mask: torch.Tensor, *, gradient_checkpointing: bool = False, logits_to_keep=0) -> torch.Tensor:

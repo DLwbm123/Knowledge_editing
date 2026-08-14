@@ -64,8 +64,9 @@ def sample(image: str, prompt: str, target: str) -> dict[str, str]:
 def validate_stage_f(recovery_dir: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     selection = read_json(recovery_dir / "checkpoint_selection.json")
     stage_f = read_json(recovery_dir / "stage_f/record953_forced_on_selected_checkpoint.json")
+    selected_step = selection.get("selected_step")
     if (selection.get("protocol") != PROTOCOL or selection.get("record953_used_for_selection") is not False
-            or selection.get("selected_step") != 3000 or stage_f.get("selected_step") != 3000
+            or selected_step is None or stage_f.get("selected_step") != selected_step
             or stage_f.get("selection_hash") != selection.get("selection_hash")
             or stage_f.get("stage_q_permitted") is not True
             or stage_f.get("native_unrestricted_success") is not True):
@@ -120,11 +121,12 @@ def build_repository(args: argparse.Namespace) -> None:
         raise FileExistsError(args.stage_q_dir)
     args.stage_q_dir.mkdir(parents=True, exist_ok=False)
     selection, stage_f = validate_stage_f(args.recovery_dir)
+    selected_step = int(selection["selected_step"])
     model, views, bank, records = load_model_views_bank(args.physical_gpu)
     apply_prefix(model, bank, 0); clean_hash = state_weight_hash(model)
     _, block = resolve_layer21_block(model)
     modules = LiveEditMedicalModules(LiveEditMedicalConfig()).to(model.lm_device).float()
-    checkpoint = args.run_dir / "training/checkpoint_3000"
+    checkpoint = args.run_dir / "training" / f"checkpoint_{selected_step:04d}"
     state, checkpoint_manifest = load_safe_state(checkpoint)
     modules.load_state_dict(state, strict=True); modules.eval()
     source = read_json(args.source_records)
@@ -152,7 +154,7 @@ def build_repository(args: argparse.Namespace) -> None:
     repo_state = {name: torch.cat(values, 0) for name, values in tensors.items()}
     ids = [row[0] for row in expert_rows]
     repo_hash = repository_hash(repo_state, ids)
-    manifest = {"protocol": PROTOCOL_Q, "selected_step": 3000,
+    manifest = {"protocol": PROTOCOL_Q, "selected_step": selected_step,
                 "selection_hash": selection["selection_hash"], "stage_f_label": stage_f["label"],
                 "ids": ids, "target_record_id": RECORD_ID, "targets": target_by_id,
                 "distractor_selection_rule": "first_31_heldout_by_existing_stable_hash_order",
@@ -168,7 +170,7 @@ def build_repository(args: argparse.Namespace) -> None:
     inputs["input_manifest_hash"] = canonical_json_hash(inputs)
     write_json(args.stage_q_dir / "input_manifest.json", inputs)
     audit = {"protocol": PROTOCOL_Q, "status": "FROZEN_REPOSITORY_READY",
-             "selected_step": 3000, "expert_count": len(ids), "target_count": 1,
+             "selected_step": selected_step, "expert_count": len(ids), "target_count": 1,
              "distractor_count": len(distractors), "repository_hash": repo_hash,
              "input_manifest_hash": inputs["input_manifest_hash"],
              "record953_used_for_checkpoint_selection": False,
@@ -310,10 +312,14 @@ def evaluate_shard(args: argparse.Namespace) -> None:
     if out.exists():
         raise FileExistsError(out)
     inputs = read_json(args.stage_q_dir / "input_manifest.json")
+    selection, _stage_f = validate_stage_f(args.recovery_dir)
+    selected_step = int(selection["selected_step"])
     model, _bank = load_clean_model(args.physical_gpu); clean_hash = state_weight_hash(model)
     _, block = resolve_layer21_block(model)
     modules = LiveEditMedicalModules(LiveEditMedicalConfig()).to(model.lm_device).float()
-    state, checkpoint_manifest = load_safe_state(args.run_dir / "training/checkpoint_3000")
+    state, checkpoint_manifest = load_safe_state(
+        args.run_dir / "training" / f"checkpoint_{selected_step:04d}"
+    )
     modules.load_state_dict(state, strict=True); modules.eval()
     repository, repo_manifest = load_repository(args.stage_q_dir, model.lm_device)
     positive_names = POSITIVE_NAMES[:2] if args.shard == 0 else POSITIVE_NAMES[2:]
@@ -337,7 +343,7 @@ def evaluate_shard(args: argparse.Namespace) -> None:
         print(json.dumps({"event": "locality", "shard": args.shard, "index": index,
                           "input_id": entry["input_id"], "passed": locality[-1]["passed"]}), flush=True)
     result = {"protocol": PROTOCOL_Q, "shard": args.shard, "physical_gpu": args.physical_gpu,
-              "selected_step": 3000, "checkpoint_manifest": checkpoint_manifest,
+              "selected_step": selected_step, "checkpoint_manifest": checkpoint_manifest,
               "repository_hash": repo_manifest["repository_hash"],
               "input_manifest_hash": inputs["input_manifest_hash"],
               "positive": positive, "safety": safety, "locality": locality,
@@ -357,8 +363,10 @@ def finalize(args: argparse.Namespace) -> None:
         raise FileExistsError(out)
     inputs = read_json(args.stage_q_dir / "input_manifest.json")
     workers = [read_json(args.stage_q_dir / f"worker_{index}.json") for index in (0, 1)]
-    if any(row.get("protocol") != PROTOCOL_Q or row.get("selected_step") != 3000 for row in workers):
+    selected_steps = {int(row.get("selected_step", -1)) for row in workers}
+    if any(row.get("protocol") != PROTOCOL_Q for row in workers) or len(selected_steps) != 1:
         raise RuntimeError("LIVEEDIT_MED_STAGE_Q_WORKER_INVALID")
+    selected_step = selected_steps.pop()
     if len({row["repository_hash"] for row in workers}) != 1 or len({row["input_manifest_hash"] for row in workers}) != 1:
         raise RuntimeError("LIVEEDIT_MED_STAGE_Q_WORKER_IDENTITY_MISMATCH")
     positives = {name: row for worker in workers for name, row in worker["positive"].items()}
@@ -379,7 +387,7 @@ def finalize(args: argparse.Namespace) -> None:
     summary = {"protocol": PROTOCOL_Q,
                "label": "LIVEEDIT_FULL_REPOSITORY_ROUTING_GATE_PASS" if passed
                         else "LIVEEDIT_FULL_REPOSITORY_ROUTING_GATE_FAILURE",
-               "passed": passed, "selected_step": 3000,
+               "passed": passed, "selected_step": selected_step,
                "record953_used_for_checkpoint_selection": False,
                "repository_hash": workers[0]["repository_hash"],
                "input_manifest_hash": workers[0]["input_manifest_hash"],
@@ -399,7 +407,7 @@ def finalize(args: argparse.Namespace) -> None:
     report = args.stage_q_dir / "STAGE_Q_FINAL_DECISION.md"
     report.write_text("# Stage Q Final Decision\n\n"
         f"- Label: `{summary['label']}`\n"
-        f"- Selected checkpoint: **3000**\n"
+        f"- Selected checkpoint: **{selected_step}**\n"
         f"- Positive native/textual/visual/paired: **"
         f"{' / '.join(str(summary['positive_success'][name]) for name in POSITIVE_NAMES)}**\n"
         f"- Safety exact S0: **{safety_pass}/40**\n"

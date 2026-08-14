@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -18,10 +19,16 @@ for item in (ROOT, ROOT / "scripts"):
     if str(item) not in sys.path:
         sys.path.insert(0, str(item))
 
-from methods.liveedit_med.cached_suffix import answer_kl, answer_nll, forward_suffix_hidden
+from methods.liveedit_med.cached_suffix import answer_kl
 from methods.liveedit_med.serialization import save_safe_state
 from methods.liveedit_med.source_ops import apply_low_rank_expert_residual, compute_text_soft_weights, source_routing_losses, source_soft_losses
+from methods.liveedit_med.source_training_continuation import (
+    SourceTrainingContinuationMode,
+    coerce_source_training_mode,
+    forward_source_training_hidden,
+)
 from methods.liveedit_med.trainer import LiveEditMedicalConfig, LiveEditMedicalModules
+from methods.liveedit_med.trace_parity import state_dict_sha256
 from dsca_medmkeb_diag_common import ensure_offline_env
 from easyeditor.models.engram import EngramMultimodalHparams
 from easyeditor.models.engram_v2 import SequentialEngramBankV2
@@ -40,6 +47,12 @@ def parse_args():
     parser.add_argument("--max-steps", type=int)
     parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--batch-size", type=int, default=8)
+    parser.add_argument(
+        "--source-training-continuation-mode",
+        choices=[item.value for item in SourceTrainingContinuationMode],
+        default=SourceTrainingContinuationMode.CORRECTED_SEMANTICS_CONTINUE_LAYER22.value,
+    )
+    parser.add_argument("--expected-initial-module-hash")
     return parser.parse_args()
 
 
@@ -47,7 +60,17 @@ def module_state(modules: LiveEditMedicalModules):
     return {name: value for name, value in modules.state_dict().items()}
 
 
-def load_training_model(primary: int, suffix: int | None):
+def component_hash(state, prefix: str) -> str:
+    return state_dict_sha256({
+        name[len(prefix) + 1 :]: value for name, value in state.items() if name.startswith(prefix + ".")
+    })
+
+
+def canonical_hash(value) -> str:
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def load_training_model(primary: int, suffix: int | None, mode: SourceTrainingContinuationMode):
     if suffix is None:
         model,_views,bank,_raw=load_model_views_bank(primary);return model,bank,model.lm_device
     if os.environ.get("CUDA_VISIBLE_DEVICES") != f"{primary},{suffix}" or torch.cuda.device_count()!=2:
@@ -57,7 +80,8 @@ def load_training_model(primary: int, suffix: int | None):
     expected=bank.anchor_state()[MODULE_KEY].to(dtype=module.weight.dtype)
     if not torch.equal(module.weight.detach().cpu(),expected):raise RuntimeError("LIVEEDIT_MED_S0_ANCHOR_MISMATCH")
     suffix_device=torch.device("cuda:1");core=model.llava_model.model
-    for layer in core.layers[22:core.config.num_hidden_layers]:layer.to(suffix_device)
+    start_layer = 21 if mode is SourceTrainingContinuationMode.STRICT_SOURCE_REAPPLY_LAYER21 else 22
+    for layer in core.layers[start_layer:core.config.num_hidden_layers]:layer.to(suffix_device)
     core.norm.to(suffix_device);core.rotary_emb.to(suffix_device);model.llava_model.lm_head.to(suffix_device)
     return model,bank,suffix_device
 
@@ -83,7 +107,7 @@ def pad_rows(rows: list[dict[str, torch.Tensor]], values: list[torch.Tensor], de
 
 
 def edited_values(modules, model, rows, moe_cs, moe_rs, masks, eqrs):
-    edited = []
+    clean_and_residual = []
     for row, mask in zip(rows, masks):
         vision, question, _answer = spans(row)
         input_key = modules.input_extractor.extract_query(question)
@@ -93,16 +117,36 @@ def edited_values(modules, model, rows, moe_cs, moe_rs, masks, eqrs):
         else:
             weights = compute_text_soft_weights(input_key, eqrs[mask])
             residual = apply_low_rank_expert_residual(row["hidden"].float().unsqueeze(0), moe_cs[mask], moe_rs[mask], weights, modules.instant_reps_norm)
-        edited.append((row["hidden"].float().unsqueeze(0) + residual).to(model.llava_model.dtype))
-    return edited
+        clean = row["hidden"].float().unsqueeze(0)
+        clean_and_residual.append((clean, residual))
+    return clean_and_residual
 
 
-def grouped_residual_losses(modules, model, groups, moe_cs, moe_rs, eqrs, suffix_device):
-    all_rows=[];all_values=[];ranges=[]
+def grouped_residual_losses(modules, model, groups, moe_cs, moe_rs, eqrs, suffix_device, continuation_mode):
+    all_rows=[];all_clean=[];all_residual=[];ranges=[]
     for name,rows,masks,locality in groups:
-        begin=len(all_rows);all_rows.extend(rows);all_values.extend(edited_values(modules,model,rows,moe_cs,moe_rs,masks,eqrs));ranges.append((name,begin,len(all_rows),locality))
-    hidden, attention, labels = pad_rows(all_rows, all_values, suffix_device)
-    suffix_hidden=forward_suffix_hidden(model.llava_model,hidden,attention,gradient_checkpointing=True)
+        begin=len(all_rows);all_rows.extend(rows)
+        values=edited_values(modules,model,rows,moe_cs,moe_rs,masks,eqrs)
+        all_clean.extend(value[0] for value in values);all_residual.extend(value[1] for value in values)
+        ranges.append((name,begin,len(all_rows),locality))
+    if continuation_mode is SourceTrainingContinuationMode.CORRECTED_SEMANTICS_CONTINUE_LAYER22:
+        # Archived port order: add in FP32 per row, then cast once before
+        # padding/continuation.  Changing this order causes a measurable drift.
+        edited=[(clean+residual).to(model.llava_model.dtype) for clean,residual in zip(all_clean,all_residual)]
+        hidden, attention, labels = pad_rows(all_rows, edited, suffix_device)
+        suffix_hidden=forward_source_training_hidden(
+            model.llava_model,hidden,attention,mode=continuation_mode,
+            gradient_checkpointing=True,
+        )
+    else:
+        clean=[value.to(model.llava_model.dtype) for value in all_clean]
+        residual_values=[value.to(model.llava_model.dtype) for value in all_residual]
+        hidden, attention, labels = pad_rows(all_rows, clean, suffix_device)
+        residual, _unused_attention, _unused_labels = pad_rows(all_rows, residual_values, suffix_device)
+        suffix_hidden=forward_source_training_hidden(
+            model.llava_model,hidden,attention,residual=residual,mode=continuation_mode,
+            gradient_checkpointing=True,
+        )
     suffix_hidden_logits=[]
     for index,row in enumerate(all_rows):
         answer_positions=torch.where(row["answer"])[0];predictors=answer_positions-1
@@ -133,6 +177,7 @@ def routing_pairs(batch, rng_data):
 
 def main():
     args=parse_args(); seed_everything();
+    continuation_mode=coerce_source_training_mode(args.source_training_continuation_mode)
     expected_visible=str(args.physical_gpu) if args.suffix_physical_gpu is None else f"{args.physical_gpu},{args.suffix_physical_gpu}"
     if os.environ.get("CUDA_VISIBLE_DEVICES") != expected_visible: raise RuntimeError("CUDA_VISIBLE_DEVICES mismatch")
     if args.batch_size != 8 or args.epochs not in (1,50): raise RuntimeError("LIVEEDIT_MED_SOURCE_CONFIG_DRIFT")
@@ -140,10 +185,33 @@ def main():
     manifest=json.loads((args.cache_dir/"manifest.json").read_text()); entries=manifest["records"]
     if args.epochs==50 and len(entries)!=512: raise RuntimeError(f"LIVEEDIT_MED_CACHE_COUNT:{len(entries)}")
     if args.epochs==1 and len(entries)!=8: raise RuntimeError(f"LIVEEDIT_MED_SMOKE_CACHE_COUNT:{len(entries)}")
-    model,bank,suffix_device=load_training_model(args.physical_gpu,args.suffix_physical_gpu); apply_prefix(model,bank,0); clean_hash=state_weight_hash(model)
+    model,bank,suffix_device=load_training_model(args.physical_gpu,args.suffix_physical_gpu,continuation_mode); apply_prefix(model,bank,0); clean_hash=state_weight_hash(model)
     for parameter in model.llava_model.parameters(): parameter.requires_grad_(False)
-    modules=LiveEditMedicalModules(LiveEditMedicalConfig()).to(model.lm_device).float(); modules.assert_trainable_boundary(model.llava_model); modules.train()
+    modules=LiveEditMedicalModules(LiveEditMedicalConfig(source_training_continuation_mode=continuation_mode)).to(model.lm_device).float(); modules.assert_trainable_boundary(model.llava_model); modules.train()
     optimizer,scheduler=modules.optimizer(); rng_data=np.random.default_rng(42); rng_train=np.random.default_rng(43); rng_order=np.random.default_rng(42);step=0
+    initial_state={name:value.detach().cpu().clone() for name,value in modules.state_dict().items()}
+    initial_hash=state_dict_sha256(initial_state)
+    if args.expected_initial_module_hash and initial_hash != args.expected_initial_module_hash:
+        raise RuntimeError(f"LIVEEDIT_MED_INITIALIZATION_MISMATCH:{initial_hash}")
+    initialization={
+        "status":"MATCHED_INITIALIZATION_PROVEN_BY_DETERMINISTIC_RECONSTRUCTION" if args.expected_initial_module_hash else "MATCHED_INITIALIZATION_NOT_FULLY_PROVABLE",
+        "comparison_reference":"corrected_regression_fresh_archived_seed_and_initialization_code" if args.expected_initial_module_hash else None,
+        "archived_initial_state_artifact_available":False,
+        "initial_module_hash":initial_hash,
+        "expected_initial_module_hash":args.expected_initial_module_hash,
+        "initial_edit_extractor_hash":component_hash(initial_state,"edit_extractor"),
+        "initial_input_extractor_hash":component_hash(initial_state,"input_extractor"),
+        "initial_moegen_c_hash":component_hash(initial_state,"moegen_c"),
+        "initial_moegen_r_hash":component_hash(initial_state,"moegen_r"),
+        "initial_instant_norm_hash":component_hash(initial_state,"instant_reps_norm"),
+        "initial_optimizer_state_hash":canonical_hash({"optimizer":"Adam","learning_rate":1e-4,"state":{},"step":0}),
+        "source_training_continuation_mode":continuation_mode.value,
+        "seed":42,
+    }
+    (args.run_dir/"training").mkdir(parents=True,exist_ok=True)
+    initialization_path=args.run_dir/"training/initialization_audit.json"
+    if initialization_path.exists():raise FileExistsError(initialization_path)
+    initialization_path.write_text(json.dumps(initialization,indent=2,sort_keys=True)+"\n")
     trajectory=args.run_dir/"training/source_training_trajectory.jsonl";trajectory.write_text("")
     for epoch in range(1,args.epochs+1):
         order=rng_order.permutation(len(entries))
@@ -163,7 +231,7 @@ def main():
                 ns=rng_train.integers(0,count+1,3); prefixes.append(ns.tolist()); rel_mask[index,:ns[0]]=True; gen_mask[index,:ns[1]]=True; loc_mask[index,:ns[2]]=True
             rel_rows=[r["variants"]["native_0"] for r in batch];loc_rows=[r["variants"]["loc_image_or_paired_0"] for r in batch]
             groups=[("rel",rel_rows,rel_mask,False)]+[(f"gen_{name}",[r["variants"][f"gen_{name}_0"] for r in batch],gen_mask,False) for name in ("textual","visual","paired")]+[("loc",loc_rows,loc_mask,True)]
-            task_losses=grouped_residual_losses(modules,model,groups,moe_cs,moe_rs,eqrs,suffix_device);rel=task_losses["rel"];generalities=[task_losses[f"gen_{name}"] for name in ("textual","visual","paired")];loc=task_losses["loc"]
+            task_losses=grouped_residual_losses(modules,model,groups,moe_cs,moe_rs,eqrs,suffix_device,continuation_mode);rel=task_losses["rel"];generalities=[task_losses[f"gen_{name}"] for name in ("textual","visual","paired")];loc=task_losses["loc"]
             neighbors,prototypes=routing_pairs(batch,rng_data)
             input_keys=torch.cat([modules.input_extractor.extract_query(pair[1]) for pair in neighbors[0]])
             edit_keys=torch.cat([modules.edit_extractor.extract_query(pair[1]) for pair in neighbors[1]])
@@ -174,16 +242,16 @@ def main():
             total.backward(); grad=torch.nn.utils.clip_grad_norm_(modules.parameters(),float("inf"))
             if not torch.isfinite(grad): raise RuntimeError("LIVEEDIT_MED_NONFINITE_SOURCE_GRADIENT")
             optimizer.step(); scheduler.step()
-            row={"epoch":epoch,"step":step,"record_ids":[r["record_id"] for r in batch],"loss":float(total.detach()),"reliability":float(rel.detach()),"generality":[float(x.detach()) for x in generalities],"locality":float(loc.detach()),"soft_relative":float(soft_rel.detach()),"soft_absolute":float(soft_abs.detach()),"hard_neighbor":float(hard_neighbor.detach()),"hard_prototype":float(hard_prototype.detach()),"lr":scheduler.get_last_lr()[0],"grad_norm":float(grad),"prefixes":prefixes}
+            row={"epoch":epoch,"step":step,"record_ids":[r["record_id"] for r in batch],"loss":float(total.detach()),"reliability":float(rel.detach()),"generality":[float(x.detach()) for x in generalities],"locality":float(loc.detach()),"soft_relative":float(soft_rel.detach()),"soft_absolute":float(soft_abs.detach()),"hard_neighbor":float(hard_neighbor.detach()),"hard_prototype":float(hard_prototype.detach()),"lr":scheduler.get_last_lr()[0],"grad_norm":float(grad),"prefixes":prefixes,"source_training_continuation_mode":continuation_mode.value}
             with trajectory.open("a") as handle: handle.write(json.dumps(row,sort_keys=True)+"\n")
             if step%10==0: print(json.dumps({k:row[k] for k in ("epoch","step","loss","reliability","locality")}),flush=True)
-            if step%500==0: save_safe_state(args.run_dir/f"training/checkpoint_{step:04d}",module_state(modules),{"stage":"S","step":step,"epoch":epoch,"source_objective":True})
+            if step%500==0: save_safe_state(args.run_dir/f"training/checkpoint_{step:04d}",module_state(modules),{"stage":"S","step":step,"epoch":epoch,"source_objective":True,"source_training_continuation_mode":continuation_mode.value})
             if args.max_steps is not None and step>=args.max_steps:
-                save_safe_state(args.run_dir/"training"/f"checkpoint_smoke_{step}",module_state(modules),{"stage":"S","step":step,"epoch":epoch,"source_objective":True,"smoke":True});print(json.dumps({"status":"STAGE_S_MAX_STEPS_COMPLETE","steps":step}));return
+                save_safe_state(args.run_dir/"training"/f"checkpoint_smoke_{step}",module_state(modules),{"stage":"S","step":step,"epoch":epoch,"source_objective":True,"smoke":True,"source_training_continuation_mode":continuation_mode.value});print(json.dumps({"status":"STAGE_S_MAX_STEPS_COMPLETE","steps":step,"source_training_continuation_mode":continuation_mode.value}));return
     final_name="checkpoint_3200" if args.epochs==50 else "checkpoint_smoke"
-    save_safe_state(args.run_dir/"training"/final_name,module_state(modules),{"stage":"S","step":step,"epoch":args.epochs,"source_objective":True,"smoke":args.epochs==1})
+    save_safe_state(args.run_dir/"training"/final_name,module_state(modules),{"stage":"S","step":step,"epoch":args.epochs,"source_objective":True,"smoke":args.epochs==1,"source_training_continuation_mode":continuation_mode.value})
     if state_weight_hash(model)!=clean_hash or bank_manifest()["sha256"]!="35ba58fa0f78619b0156846a175a31b28fefd779f25b39250a7c238f58ffe4db": raise RuntimeError("LIVEEDIT_MED_BASE_OR_BANK_MUTATION")
-    print(json.dumps({"status":"STAGE_S_TRAINING_COMPLETE","steps":step}))
+    print(json.dumps({"status":"STAGE_S_TRAINING_COMPLETE","steps":step,"source_training_continuation_mode":continuation_mode.value}))
 
 
 if __name__=="__main__": main()
