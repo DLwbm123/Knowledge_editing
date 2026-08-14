@@ -16,6 +16,8 @@ SIM_SCALE = 1 / (1024 ** 0.5)
 class BaseRoutePlan:
     reason: str = "EMPTY_CANDIDATE_BASE_BYPASS"
     candidate_mask: torch.Tensor | None = None
+    visual_scores: torch.Tensor | None = None
+    sentinel_score: torch.Tensor | None = None
 
 
 @dataclass(frozen=True)
@@ -63,7 +65,8 @@ def route_repository(input_extractor: nn.Module, question_reps: torch.Tensor, vi
     sentinel_score = torch.einsum("bed,bed->be", input_visual, sentinel_visual).mean(1, True) * SIM_SCALE
     candidate = (visual_score > sentinel_score)[0]
     if int(candidate.sum()) == 0:
-        return BaseRoutePlan(candidate_mask=candidate)
+        return BaseRoutePlan(candidate_mask=candidate, visual_scores=visual_score,
+                             sentinel_score=sentinel_score)
     input_text = input_extractor.extract_query(question_reps)
     text_score = torch.einsum("ned,med->nme", input_text, edit_text_keys[candidate]).mean(2) * SIM_SCALE
     relative, absolute = torch.softmax(text_score, 1), torch.sigmoid(text_score)

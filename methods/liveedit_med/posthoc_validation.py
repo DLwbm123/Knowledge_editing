@@ -97,9 +97,11 @@ def unrestricted_match(output: str, target: str, *, eos: bool, cap_hit: bool) ->
 def plan_audit(plan: BaseRoutePlan | RoutePlan, expert_ids: Sequence[str]) -> dict[str, Any]:
     if isinstance(plan, BaseRoutePlan):
         mask = plan.candidate_mask.tolist() if plan.candidate_mask is not None else [False] * len(expert_ids)
+        visual = plan.visual_scores.detach().float().cpu().tolist() if plan.visual_scores is not None else []
+        sentinel = plan.sentinel_score.detach().float().cpu().tolist() if plan.sentinel_score is not None else None
         return {"kind": "base", "reason": plan.reason, "candidate_mask": mask,
                 "candidate_ids": [rid for rid, selected in zip(expert_ids, mask) if selected],
-                "visual_scores": [], "sentinel_score": None, "raw_text_scores": [],
+                "visual_scores": visual, "sentinel_score": sentinel, "raw_text_scores": [],
                 "sigmoid_weights": [], "softmax_weights": [], "final_weights": [], "sum_final_weights": 0.0}
     mask = [bool(value) for value in plan.candidate_mask.tolist()]
     return {"kind": "routed", "candidate_mask": mask,
