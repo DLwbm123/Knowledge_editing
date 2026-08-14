@@ -17,14 +17,12 @@ def expand2square(pil_img, background_color):
         return pil_img
     elif width > height:
         result = Image.new(pil_img.mode, (width, width), background_color)
-        # sample a random between 0 and (width - height) // 2
-        y_start = random.randint((width - height) // 2, (width - height) // 2 + 1)
+        y_start = (width - height) // 2
         result.paste(pil_img, (0, y_start))
         return result
     else:
         result = Image.new(pil_img.mode, (height, height), background_color)
-        # sample a random between 0 and (height - width) // 2
-        x_start = random.randint((height - width) // 2, (height - width) // 2 + 1)
+        x_start = (height - width) // 2
         result.paste(pil_img, (x_start, 0))
         return result
 

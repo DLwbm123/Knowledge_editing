@@ -332,7 +332,6 @@ class LlavaMedForEditing(nn.Module):
 
     def forward(self, samples: Dict[str, Any]) -> LlavaMedOutput:
         inputs_embeds, labels, masks = self._build_batch(samples)
-        samples["labels"] = labels
         samples["attention_mask"] = masks["attention_mask"]
         samples["vision_mask"] = masks["vision_mask"]
         samples["prompt_mask"] = masks["prompt_mask"]
@@ -353,3 +352,4 @@ class LlavaMedForEditing(nn.Module):
             prompt_mask=masks["prompt_mask"],
             answer_mask=masks["answer_mask"],
         )
+

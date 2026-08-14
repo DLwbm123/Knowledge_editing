@@ -36,10 +36,25 @@ from dsca_medmkeb_diag_common import (  # noqa: E402
     torch_device,
     write_json,
 )
-from easyeditor.models.time_edit import TIMEEditMultimodalHparams  # noqa: E402
-from easyeditor.trainer.algs.time_edit import TIMEEdit  # noqa: E402
-from easyeditor.trainer.algs.time_edit_modules import time_memory_estimate  # noqa: E402
-from easyeditor.trainer.models import get_model  # noqa: E402
+TIMEEditMultimodalHparams = None
+TIMEEdit = None
+time_memory_estimate = None
+get_model = None
+
+
+def ensure_time_runtime_imports() -> None:
+    global TIMEEditMultimodalHparams, TIMEEdit, time_memory_estimate, get_model
+    if get_model is not None:
+        return
+    from easyeditor.models.time_edit import TIMEEditMultimodalHparams as _TIMEEditMultimodalHparams
+    from easyeditor.trainer.algs.time_edit import TIMEEdit as _TIMEEdit
+    from easyeditor.trainer.algs.time_edit_modules import time_memory_estimate as _time_memory_estimate
+    from easyeditor.trainer.models import get_model as _get_model
+
+    TIMEEditMultimodalHparams = _TIMEEditMultimodalHparams
+    TIMEEdit = _TIMEEdit
+    time_memory_estimate = _time_memory_estimate
+    get_model = _get_model
 
 
 def parse_args() -> argparse.Namespace:
@@ -105,7 +120,7 @@ def parse_args() -> argparse.Namespace:
         choices=["none", "factor", "factor_z", "self_score", "factor_self_score"],
     )
     parser.add_argument("--lambda-factor-norm-reg", dest="lambda_factor_norm_reg", type=float, default=0.0)
-    parser.add_argument("--time-load-repository", type=Path, default=None)
+    parser.add_argument("--time-load-repository", "--existing-expert-repository", dest="time_load_repository", type=Path, default=None)
     parser.add_argument("--eval-only", action="store_true")
     parser.add_argument("--time-routing-calibration", action="store_true")
     parser.add_argument("--time-routing-calibration-grid", default="")
@@ -113,6 +128,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--time-10edit-routing-repair-eval", action="store_true")
     parser.add_argument("--time-fragile-routing-repair-eval", action="store_true")
     parser.add_argument("--time-adaptive-margin-microcheck", action="store_true")
+    parser.add_argument("--time-adaptive-margin-sequential-confirmation", action="store_true")
+    parser.add_argument("--time-confirmation-plan-only", action="store_true")
     parser.add_argument("--time-adaptive-topk-margin", type=float, action="append", default=None)
     parser.add_argument("--time-adaptive-topk-max", type=int, default=3)
     parser.add_argument("--time-enable-adaptive-rank-margin-rescue", action="store_true")
@@ -137,11 +154,134 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--time-expert-gain", type=float, default=1.0)
     parser.add_argument("--time-token-scope", default="all", choices=["all", "last", "answer_mask"])
     parser.add_argument("--eval-routing-modes", default="")
+    parser.add_argument("--routing-mode", dest="confirmation_routing_mode", default=None)
     parser.add_argument("--skip-generation", action="store_true")
     parser.add_argument("--out-dir", "--output-dir", dest="out_dir", required=True, type=Path)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--log-every", "--log_every", dest="log_every", type=int, default=5)
     return parser.parse_args()
+
+
+ADAPTIVE_MARGIN_CONFIRMATION_MODE = "adaptive_topk2_to_3_margin0p25"
+ADAPTIVE_MARGIN_CONFIRMATION_INTERNAL_MODE = "adaptive_margin0p25"
+ADAPTIVE_MARGIN_CONFIRMATION_MARGIN = 0.25
+
+
+def _flag_active(value: Any) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (list, tuple, set, dict)):
+        return len(value) > 0
+    return bool(str(value).strip())
+
+
+def _device_requests_gpu2(device: Any, environ: Optional[Dict[str, str]] = None) -> bool:
+    text = str(device or "")
+    if text in {"2", "cuda:2"}:
+        return True
+    cuda_visible = (environ or os.environ).get("CUDA_VISIBLE_DEVICES", "")
+    visible = [part.strip() for part in str(cuda_visible).split(",") if part.strip()]
+    return len(visible) == 1 and visible[0] == "2"
+
+
+def build_adaptive_margin_confirmation_plan(
+    args: argparse.Namespace,
+    repo_path: Optional[Path] = None,
+    environ: Optional[Dict[str, str]] = None,
+    actual_run: bool = False,
+    allow_internal_eval_modes: bool = False,
+) -> Dict[str, Any]:
+    errors: List[str] = []
+    if not bool(getattr(args, "time_adaptive_margin_sequential_confirmation", False)):
+        errors.append("--time-adaptive-margin-sequential-confirmation is required.")
+    if not bool(getattr(args, "eval_only", False)):
+        errors.append("--eval-only is required.")
+    if int(getattr(args, "max_edits", 0) or 0) != 10:
+        errors.append("--max-edits must be exactly 10.")
+
+    mode = getattr(args, "confirmation_routing_mode", None)
+    if not mode:
+        errors.append(f"--routing-mode {ADAPTIVE_MARGIN_CONFIRMATION_MODE} is required.")
+    elif str(mode) != ADAPTIVE_MARGIN_CONFIRMATION_MODE:
+        errors.append(f"--routing-mode must be exactly {ADAPTIVE_MARGIN_CONFIRMATION_MODE}.")
+    if mode and "," in str(mode):
+        errors.append("--routing-mode must name one mode, not a comma-separated list.")
+
+    eval_modes = str(getattr(args, "eval_routing_modes", "") or "").strip()
+    if eval_modes and not (allow_internal_eval_modes and eval_modes == ADAPTIVE_MARGIN_CONFIRMATION_INTERNAL_MODE):
+        errors.append("Do not pass --eval-routing-modes to the adaptive margin confirmation bridge.")
+
+    repo = repo_path if repo_path is not None else getattr(args, "time_load_repository", None)
+    if repo is None:
+        errors.append("--existing-expert-repository/--time-load-repository is required.")
+        resolved_repo: Optional[Path] = None
+    else:
+        resolved_repo = Path(repo).expanduser()
+        if not resolved_repo.exists():
+            errors.append(f"Repository path not found: {resolved_repo}")
+
+    out_dir = getattr(args, "out_dir", None)
+    if out_dir is None:
+        errors.append("--output-dir/--out-dir is required.")
+
+    grid_flags = [
+        "time_routing_calibration",
+        "time_post_retrain_calibration",
+        "time_10edit_routing_repair_eval",
+        "time_fragile_routing_repair_eval",
+        "time_adaptive_margin_microcheck",
+        "time_routing_calibration_grid",
+        "time_gamma_sweep",
+        "time_scale_init_grid",
+        "time_overfit_grid",
+        "time_adaptive_topk_margin",
+    ]
+    active_grid_flags = [name for name in grid_flags if _flag_active(getattr(args, name, None))]
+    if active_grid_flags:
+        errors.append(f"Grid/sweep/multi-config flags are forbidden: {', '.join(active_grid_flags)}")
+
+    train_flags = ["time_anti_collapse_loss", "time_routing_margin_loss", "time_force_current_train"]
+    active_train_flags = [name for name in train_flags if _flag_active(getattr(args, name, None))]
+    if active_train_flags:
+        errors.append(f"Training/retrain flags are forbidden: {', '.join(active_train_flags)}")
+
+    if _device_requests_gpu2(getattr(args, "device", None), environ):
+        errors.append("GPU 2 is forbidden for this confirmation bridge.")
+
+    if errors:
+        raise ValueError("Invalid adaptive margin sequential confirmation plan: " + "; ".join(errors))
+
+    return {
+        "confirmation_type": "time_adaptive_margin_sequential_confirmation",
+        "mode": ADAPTIVE_MARGIN_CONFIRMATION_MODE,
+        "internal_eval_routing_mode": ADAPTIVE_MARGIN_CONFIRMATION_INTERNAL_MODE,
+        "eval_only": bool(getattr(args, "eval_only", False)),
+        "max_edits": int(getattr(args, "max_edits", 0) or 0),
+        "repository_path": str(resolved_repo),
+        "output_dir": str(out_dir),
+        "number_of_configs": 1,
+        "actual_run": bool(actual_run),
+        "plan_only": bool(getattr(args, "time_confirmation_plan_only", False)),
+        "grid_or_sweep": False,
+        "training": False,
+    }
+
+
+def apply_adaptive_margin_confirmation_defaults(args: argparse.Namespace) -> None:
+    args.mode = "sequential"
+    args.eval_routing_modes = ADAPTIVE_MARGIN_CONFIRMATION_INTERNAL_MODE
+    args.time_routing_mode = "topk"
+    args.time_topk = 2
+    args.time_score_norm = "factor_z"
+    if args.time_align_score_norm is None:
+        args.time_align_score_norm = "factor_z"
+    args.time_calibration_mode = "zscore_neg_mean"
+    args.time_score_pool = "mean"
+    args.time_mixing_mode = "softmax"
+    args.time_adaptive_topk_max = 3
+    args.time_max_selected_experts = None
 
 
 def set_seeds(seed: int) -> None:
@@ -3387,6 +3527,164 @@ def _per_expert_calibration_rows(config: Dict[str, Any], eval_row: Dict[str, Any
             row[f"{mode}_score"] = values[expert_index] if expert_index < len(values) else None
         rows.append(row)
     return rows
+
+
+
+def run_adaptive_margin_sequential_confirmation(
+    args: argparse.Namespace,
+    config: TIMEEditMultimodalHparams,
+    dataset_path: Path,
+    records: List[Dict[str, Any]],
+    samples: List[Dict[str, Any]],
+    alg: TIMEEdit,
+    out_dir: Path,
+    repo_path: Path,
+) -> Dict[str, Any]:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    debug_path = out_dir / "adaptive_margin0p25_confirmation_debug.jsonl"
+    if debug_path.exists():
+        debug_path.unlink()
+    command = current_command_line()
+    plan = build_adaptive_margin_confirmation_plan(
+        args,
+        repo_path=repo_path,
+        actual_run=True,
+        allow_internal_eval_modes=True,
+    )
+    write_json(out_dir / "confirmation_plan.json", plan)
+
+    base_cache = build_base_eval_cache(alg, samples)
+    force_rows: List[Dict[str, Any]] = []
+    with _sequential_eval_context(args, alg, "force_own", {}):
+        for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+            force_rows.append(
+                evaluate_sample(
+                    alg,
+                    sample,
+                    record,
+                    eval_pos,
+                    phase=f"adaptive_margin0p25_confirmation_force_own_{eval_pos}",
+                    expected_expert=eval_pos,
+                    routing_debug_path=debug_path,
+                    eval_routing_mode="force_own_calibration_source",
+                    force_expert_id=eval_pos,
+                    base_cache=base_cache[eval_pos],
+                    extra_fields={"confirmation_phase": "calibration_source"},
+                )
+            )
+    calibration_stats = _sequential_calibration_stats(force_rows, alg.repository.num_experts)
+
+    boundary_rows: List[Dict[str, Any]] = []
+    rank_by_pos: Dict[int, Dict[str, Any]] = {}
+    with _sequential_eval_context(args, alg, "calibrated_topk2", calibration_stats):
+        for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+            row = evaluate_sample(
+                alg,
+                sample,
+                record,
+                eval_pos,
+                phase=f"adaptive_margin0p25_confirmation_boundary_source_{eval_pos}",
+                expected_expert=eval_pos,
+                routing_debug_path=debug_path,
+                eval_routing_mode="adaptive_topk2_to_3_margin0p25_boundary_source",
+                base_cache=base_cache[eval_pos],
+                extra_fields={
+                    "confirmation_phase": "boundary_source",
+                    "calibration_stats_source": "force_own_scores",
+                    "calibration_mu_neg": calibration_stats.get("mu_neg"),
+                    "calibration_std_neg": calibration_stats.get("std_neg"),
+                },
+            )
+            scores = [float(value) for value in (row.get("pooled_scores") or [])]
+            rank_by_pos[eval_pos] = _rank_details(scores, eval_pos)
+            boundary_rows.append(row)
+
+    confirmation_rows: List[Dict[str, Any]] = []
+    with _sequential_eval_context(args, alg, ADAPTIVE_MARGIN_CONFIRMATION_INTERNAL_MODE, calibration_stats):
+        for eval_pos, (record, sample) in enumerate(zip(records, samples)):
+            rank_info = rank_by_pos.get(eval_pos, {})
+            rank2_minus_rank3 = _float_or_none(rank_info.get("rank2_minus_rank3"))
+            force_id = None
+            adaptive_included_rank3 = False
+            if (
+                rank2_minus_rank3 is not None
+                and rank2_minus_rank3 <= ADAPTIVE_MARGIN_CONFIRMATION_MARGIN
+                and rank_info.get("top3_expert_id") is not None
+            ):
+                force_id = int(rank_info["top3_expert_id"])
+                adaptive_included_rank3 = True
+            row = evaluate_sample(
+                alg,
+                sample,
+                record,
+                eval_pos,
+                phase=f"adaptive_margin0p25_confirmation_{eval_pos}",
+                expected_expert=eval_pos,
+                routing_debug_path=debug_path,
+                eval_routing_mode=ADAPTIVE_MARGIN_CONFIRMATION_MODE,
+                force_expert_id=force_id,
+                base_cache=base_cache[eval_pos],
+                extra_fields={
+                    "confirmation_phase": "single_config_eval",
+                    "adaptive_margin": ADAPTIVE_MARGIN_CONFIRMATION_MARGIN,
+                    "adaptive_topk_max": 3,
+                    "adaptive_rank2_minus_rank3": rank2_minus_rank3,
+                    "adaptive_rank3_expert_id": rank_info.get("top3_expert_id"),
+                    "adaptive_included_rank3": adaptive_included_rank3,
+                    "forced_expert_id": force_id,
+                    "calibration_stats_source": "force_own_scores",
+                    "calibration_mu_neg": calibration_stats.get("mu_neg"),
+                    "calibration_std_neg": calibration_stats.get("std_neg"),
+                },
+            )
+            if force_id is not None:
+                row["top_routed_expert_id"] = row.get("top_score_expert_id")
+                row["routing_top1_correct"] = bool(row.get("top_score_expert_id") == eval_pos)
+            confirmation_rows.append(row)
+
+    target_deltas = [_float_or_none(row.get("target_nll_delta")) for row in confirmation_rows]
+    selected_sizes = [_float_or_none(row.get("selected_expert_set_size")) for row in confirmation_rows]
+    locality = [_float_or_none(row.get("reference_delta")) for row in confirmation_rows]
+    top_ids = [row.get("top_score_expert_id") for row in confirmation_rows if row.get("top_score_expert_id") is not None]
+    top_counts = {str(top_id): top_ids.count(top_id) for top_id in sorted(set(top_ids), key=lambda value: str(value))}
+    summary = {
+        "confirmation_type": "time_adaptive_margin_sequential_confirmation",
+        "mode": ADAPTIVE_MARGIN_CONFIRMATION_MODE,
+        "internal_eval_routing_mode": ADAPTIVE_MARGIN_CONFIRMATION_INTERNAL_MODE,
+        "number_of_configs": 1,
+        "eval_only": True,
+        "actual_run": True,
+        "max_edits": int(args.max_edits),
+        "num_records": len(confirmation_rows),
+        "loaded_repository_path": str(repo_path),
+        "command": command,
+        "plan": plan,
+        "retained_positive_count": sum(1 for value in target_deltas if value is not None and value > 0.0),
+        "own_selected_count": sum(1 for row in confirmation_rows if row.get("selected_own_expert")),
+        "own_top1_count": sum(1 for row in confirmation_rows if row.get("routing_top1_correct")),
+        "mean_selected_set_size": _mean(selected_sizes),
+        "max_selected_set_size": max([value for value in selected_sizes if value is not None], default=None),
+        "empty_selection_count": sum(1 for row in confirmation_rows if int(row.get("selected_expert_set_size") or 0) == 0),
+        "max_top_expert_count": max(top_counts.values(), default=0),
+        "top_expert_counts": top_counts,
+        "worst_nll_degradation": max([0.0] + [-float(value) for value in target_deltas if value is not None and value < 0.0]),
+        "locality_reference_delta": _mean(locality),
+        "record_671_recovered": any(str(row.get("record_id")) == "671" and row.get("selected_own_expert") for row in confirmation_rows),
+        "record_942_remains_recovered": any(str(row.get("record_id")) == "942" and row.get("selected_own_expert") for row in confirmation_rows),
+        "gate": {
+            "single_config": True,
+            "retained_positive_10_of_10": sum(1 for value in target_deltas if value is not None and value > 0.0) == 10,
+            "own_selected_10_of_10": sum(1 for row in confirmation_rows if row.get("selected_own_expert")) == 10,
+            "max_selected_size_le_3": max([value for value in selected_sizes if value is not None], default=1.0e9) <= 3,
+            "empty_selection_zero": sum(1 for row in confirmation_rows if int(row.get("selected_expert_set_size") or 0) == 0) == 0,
+        },
+    }
+    write_loss_trace(out_dir / "adaptive_margin0p25_confirmation_force_own.csv", force_rows)
+    write_loss_trace(out_dir / "adaptive_margin0p25_confirmation_boundary_source.csv", boundary_rows)
+    write_loss_trace(out_dir / "adaptive_margin0p25_confirmation_per_record.csv", confirmation_rows)
+    write_json(out_dir / "adaptive_margin0p25_confirmation_summary.json", summary)
+    print(json.dumps(to_jsonable(summary), indent=2, sort_keys=True))
+    return summary
 
 
 def run_eval_only(
@@ -7709,15 +8007,30 @@ def write_reliability_report(out_dir: Path) -> Path:
 
 def main() -> None:
     args = parse_args()
+    repo_path = resolve_repository_path(args.time_load_repository)
+    if args.time_adaptive_margin_sequential_confirmation:
+        args.mode = "sequential"
+        try:
+            plan = build_adaptive_margin_confirmation_plan(
+                args,
+                repo_path=repo_path,
+                actual_run=not bool(args.time_confirmation_plan_only),
+            )
+        except ValueError as exc:
+            raise SystemExit(str(exc)) from exc
+        if args.time_confirmation_plan_only:
+            print(json.dumps(plan, indent=2, sort_keys=True))
+            return
+        apply_adaptive_margin_confirmation_defaults(args)
     if args.mode in {"nonseq", "sequential"} and args.max_edits < 5:
         args.max_edits = 5
     if args.mode == "one":
         args.max_edits = 1
     set_seeds(args.seed)
     ensure_offline_env()
+    ensure_time_runtime_imports()
 
     dataset_path = resolve_dataset_path(args.dataset, Path.cwd(), args.dataset_path)
-    repo_path = resolve_repository_path(args.time_load_repository)
     if args.time_adaptive_margin_microcheck:
         if not args.eval_only:
             raise RuntimeError("--time-adaptive-margin-microcheck requires --eval-only.")
@@ -7745,7 +8058,16 @@ def main() -> None:
 
     model = get_model(config).to(device).eval()
     samples = [make_sample(model, record, image_root) for record in records]
-    if args.time_adaptive_margin_microcheck and args.eval_only:
+    if args.time_adaptive_margin_sequential_confirmation and args.eval_only:
+        if repo_path is None:
+            raise RuntimeError("--time-adaptive-margin-sequential-confirmation requires --existing-expert-repository PATH.")
+        alg = TIMEEdit(model, config, lambda: None).to(device)
+        try:
+            run_adaptive_margin_sequential_confirmation(args, config, dataset_path, records, samples, alg, args.out_dir, repo_path)
+        finally:
+            alg.remove_hook()
+            del alg
+    elif args.time_adaptive_margin_microcheck and args.eval_only:
         if repo_path is None:
             raise RuntimeError("--time-adaptive-margin-microcheck requires --time-load-repository PATH.")
         alg = TIMEEdit(model, config, lambda: None).to(device)

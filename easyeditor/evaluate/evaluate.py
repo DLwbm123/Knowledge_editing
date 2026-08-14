@@ -465,24 +465,8 @@ def prepare_multimodal_edit(hparams,
             'image': image,
             'labels': target,
             'prompts_len': prompts_len        
-        }
-        if hparams.model_name in {"llava-med", "llava_med"} and isinstance(image, str):
-            ret['image_paths'] = [image]
-            ret['image'] = None
+        } 
     return ret
-
-
-def _align_causal_logits_and_targets(logits, targ):
-    if logits.dim() == 3:
-        logits = logits[:, :-1]
-        if logits.shape[1] != targ.shape[1]:
-            common_len = min(logits.shape[1], targ.shape[1])
-            logits = logits[:, -common_len:]
-            targ = targ[:, -common_len:]
-        else:
-            logits = logits[:, -targ.shape[1]:]
-    return logits, targ
-
 
 def compute_multimodal_edit_quality(model, batch):
     
@@ -501,9 +485,11 @@ def compute_multimodal_edit_quality(model, batch):
             logits = outputs.logits.detach().cpu()    
         # targ = outputs.labels.detach().cpu()
         targ = batch["labels"].cpu()
-    logits, targ = _align_causal_logits_and_targets(logits, targ)
+    if logits.dim() == 3:
+        logits = logits[:, :-1]
+        # targ = targ[:, 1:]
+        logits = logits[:, -targ.shape[1]:]
     mask = targ != -100
-    targ = targ.clone()
     targ[~mask] = 0
     pred_ids = logits.argmax(-1).masked_fill(~mask, 0).detach().cpu()
     correct = pred_ids == targ
@@ -523,9 +509,11 @@ def compute_multimodal_edit_quality_demo(model, batch):
             logits = outputs.logits.detach().cpu()    
         # targ = outputs.labels.detach().cpu()
         targ = batch["labels"].cpu()
-    logits, targ = _align_causal_logits_and_targets(logits, targ)
+    if logits.dim() == 3:
+        logits = logits[:, :-1]
+        # targ = targ[:, 1:]
+        logits = logits[:, -targ.shape[1]:]
     mask = targ != -100
-    targ = targ.clone()
     targ[~mask] = 0
     pred_ids = logits.argmax(-1).masked_fill(~mask, 0).detach().cpu()
     correct = pred_ids == targ
@@ -578,11 +566,8 @@ def compute_multimodal_edit_results(
     if 'locality_prompt' in record.keys():
         locality_prompt = record["locality_prompt"]
         locality_ground_truth = record["locality_ground_truth"]
-        if hparams.model_name in {"llava-med", "llava_med"}:
-            ret["locality_unavailable"] = "text_only_locality_requires_image_for_llava_med"
-        else:
-            locality = prepare_multimodal_edit(hparams, tok, locality_ground_truth, locality_prompt, None)
-            _, ret['locality_output'] = compute_multimodal_edit_quality(model, locality)
+        locality = prepare_multimodal_edit(hparams, tok, locality_ground_truth, locality_prompt, None)
+        _, ret['locality_output'] = compute_multimodal_edit_quality(model, locality)
         
     if 'multimodal_locality_prompt' in record.keys():
         m_loc_prompt = record["multimodal_locality_prompt"]
@@ -637,11 +622,8 @@ def compute_multimodal_edit_results_demo(
     if 'locality_prompt' in record.keys():
         locality_prompt = record["locality_prompt"]
         locality_ground_truth = record["locality_ground_truth"]
-        if hparams.model_name in {"llava-med", "llava_med"}:
-            ret["locality_unavailable"] = "text_only_locality_requires_image_for_llava_med"
-        else:
-            locality = prepare_multimodal_edit(hparams, tok, locality_ground_truth, locality_prompt, None)
-            _, ret['locality_output'] = compute_multimodal_edit_quality(model, locality)
+        locality = prepare_multimodal_edit(hparams, tok, locality_ground_truth, locality_prompt, None)
+        _, ret['locality_output'] = compute_multimodal_edit_quality(model, locality)
         
     if 'multimodal_locality_prompt' in record.keys():
         m_loc_prompt = record["multimodal_locality_prompt"]

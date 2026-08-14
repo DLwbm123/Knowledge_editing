@@ -1,0 +1,73 @@
+# ENGRAM continual-editing V1: frozen before effect runs on 2026-07-10.
+device: cuda
+alg: ENGRAM
+alg_name: ENGRAM
+name: /remote-home/wangbomin/hugging_cache/medical_vlms/llava_med_v1_5_mistral_7b
+model_name: llava-med
+model_class: LlavaMedForEditing
+tokenizer_class: LlamaTokenizer
+tokenizer_name: /remote-home/wangbomin/hugging_cache/medical_vlms/llava_med_v1_5_mistral_7b
+inner_params: []
+archive: null
+results_dir: ./outputs/engram_continual_editing_v1_20260710
+batch_size: 1
+max_length: 30
+model_parallel: false
+eval_only: true
+half: false
+save: true
+verbose: true
+debug: true
+freeze_qformer: true
+coco_image: datasets/MedMKEB/images
+rephrase_image: datasets/MedMKEB/images
+llava_med_vision_tower: /remote-home/wangbomin/hugging_cache/openai/clip-vit-large-patch14-336
+llava_med_model_name: llava-med-v1.5-mistral-7b
+llava_med_loader_source: third_party/LLaVA-Med
+llava_med_conversation_template: mistral_instruct
+llava_med_dtype: float16
+
+# Core source defaults retained for V1.
+edit_mode: erase
+alpha: null
+beta: 1.0
+engram_alpha: 0.6
+engram_update_direction: subtract
+behavior_objective: continual_target_nll
+solver: pinv
+rcond: 1.0e-6
+absorb_bias: true
+normalize_covariance: false
+jitter: 0.0
+store_projector: true
+covariance_device: cpu
+solve_device: cpu
+covariance_dtype: float32
+solve_per_module: true
+clear_cuda_cache: false
+norm_ratio_warn_threshold: 0.25
+skip_if_norm_ratio_larger_than: null
+min_reference_examples: 1
+skip_if_insufficient_reference: true
+
+# V1 protocol choices: one tractable source-default module family member.
+module_patterns:
+  - 'model\.mm_projector\.0$'
+exclude_module_patterns: []
+module_priority_patterns: []
+prioritize_module_selection: false
+engram_layers: null
+engram_max_modules: 1
+max_cov_dim: 1025
+skip_if_dim_larger_than: 1025
+engram_token_scope: all
+engram_mask_fallback: all
+target_variants: [edit]
+reference_variants: [locality_multimodal]
+sequential_edit: true
+bank_dir: null
+edit_id: null
+modality: mixed
+replacement_mode: none
+project_delta_with_engram: false
+candidate_delta_source: none

@@ -95,17 +95,6 @@ class MultimodalEditor:
             elif hparams.model_name == "llava":
                 from ..trainer.llava.model.builder import load_pretrained_model
                 model = load_pretrained_model(model_path=hparams.name, device=hparams.device)
-            elif hparams.model_name in {"llava-med", "llava_med"}:
-                from ..trainer.llava_med_models import LlavaMedForEditing
-                model = LlavaMedForEditing(
-                    model_path=hparams.name,
-                    vision_tower_path=hparams.llava_med_vision_tower,
-                    model_name=getattr(hparams, "llava_med_model_name", "llava-med-v1.5-mistral-7b"),
-                    official_loader_source=getattr(hparams, "llava_med_loader_source", "third_party/LLaVA-Med"),
-                    device=hparams.device,
-                    dtype=getattr(hparams, "llava_med_dtype", "float16"),
-                    conversation_template=getattr(hparams, "llava_med_conversation_template", "mistral_instruct"),
-                )
             elif "qwen-vl" in hparams.model_name.lower():
                 tokenizer = AutoTokenizer.from_pretrained(hparams.name, trust_remote_code=True, pad_token='<|endoftext|>')
                 model = AutoModelForCausalLM.from_pretrained(
@@ -128,13 +117,6 @@ class MultimodalEditor:
             elif hparams.model_name == "llava":
                 vis_processor = transformers.CLIPImageProcessor.from_pretrained("openai/clip-vit-large-patch14-336")
                 self.vis_tok = lambda image: vis_processor(image, return_tensors='pt')['pixel_values'].to(dtype=torch.float16)
-            elif hparams.model_name in {"llava-med", "llava_med"}:
-                def _llava_med_vis_tok(image):
-                    processed = model.process_images([image], model.image_processor, model.llava_model.config)
-                    if isinstance(processed, list):
-                        processed = torch.stack(processed, dim=0)
-                    return processed.to(model.lm_device, dtype=model.dtype)
-                self.vis_tok = _llava_med_vis_tok
             elif hparams.model_class ==  "qwen-vl":
                 vis_processor = BlipImageEvalProcessor(image_size=448, mean=None, std=None)
                 self.vis_tok = vis_processor
@@ -167,8 +149,7 @@ class MultimodalEditor:
         #     2: [_ for _ in range(32, 48)]
         # }
         # self.model.parallelize(device_map=device_map)
-        device_str = hparams.device if str(hparams.device).startswith(("cuda", "cpu", "mps")) else f"cuda:{hparams.device}"
-        self.model.to(device_str)
+        self.model.to(f'cuda:{hparams.device}')
 
         self.hparams = hparams
         self.vis_root = hparams.coco_image
@@ -280,9 +261,8 @@ class MultimodalEditor:
                         weights_copy() # unpatch_fn
                 else:
                     with torch.no_grad():
-                        restore_device = self.hparams.device if str(self.hparams.device).startswith(("cuda", "cpu", "mps")) else f"cuda:{self.hparams.device}"
                         for k, v in weights_copy.items():
-                            nethook.get_parameter(self.model, k)[...] = v.to(restore_device)
+                            nethook.get_parameter(self.model, k)[...] = v.to(f"cuda:{self.hparams.device}")
                 metrics["pre"] = compute_multimodal_edit_results(self.model, self.model_name, self.hparams, self.tok, request, self.hparams.device)
                 if 'locality_output' in metrics['post'].keys():
                     assert len(metrics['post']['locality_output']) == \
@@ -426,9 +406,8 @@ class MultimodalEditor:
                         weights_copy() # unpatch_fn
                 else:
                     with torch.no_grad():
-                        restore_device = self.hparams.device if str(self.hparams.device).startswith(("cuda", "cpu", "mps")) else f"cuda:{self.hparams.device}"
                         for k, v in weights_copy.items():
-                            nethook.get_parameter(self.model, k)[...] = v.to(restore_device)
+                            nethook.get_parameter(self.model, k)[...] = v.to(f"cuda:{self.hparams.device}")
                 pre, pre_logits = compute_multimodal_edit_results_demo(self.model, self.model_name, self.hparams, self.tok, request, self.hparams.device)
                 metrics["pre"] = pre
                 if 'locality_output' in metrics['post'].keys():
@@ -567,9 +546,8 @@ class MultimodalEditor:
                         weights_copy() # unpatch_fn
                 else:
                     with torch.no_grad():
-                        restore_device = self.hparams.device if str(self.hparams.device).startswith(("cuda", "cpu", "mps")) else f"cuda:{self.hparams.device}"
                         for k, v in weights_copy.items():
-                            nethook.get_parameter(self.model, k)[...] = v.to(restore_device)
+                            nethook.get_parameter(self.model, k)[...] = v.to(f"cuda:{self.hparams.device}")
                 pre, pre_logits = compute_multimodal_edit_results_demo(self.model, self.model_name, self.hparams, self.tok, request, self.hparams.device)
                 metrics["pre"] = pre
                 if 'locality_output' in metrics['post'].keys():
@@ -599,7 +577,6 @@ class MultimodalEditor:
 
                 all_metrics.append(metrics)
 
-        os.makedirs(os.path.dirname(save_json), exist_ok=True)
         with open(save_json, 'w') as f:
             json.dump(port_result, f, indent=2)
 
@@ -743,3 +720,5 @@ class MultimodalEditor:
 #     )
 #
 #     metrics, edited_model, _ = editor.edit(prompts='What university did Watts Humphrey attend?', ground_truth='Illinois Institute of Technology', target_new='University of Michigan')
+
+

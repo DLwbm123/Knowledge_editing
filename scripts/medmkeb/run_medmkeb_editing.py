@@ -187,10 +187,6 @@ def default_hparams_for_method(method: str) -> Path:
         return PROJECT_ROOT / "hparams" / "FT" / "blip2_qformer.yaml"
     if method_key == "ASAM-FT":
         return PROJECT_ROOT / "hparams" / "ASAM_FT" / "blip2.yaml"
-    if method_key in {"ENGRAM", "AI-ENGRAM"}:
-        return PROJECT_ROOT / "hparams" / "ENGRAM" / "blip2.yaml"
-    if method_key in {"SAME-EDIT", "SAME_EDIT", "SAMEEDIT"}:
-        return PROJECT_ROOT / "hparams" / "SAME_EDIT" / "llava_med.yaml"
     raise SystemExit(f"No default VLKEB hparams for method={method}. Pass --hparams explicitly.")
 
 
@@ -242,11 +238,6 @@ def load_vlkeb_hparams(easyeditor, method: str, hparams_path: Path):
         "FT-LLM": ["FTMultimodalHparams"],
         "FT-PROJ": ["FTMultimodalHparams"],
         "ASAM-FT": ["FTMultimodalHparams"],
-        "ENGRAM": ["EngramMultimodalHparams"],
-        "AI-ENGRAM": ["EngramMultimodalHparams"],
-        "SAME-EDIT": ["SAMEEditMultimodalHparams"],
-        "SAME_EDIT": ["SAMEEditMultimodalHparams"],
-        "SAMEEDIT": ["SAMEEditMultimodalHparams"],
     }.get(method_key)
     if not class_names:
         raise RuntimeError(f"Unsupported VLKEB method in this runner: {method}")
@@ -395,7 +386,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--method",
         default="IKE",
-        choices=["IKE", "MEND", "ASAM-MEND", "ASAM_MEND", "SERAC", "FT", "FT-LLM", "FT-Proj", "ASAM-FT", "ASAM_FT", "ENGRAM", "AI-ENGRAM", "AI_ENGRAM"],
+        choices=["IKE", "MEND", "ASAM-MEND", "ASAM_MEND", "SERAC", "FT", "FT-LLM", "FT-Proj", "ASAM-FT", "ASAM_FT"],
     )
     parser.add_argument("--hparams", help="VLKEB hparams file. Defaults to hparams/<method>/blip2*.yaml.")
     parser.add_argument("--model-name-or-path")

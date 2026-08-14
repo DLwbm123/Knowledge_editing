@@ -39,8 +39,6 @@ class CaptionDataset(BaseDataset):
         elif "owl-2" in config.model_name.lower():
             from transformers.models.clip.image_processing_clip import CLIPImageProcessor
             vis_processor = CLIPImageProcessor.from_pretrained(config.name, trust_remote_code=True)
-        elif config.model_class == "LlavaMedForEditing" or config.model_name in {"llava-med", "llava_med"}:
-            vis_processor = None
         else:
             raise NotImplementedError("unknown model class")
 
@@ -91,9 +89,6 @@ class CaptionDataset(BaseDataset):
             locality_image_path = os.path.join(self.vis_root, record['m_loc'])
             
             item = {
-                'id': record.get('id'),
-                'record_id': record.get('id'),
-                'source_record_id': record.get('id'),
                 'prompt': record['src'],
                 'pred': record['pred'],
                 'target': record['alt'],
@@ -149,12 +144,6 @@ class CaptionDataset(BaseDataset):
         image_path = data['image']
         rephrase_image_path = data['image_rephrase']
         locality_image_path = data['multimodal_locality_image']
-
-        if self.config.model_class == "LlavaMedForEditing" or self.config.model_name in {"llava-med", "llava_med"}:
-            data['image'] = image_path
-            data['image_rephrase'] = rephrase_image_path
-            data['multimodal_locality_image'] = locality_image_path
-            return data
         
         image = Image.open(image_path).convert("RGB")
         rephrase_image = Image.open(rephrase_image_path).convert("RGB")

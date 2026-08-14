@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import py_compile
 import sys
@@ -14,7 +15,12 @@ import torch
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
+sys.path.insert(0, str(SCRIPT_DIR))
 
+from run_time_medmkeb_smoke import (  # noqa: E402
+    ADAPTIVE_MARGIN_CONFIRMATION_MODE,
+    build_adaptive_margin_confirmation_plan,
+)
 from easyeditor.trainer.algs.time_edit_modules import (  # noqa: E402
     TIMECPResidual,
     TIMEExpertRepository,
@@ -321,6 +327,94 @@ def test_no_dense_tensor_saved() -> None:
         raise AssertionError(f"Repository saved dense H x H tensors: {dense_shapes}")
 
 
+
+def _confirmation_args(repo_path: Path | None, **overrides: object) -> argparse.Namespace:
+    values = {
+        "time_adaptive_margin_sequential_confirmation": True,
+        "time_confirmation_plan_only": True,
+        "eval_only": True,
+        "max_edits": 10,
+        "time_load_repository": repo_path,
+        "confirmation_routing_mode": ADAPTIVE_MARGIN_CONFIRMATION_MODE,
+        "out_dir": Path("outputs/time_medmkeb_smoke/plan_only"),
+        "eval_routing_modes": "",
+        "time_routing_calibration": False,
+        "time_post_retrain_calibration": False,
+        "time_10edit_routing_repair_eval": False,
+        "time_fragile_routing_repair_eval": False,
+        "time_adaptive_margin_microcheck": False,
+        "time_routing_calibration_grid": "",
+        "time_gamma_sweep": "",
+        "time_scale_init_grid": "",
+        "time_overfit_grid": "",
+        "time_adaptive_topk_margin": None,
+        "time_anti_collapse_loss": False,
+        "time_routing_margin_loss": False,
+        "time_force_current_train": None,
+        "device": "cuda",
+    }
+    values.update(overrides)
+    return argparse.Namespace(**values)
+
+
+def _assert_confirmation_plan_rejects(args: argparse.Namespace, expected: str, env: dict[str, str] | None = None) -> None:
+    try:
+        build_adaptive_margin_confirmation_plan(args, environ=env or {})
+    except ValueError as exc:
+        if expected not in str(exc):
+            raise AssertionError(f"Expected error containing {expected!r}, got {exc!r}.") from exc
+        return
+    raise AssertionError(f"Plan unexpectedly accepted invalid args: {args}")
+
+
+def test_adaptive_margin_confirmation_plan_guards() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        repo_path = Path(tmp) / "expert_repository.pt"
+        repo_path.write_bytes(b"placeholder")
+        args = _confirmation_args(repo_path)
+        plan = build_adaptive_margin_confirmation_plan(args, environ={})
+        if plan["mode"] != ADAPTIVE_MARGIN_CONFIRMATION_MODE:
+            raise AssertionError(f"Wrong confirmation mode: {plan}")
+        if plan["number_of_configs"] != 1:
+            raise AssertionError(f"Plan must contain exactly one config: {plan}")
+        if plan["actual_run"]:
+            raise AssertionError(f"Plan-only validation must not mark an actual run: {plan}")
+        if not plan["eval_only"] or plan["max_edits"] != 10:
+            raise AssertionError(f"Plan lost eval-only/max-edits guards: {plan}")
+
+        _assert_confirmation_plan_rejects(_confirmation_args(repo_path, eval_only=False), "--eval-only")
+        _assert_confirmation_plan_rejects(_confirmation_args(repo_path, max_edits=20), "--max-edits")
+        _assert_confirmation_plan_rejects(
+            _confirmation_args(repo_path, confirmation_routing_mode="adaptive_topk2_to_3_margin0p28"),
+            "--routing-mode must be exactly",
+        )
+        _assert_confirmation_plan_rejects(
+            _confirmation_args(repo_path, confirmation_routing_mode="topk3"),
+            "--routing-mode must be exactly",
+        )
+        _assert_confirmation_plan_rejects(
+            _confirmation_args(repo_path, eval_routing_modes="adaptive_margin0p25,topk3"),
+            "Do not pass --eval-routing-modes",
+        )
+        _assert_confirmation_plan_rejects(
+            _confirmation_args(repo_path, time_10edit_routing_repair_eval=True),
+            "Grid/sweep/multi-config flags",
+        )
+        _assert_confirmation_plan_rejects(
+            _confirmation_args(None),
+            "--existing-expert-repository/--time-load-repository",
+        )
+        _assert_confirmation_plan_rejects(
+            _confirmation_args(repo_path, device="cuda:2"),
+            "GPU 2",
+        )
+        _assert_confirmation_plan_rejects(
+            _confirmation_args(repo_path),
+            "GPU 2",
+            env={"CUDA_VISIBLE_DEVICES": "2"},
+        )
+
+
 def main() -> None:
     tests = [
         test_py_compile,
@@ -337,6 +431,7 @@ def main() -> None:
         test_adaptive_rank_margin_fallback_with_fewer_than_three_experts,
         test_gradient_isolation,
         test_no_dense_tensor_saved,
+        test_adaptive_margin_confirmation_plan_guards,
     ]
     results = {}
     for test in tests:

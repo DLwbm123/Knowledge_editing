@@ -1,0 +1,87 @@
+{
+  "all_passed": true,
+  "commit": "3615a37b05294509f411df045621940f276a5e6b",
+  "commit_date": "2025-06-22T09:14:40+08:00",
+  "files": [
+    {
+      "expected_blob_sha": "84ef7fc6087249729320a48b9562941ab6b8d98f",
+      "observed_blob_sha": "84ef7fc6087249729320a48b9562941ab6b8d98f",
+      "passed": true,
+      "path": "LICENSE"
+    },
+    {
+      "expected_blob_sha": "015c8b7a54c797265cd5a6c18feabb2ef9434104",
+      "observed_blob_sha": "015c8b7a54c797265cd5a6c18feabb2ef9434104",
+      "passed": true,
+      "path": "README.md"
+    },
+    {
+      "expected_blob_sha": "1e84df74b32d6ffa46b0c2c8103034f30dc992dc",
+      "observed_blob_sha": "1e84df74b32d6ffa46b0c2c8103034f30dc992dc",
+      "passed": true,
+      "path": "configs/liveedit/llava-v1.5-7b.yaml"
+    },
+    {
+      "expected_blob_sha": "c895fcbff8bd9ede01330bc1aeace7c695a94cc8",
+      "observed_blob_sha": "c895fcbff8bd9ede01330bc1aeace7c695a94cc8",
+      "passed": true,
+      "path": "editor/vllm_editors/liveedit/modules.py"
+    },
+    {
+      "expected_blob_sha": "b2e893d7076784bd28f777096375f1fbcf14f831",
+      "observed_blob_sha": "b2e893d7076784bd28f777096375f1fbcf14f831",
+      "passed": true,
+      "path": "editor/vllm_editors/liveedit/liveedit.py"
+    },
+    {
+      "expected_blob_sha": "36d761d79b3a64c1f69a9124695cf3436438d402",
+      "observed_blob_sha": "36d761d79b3a64c1f69a9124695cf3436438d402",
+      "passed": true,
+      "path": "editor/vllm_editors/base.py"
+    },
+    {
+      "expected_blob_sha": "4db84c1545ad7e04055f61b21d67e7a5be5658f9",
+      "observed_blob_sha": "4db84c1545ad7e04055f61b21d67e7a5be5658f9",
+      "passed": true,
+      "path": "editor/vllms_for_edit/base.py"
+    },
+    {
+      "expected_blob_sha": "8b50cefb426d51ebd4f557b0aa3f4b412bce5c33",
+      "observed_blob_sha": "8b50cefb426d51ebd4f557b0aa3f4b412bce5c33",
+      "passed": true,
+      "path": "editor/vllms_for_edit/llava/llava.py"
+    },
+    {
+      "expected_blob_sha": "ed64a1086848e23a97984089fcea29a2951b7173",
+      "observed_blob_sha": "ed64a1086848e23a97984089fcea29a2951b7173",
+      "passed": true,
+      "path": "dataset/vllm.py"
+    },
+    {
+      "expected_blob_sha": "f1351c52dd139a2231f6e12de4e929a7b613ab78",
+      "observed_blob_sha": "f1351c52dd139a2231f6e12de4e929a7b613ab78",
+      "passed": true,
+      "path": "evaluation/vllm_editor_eval.py"
+    },
+    {
+      "expected_blob_sha": "d0078ceaee73a6131cb9291a8cb18406d02f1547",
+      "observed_blob_sha": "d0078ceaee73a6131cb9291a8cb18406d02f1547",
+      "passed": true,
+      "path": "train_vllm_editor.py"
+    },
+    {
+      "expected_blob_sha": "5a001ce4056cbeb1c9509ec6f2eb04180e7dcc11",
+      "observed_blob_sha": "5a001ce4056cbeb1c9509ec6f2eb04180e7dcc11",
+      "passed": true,
+      "path": "test_vllm_edit.py"
+    },
+    {
+      "expected_blob_sha": "0bbafe9361e7d659ca335f83a147c6d4879e98df",
+      "observed_blob_sha": "0bbafe9361e7d659ca335f83a147c6d4879e98df",
+      "passed": true,
+      "path": "utils/__init__.py"
+    }
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/qizhou000/LiveEdit"
+}

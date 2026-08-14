@@ -1,0 +1,12 @@
+{
+  "commit": "3615a37b05294509f411df045621940f276a5e6b",
+  "symbols": [
+    {"source": "editor/vllm_editors/liveedit/modules.py:7-39", "symbol": "Attention", "port": "methods.liveedit_med.upstream_modules.Attention"},
+    {"source": "editor/vllm_editors/liveedit/modules.py:41-88", "symbol": "QVExtractor", "port": "methods.liveedit_med.upstream_modules.QVExtractor"},
+    {"source": "editor/vllm_editors/liveedit/modules.py:90-110", "symbol": "LowRankGenerator", "port": "methods.liveedit_med.upstream_modules.LowRankGenerator"},
+    {"source": "editor/vllm_editors/liveedit/liveedit.py:132-198", "symbol": "routing_and_residual", "port": "methods.liveedit_med.source_ops"},
+    {"source": "editor/vllm_editors/liveedit/liveedit.py:251-476", "symbol": "batch_and_training", "port": "methods.liveedit_med.trainer"},
+    {"source": "dataset/vllm.py:10-145", "symbol": "BaseVLLMEditData", "port": "methods.liveedit_med.data"},
+    {"source": "editor/vllms_for_edit/llava/llava.py:8-80", "symbol": "LlavaForEdit", "port": "methods.liveedit_med.llavamed_adapter"}
+  ]
+}

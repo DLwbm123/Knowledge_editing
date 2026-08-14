@@ -1,0 +1,39 @@
+# SR-TR ENGRAM V2, frozen before LLaVA-Med effect runs on 2026-07-10.
+device: cuda
+name: /remote-home/wangbomin/hugging_cache/medical_vlms/llava_med_v1_5_mistral_7b
+model_name: llava-med
+model_class: LlavaMedForEditing
+tokenizer_class: LlamaTokenizer
+tokenizer_name: /remote-home/wangbomin/hugging_cache/medical_vlms/llava_med_v1_5_mistral_7b
+inner_params: []
+model_parallel: false
+half: false
+dropout: 0.0
+no_grad_layers: null
+freeze_qformer: true
+state_dict_file: null
+qformer_name_or_path: null
+qformer_checkpoint: null
+pretrained_ckpt: null
+llava_med_vision_tower: /remote-home/wangbomin/hugging_cache/openai/clip-vit-large-patch14-336
+llava_med_model_name: llava-med-v1.5-mistral-7b
+llava_med_loader_source: third_party/LLaVA-Med
+llava_med_conversation_template: mistral_instruct
+llava_med_dtype: float16
+coco_image: datasets/MedMKEB/images
+rephrase_image: datasets/MedMKEB/images
+
+method_version: SR-TR-ENGRAM-V2
+bank_semantics: sequential_anchor_reconstruction
+target_module: llava_model.model.layers.21.self_attn.q_proj
+token_policy: answer_prediction
+beta_ref: 1.0
+beta_old: 1.0
+ridge_relative: 1.0e-4
+max_relative_weight_norm: 1.0e-2
+solve_dtype: float64
+seed: 42
+dataset: datasets/MedMKEB/eval.json
+record_ids: [953, 1293]
+locality_nll_abs_drift_limit: 0.5
+replay_nll_tolerance: 1.0e-7
