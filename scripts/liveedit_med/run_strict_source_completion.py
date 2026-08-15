@@ -95,12 +95,21 @@ def validate_training() -> dict:
     if last["step"] != 3200 or last["epoch"] != 50 or last["source_training_continuation_mode"] != "strict_source_reapply_layer21":
         raise RuntimeError("STRICT_SOURCE_TRAINING_FINAL_ROW_INVALID")
     checkpoints = verify_checkpoint_set(RUN)
-    write_new(RUN / "training/checkpoint_manifest.json", checkpoints)
+    manifest_path = RUN / "training/checkpoint_manifest.json"
+    if manifest_path.is_file():
+        existing = json.loads(manifest_path.read_text())
+        if canonical_json_hash(existing) != canonical_json_hash(checkpoints):
+            raise RuntimeError("STRICT_SOURCE_CHECKPOINT_MANIFEST_DRIFT")
+    else:
+        write_new(manifest_path, checkpoints)
     return {"status": "STRICT_SOURCE_TRAINING_COMPLETE", "steps": 3200, "epochs": 50,
             "last_row": last, "checkpoint_set_hash": checkpoints["set_hash"]}
 
 
 def run_extra_stage_a() -> dict:
+    result_path = RUN / "gates/strict_stage_a_extra_robustness.json"
+    if result_path.is_file():
+        return json.loads(result_path.read_text())
     pending = []
     for index, gpu in ((1, 2), (2, 3)):
         out = RUN / "gates" / f"strict_stage_a_extra_{index}"
@@ -118,14 +127,23 @@ def run_extra_stage_a() -> dict:
         rows.append({"sample_index": index, "returncode": process.returncode, "log": str(log),
                      "summary": json.loads(summary_path.read_text()) if summary_path.is_file() else None})
     result = {"non_gating": True, "implementation_changed_from_extra_samples": False, "samples": rows}
-    write_new(RUN / "gates/strict_stage_a_extra_robustness.json", result)
+    write_new(result_path, result)
     return result
 
 
 def run_validation(training: dict) -> dict:
     out = RUN / "validation"
+    selection_path = out / "checkpoint_selection.json"
+    if selection_path.is_file():
+        return json.loads(selection_path.read_text())
+    if out.exists():
+        raise RuntimeError("STRICT_SOURCE_PARTIAL_VALIDATION_REQUIRES_ARCHIVE")
     out.mkdir(parents=True, exist_ok=False)
-    shutil.copy2(RUN / "training/validation_panel_manifest.json", out / "validation_panel_manifest.json")
+    # copy2 attempts to reproduce macOS provenance xattrs on the remote
+    # filesystem and can fail with EIO after the file bytes are written.
+    # The manifest is content-addressed, so byte copying is the required
+    # operation and metadata copying is explicitly unnecessary.
+    shutil.copyfile(RUN / "training/validation_panel_manifest.json", out / "validation_panel_manifest.json")
     checkpoints = json.loads((RUN / "training/checkpoint_manifest.json").read_text())
     for offset in range(0, len(CHECKPOINT_STEPS), 2):
         pending = []
