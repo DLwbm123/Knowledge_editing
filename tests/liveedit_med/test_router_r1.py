@@ -149,6 +149,7 @@ def test_16_hard_negative_mining_declares_clean_s0_only():
     text = (ROOT / "scripts/liveedit_med/prepare_router_r1_data.py").read_text()
     assert '"clean_s0_only": True' in text
     assert '"target_answers_used_as_features": False' in text
+    assert "other not in {visual_nearest, text_nearest}" in text
 
 
 def test_17_record953_excluded_from_fitting_and_selection():

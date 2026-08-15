@@ -94,12 +94,16 @@ def main() -> None:
             filtered = {name: [other for other in values if valid(other)] for name, values in ranks.items()}
             same_image = next(other for other in ranks["text"] if valid(other, need_question=True))
             same_question = next(other for other in ranks["visual"] if valid(other, need_image=True))
+            visual_nearest = filtered["visual"][0]
+            text_nearest = next(other for other in filtered["text"] if other != visual_nearest)
+            joint_near_miss = next(other for other in filtered["joint"]
+                                   if other not in {visual_nearest, text_nearest})
             chosen = {
                 "same_image_different_question": same_image,
                 "same_question_different_image": same_question,
-                "visual_nearest": filtered["visual"][0],
-                "text_nearest": filtered["text"][0],
-                "joint_near_miss": filtered["joint"][0],
+                "visual_nearest": visual_nearest,
+                "text_nearest": text_nearest,
+                "joint_near_miss": joint_near_miss,
             }
             nearest[rid] = {"split": split, "visual": filtered["visual"],
                             "text": filtered["text"], "joint": filtered["joint"], "chosen": chosen}
