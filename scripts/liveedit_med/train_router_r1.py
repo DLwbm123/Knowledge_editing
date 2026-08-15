@@ -108,6 +108,20 @@ def module_keys(modules, tensors, device):
     return modules.edit_extractor.extract_query(question), modules.edit_extractor.extract_vision(question, vision)
 
 
+def compact_native(tensors: Mapping[str, torch.Tensor]):
+    hidden = tensors["native__hidden"]
+    return {"vision": hidden[tensors["native__vision_mask"].bool()].contiguous(),
+            "question": hidden[tensors["native__question_mask"].bool()].contiguous(),
+            "moe_c": tensors["expert__moe_c"].contiguous(),
+            "moe_r": tensors["expert__moe_r"].contiguous()}
+
+
+def compact_module_keys(modules, row, device):
+    vision = row["vision"].float().unsqueeze(0).to(device)
+    question = row["question"].float().unsqueeze(0).to(device)
+    return modules.edit_extractor.extract_query(question), modules.edit_extractor.extract_vision(question, vision)
+
+
 def query_keys(modules, row):
     vision, question, _answer = spans(row)
     return (modules.input_extractor.extract_query(question),
@@ -217,6 +231,10 @@ inference_continuation: official_layer21_output_hook_then_layer22
     frozen_ledger = args.run_dir / "frozen_hash_ledger.jsonl"
     frozen_ledger.write_text("")
     train_ids = [str(row["record_id"]) for row in manifest["splits"]["train"]]
+    # Preload only the native vision/question spans and frozen C/R tensors.
+    # Loading complete multi-variant record files for every repository member
+    # at every optimizer step would multiply disk traffic by repository size.
+    native_bank = {rid: compact_native(load_regular(regular["train"][rid])) for rid in train_ids}
     rng = np.random.default_rng(42)
     step = 0
     checkpoints = []
@@ -237,6 +255,10 @@ inference_continuation: official_layer21_output_hook_then_layer22
             route_losses = {"hard": [], "absolute": [], "relative": []}
             regular_cache: dict[str, Mapping[str, torch.Tensor]] = {}
             hard_cache: dict[str, Mapping[str, torch.Tensor]] = {}
+            def get_regular(record_id: str):
+                if record_id not in regular_cache:
+                    regular_cache[record_id] = load_regular(regular["train"][record_id])
+                return regular_cache[record_id]
             for rid in ids:
                 member = memberships[(step, rid)]
                 repo_ids = [str(value) for value in member["repository_ids"]]
@@ -244,13 +266,13 @@ inference_continuation: official_layer21_output_hook_then_layer22
                     raise RuntimeError("ROUTER_ADAPTATION_INVALID_ENGINEERING_RUN:repository")
                 begin_repo = len(all_eqr)
                 for member_id in repo_ids:
-                    tensors = regular_cache.setdefault(member_id, load_regular(regular["train"][member_id]))
-                    eqr, evr = module_keys(modules, tensors, model.lm_device)
+                    native_tensors = native_bank[member_id]
+                    eqr, evr = compact_module_keys(modules, native_tensors, model.lm_device)
                     all_eqr.append(eqr); all_evr.append(evr)
-                    all_c.append(tensors["expert__moe_c"].float().to(model.lm_device))
-                    all_r.append(tensors["expert__moe_r"].float().to(model.lm_device))
+                    all_c.append(native_tensors["moe_c"].float().to(model.lm_device))
+                    all_r.append(native_tensors["moe_r"].float().to(model.lm_device))
                 target_positions.append(begin_repo)
-                target_tensor = regular_cache[rid]
+                target_tensor = get_regular(rid)
                 native_row = variant(target_tensor, "native", model.lm_device)
                 semantic_row = variant(target_tensor, semantic, model.lm_device)
                 if negative in ("same_image_different_question", "same_question_different_image"):
@@ -259,8 +281,7 @@ inference_continuation: official_layer21_output_hook_then_layer22
                     negative_row = variant(hard_tensor, negative, model.lm_device)
                 else:
                     other_id = nearest[rid]["chosen"][negative]
-                    negative_row = variant(regular_cache.setdefault(other_id,
-                        load_regular(regular["train"][other_id])), "native", model.lm_device)
+                    negative_row = variant(get_regular(other_id), "native", model.lm_device)
                 locality_row = variant(target_tensor, "image_locality", model.lm_device)
                 target_rows.append((native_row, semantic_row, negative_row, locality_row, begin_repo, begin_repo + size))
             eqrs = torch.cat(all_eqr); evrs = torch.cat(all_evr)
