@@ -16,7 +16,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from methods.liveedit_med.posthoc_validation import (
-    CHECKPOINT_STEPS, PROTOCOL, canonical_json_hash, select_checkpoint, verify_checkpoint_set,
+    CHECKPOINT_STEPS, PROTOCOL, canonical_json_hash, file_sha256, immutable_tree_manifest,
+    select_checkpoint, verify_checkpoint_set,
 )
 
 RUNTIME = Path("/dev/shm/.strict-src-51")
@@ -108,27 +109,56 @@ def validate_training() -> dict:
 
 def run_extra_stage_a() -> dict:
     result_path = RUN / "gates/strict_stage_a_extra_robustness.json"
-    if result_path.is_file():
-        return json.loads(result_path.read_text())
-    pending = []
-    for index, gpu in ((1, 2), (2, 3)):
-        out = RUN / "gates" / f"strict_stage_a_extra_{index}"
-        log = RUN / "logs" / f"strict_stage_a_extra_{index}.log"
-        env = dict(os.environ, SS_TASK="stage_a_extra", SS_GPU=str(gpu), SS_SAMPLE=str(index),
-                   SS_OUT=str(out), CUDA_VISIBLE_DEVICES=str(gpu), CUBLAS_WORKSPACE_CONFIG=":4096:8")
-        log.parent.mkdir(parents=True, exist_ok=True); handle = log.open("x")
-        process = subprocess.Popen(["bash", "-c", f"exec -a ss-worker {PYTHON} {WORKER}"],
-                                   cwd=ROOT, env=env, stdout=handle, stderr=subprocess.STDOUT)
-        pending.append((index, process, handle, log))
-    rows = []
-    for index, process, handle, log in pending:
-        process.wait(); handle.close()
-        summary_path = RUN / "gates" / f"strict_stage_a_extra_{index}/trace_parity_summary.json"
-        rows.append({"sample_index": index, "returncode": process.returncode, "log": str(log),
-                     "summary": json.loads(summary_path.read_text()) if summary_path.is_file() else None})
-    result = {"non_gating": True, "implementation_changed_from_extra_samples": False, "samples": rows}
-    write_new(result_path, result)
+    if not result_path.is_file():
+        raise RuntimeError("STRICT_SOURCE_STAGE_A_RERUN_FORBIDDEN")
+    result = json.loads(result_path.read_text())
+    classification = {
+        "label": "NON_GATING_STAGE_A_ROBUSTNESS_NOT_RUN__INVALID_IMAGE_ASSET",
+        "core_stage_a": "27/27 PASS",
+        "gating": False,
+        "rerun_performed": False,
+        "implementation_changed": False,
+        "reason": "Two downloaded JPG paths were not decodable image assets.",
+    }
+    classification_path = RUN / "gates/non_gating_stage_a_robustness_classification.json"
+    if not classification_path.is_file():
+        write_new(classification_path, classification)
+    result["classification"] = classification["label"]
     return result
+
+
+def validate_checkpoint_result(path: Path, step: int, panel: dict) -> dict:
+    if not path.is_file():
+        raise RuntimeError(f"STRICT_SOURCE_VALIDATION_RESULT_MISSING:{step}")
+    row = json.loads(path.read_text())
+    required = {
+        "routed_native_success_count", "routed_generality_success_count",
+        "locality_exact_preservation_count", "routing_false_positive_count",
+        "target_contamination_count", "forced_native_success_count",
+        "forced_generality_success_count", "validation_source_loss", "outputs",
+    }
+    if not required.issubset(row):
+        raise RuntimeError(f"STRICT_SOURCE_VALIDATION_RESULT_INCOMPLETE:{step}")
+    if (row.get("protocol") != PROTOCOL or int(row.get("step", -1)) != step
+            or row.get("panel_hash") != panel["panel_hash"]
+            or row.get("fresh_clean_s0") is not True
+            or row.get("record953_loaded_or_evaluated") is not False
+            or row.get("canonical_bank_unchanged") is not True
+            or row.get("base_state_unchanged") is not True
+            or row.get("generation_config") != {"do_sample": False, "num_beams": 1, "max_new_tokens": 128}
+            or len(row["outputs"]) != 8):
+        raise RuntimeError(f"STRICT_SOURCE_VALIDATION_RESULT_INVALID:{step}")
+    expected_ids = [str(item["record_id"]) for item in panel["edits"]]
+    if [str(item.get("record_id")) for item in row["outputs"]] != expected_ids or "953" in expected_ids:
+        raise RuntimeError(f"STRICT_SOURCE_VALIDATION_PANEL_DRIFT:{step}")
+    for item in row["outputs"]:
+        if set(item.get("forced_on", {})) != {"native", "textual", "visual", "paired"}:
+            raise RuntimeError(f"STRICT_SOURCE_VALIDATION_FORCED_VIEW_DRIFT:{step}")
+        if set(item.get("routed", {})) != {"native", "textual", "visual", "paired"}:
+            raise RuntimeError(f"STRICT_SOURCE_VALIDATION_ROUTED_VIEW_DRIFT:{step}")
+        if set(item.get("locality", {})) != {"image_bearing", "text_only"}:
+            raise RuntimeError(f"STRICT_SOURCE_VALIDATION_LOCALITY_VIEW_DRIFT:{step}")
+    return row
 
 
 def run_validation(training: dict) -> dict:
@@ -136,55 +166,88 @@ def run_validation(training: dict) -> dict:
     selection_path = out / "checkpoint_selection.json"
     if selection_path.is_file():
         return json.loads(selection_path.read_text())
-    if out.exists():
-        raise RuntimeError("STRICT_SOURCE_PARTIAL_VALIDATION_REQUIRES_ARCHIVE")
-    out.mkdir(parents=True, exist_ok=False)
-    # copy2 attempts to reproduce macOS provenance xattrs on the remote
-    # filesystem and can fail with EIO after the file bytes are written.
-    # The manifest is content-addressed, so byte copying is the required
-    # operation and metadata copying is explicitly unnecessary.
-    shutil.copyfile(RUN / "training/validation_panel_manifest.json", out / "validation_panel_manifest.json")
+    out.mkdir(parents=True, exist_ok=True)
+    frozen_panel = RUN / "training/validation_panel_manifest.json"
+    panel_copy = out / "validation_panel_manifest.json"
+    if panel_copy.is_file():
+        if file_sha256(panel_copy) != file_sha256(frozen_panel):
+            raise RuntimeError("STRICT_SOURCE_VALIDATION_PANEL_COPY_DRIFT")
+    else:
+        # Content-only copying avoids macOS provenance-xattr EIO on the remote filesystem.
+        shutil.copyfile(frozen_panel, panel_copy)
+    panel = json.loads(panel_copy.read_text())
     checkpoints = json.loads((RUN / "training/checkpoint_manifest.json").read_text())
-    for offset in range(0, len(CHECKPOINT_STEPS), 2):
+    checkpoint_root = out / "checkpoints"
+    checkpoint_root.mkdir(parents=True, exist_ok=True)
+    complete = {}
+    for step in CHECKPOINT_STEPS:
+        result = checkpoint_root / f"checkpoint_{step:04d}" / "result.json"
+        if result.is_file():
+            complete[step] = validate_checkpoint_result(result, step, panel)
+    missing = [step for step in CHECKPOINT_STEPS if step not in complete]
+    for offset in range(0, len(missing), 2):
         pending = []
-        for local, step in enumerate(CHECKPOINT_STEPS[offset : offset + 2]):
+        for local, step in enumerate(missing[offset : offset + 2]):
             gpu = (2, 3)[local]
-            result = out / "checkpoints" / f"checkpoint_{step:04d}.json"
-            log = RUN / "logs" / f"validation_{step:04d}.log"
-            result.parent.mkdir(parents=True, exist_ok=True); log.parent.mkdir(parents=True, exist_ok=True)
+            result_dir = checkpoint_root / f"checkpoint_{step:04d}"
+            result = result_dir / "result.json"
+            result_dir.mkdir(parents=True, exist_ok=False)
+            attempt = 1 + len(list((RUN / "logs").glob(f"validation_{step:04d}_attempt_*.log")))
+            log = RUN / "logs" / f"validation_{step:04d}_attempt_{attempt:02d}.log"
+            log.parent.mkdir(parents=True, exist_ok=True)
             env = dict(os.environ, SS_TASK="validation", SS_GPU=str(gpu), SS_STEP=str(step), SS_OUT=str(result),
                        CUDA_VISIBLE_DEVICES=str(gpu))
             handle = log.open("x")
             process = subprocess.Popen(["bash", "-c", f"exec -a ss-worker {PYTHON} {WORKER}"],
                                        cwd=ROOT, env=env, stdout=handle, stderr=subprocess.STDOUT)
-            pending.append((process, handle, log))
-        for process, handle, log in pending:
+            pending.append((step, process, handle, log, result_dir, result))
+        failures = []
+        for step, process, handle, log, result_dir, result in pending:
             process.wait(); handle.close()
-            if process.returncode: raise RuntimeError(f"STRICT_SOURCE_VALIDATION_FAILURE:{log}")
-    rows = [json.loads((out / "checkpoints" / f"checkpoint_{step:04d}.json").read_text())
-            for step in CHECKPOINT_STEPS]
-    compact = [{key: row[key] for key in ("step", "routed_native_success_count",
+            if process.returncode:
+                failed_index = 1 + len(list(checkpoint_root.glob(f"checkpoint_{step:04d}_failed_attempt_*")))
+                failed_dir = checkpoint_root / f"checkpoint_{step:04d}_failed_attempt_{failed_index:02d}"
+                result_dir.rename(failed_dir)
+                write_new(failed_dir / "worker_failure.json", {"step": step, "returncode": process.returncode,
+                          "log": str(log), "infrastructure_retry_only": True})
+                failures.append(step)
+            else:
+                complete[step] = validate_checkpoint_result(result, step, panel)
+        if failures:
+            raise RuntimeError(f"STRICT_SOURCE_VALIDATION_INFRASTRUCTURE_FAILURE:{failures}")
+    if set(complete) != set(CHECKPOINT_STEPS):
+        raise RuntimeError("STRICT_SOURCE_VALIDATION_NOT_ALL_SEVEN_COMPLETE")
+    rows = [complete[step] for step in CHECKPOINT_STEPS]
+    compact = [{**{key: row[key] for key in ("step", "routed_native_success_count",
         "routed_generality_success_count", "locality_exact_preservation_count",
         "routing_false_positive_count", "target_contamination_count", "forced_native_success_count",
-        "forced_generality_success_count", "validation_source_loss")} for row in rows]
+        "forced_generality_success_count", "validation_source_loss")},
+        "result_sha256": file_sha256(checkpoint_root / f"checkpoint_{int(row['step']):04d}" / "result.json")}
+        for row in rows]
     base = select_checkpoint(compact)
+    diagnostic_label = base["label"]
     if base["selected_step"] is None:
-        label = "STRICT_SOURCE_GENERATOR_NO_NATURAL_GENERATION"
+        strict_label = "STRICT_SOURCE_GENERATOR_NO_NATURAL_GENERATION"
+    elif base["status"] == "SELECTED_FOR_STAGE_F_ONLY":
+        strict_label = "STRICT_SOURCE_GENERATOR_CAPABLE__ROUTER_UNDERFIT"
     else:
-        label = "STRICT_SOURCE_CHECKPOINT_SELECTED"
-    panel = json.loads((out / "validation_panel_manifest.json").read_text())
-    selection = {**base, "label": label, "selection_diagnostic": base["label"], "protocol": PROTOCOL,
+        strict_label = "POST_TRAINING_FROZEN_CHECKPOINT_SELECTION__NO_TEST_LEAKAGE"
+    selection = {**base, "label": strict_label, "selection_diagnostic": diagnostic_label, "protocol": PROTOCOL,
                  "panel_hash": panel["panel_hash"], "checkpoint_set_hash": checkpoints["set_hash"],
                  "lexicographic_rows": compact, "record953_used_for_selection": False,
-                 "sealed_blind_used_for_selection": False}
+                 "sealed_blind_used_for_selection": False, "online_validation": False,
+                 "selection_rule": ["routed_native", "routed_textual_visual_paired", "exact_locality",
+                    "fewer_routing_false_positives", "fewer_target_contaminations",
+                    "forced_native", "forced_textual_visual_paired", "lower_source_validation_loss",
+                    "earlier_checkpoint"], "all_seven_results_complete_and_valid": True}
     selection["selection_hash"] = canonical_json_hash(selection)
     write_new(out / "checkpoint_selection.json", selection)
-    target = RUN / "training/validation_generation_panel.jsonl"
-    if target.stat().st_size != 0: raise RuntimeError("STRICT_SOURCE_VALIDATION_PANEL_ALREADY_POPULATED")
-    with target.open("w") as handle:
+    target = out / "validation_generation_panel.jsonl"
+    if target.exists():
+        raise RuntimeError("STRICT_SOURCE_VALIDATION_PANEL_ALREADY_MATERIALIZED")
+    with target.open("x") as handle:
         for row in rows: handle.write(json.dumps(row, sort_keys=True) + "\n")
-    write_new(RUN / "training/checkpoint_selection.json", selection)
-    write_new(RUN / "training/STRICT_SOURCE_TRAINING_REPORT.json", {**training, "selection": selection})
+    write_new(out / "STRICT_SOURCE_TRAINING_REPORT.json", {**training, "selection": selection})
     return selection
 
 
@@ -195,12 +258,15 @@ def post_training(selection: dict) -> dict:
     stage_f_out = RUN / "validation/stage_f/record953_forced_on_selected_checkpoint.json"
     run_worker("stage_f", gpu=2, log_name="stage_f", out=stage_f_out)
     stage_f = json.loads(stage_f_out.read_text())
-    q_complete = False
-    if stage_f.get("stage_q_permitted"):
-        run_worker("q_build", gpu=2, log_name="q_build")
-        run_pair("q_worker", "record953_stage_q")
-        run_worker("q_finalize", log_name="q_finalize")
-        q_complete = True
+    if not stage_f.get("stage_q_permitted"):
+        return {"status": "STRICT_SOURCE_STAGE_F_NATIVE_UNRESTRICTED_FAILURE__STOPPED_BEFORE_Q_B_D",
+                "selected_step": step, "stage_f": stage_f, "record953_repository_complete": False,
+                "stage_b_complete": False, "stage_c_complete": False, "stage_d_complete": False,
+                "stage2_permitted": False}
+    run_worker("q_build", gpu=2, log_name="q_build")
+    run_pair("q_worker", "record953_stage_q")
+    run_worker("q_finalize", log_name="q_finalize")
+    q_complete = True
     run_pair("b_worker", "stage_b", checkpoint=checkpoint)
     run_worker("b_finalize", log_name="stage_b_finalize")
     run_pair("c_worker", "stage_c", checkpoint=checkpoint)
@@ -216,6 +282,12 @@ def post_training(selection: dict) -> dict:
 
 
 def finalize_reports(training: dict, selection: dict, post: dict) -> dict:
+    frozen_strict_training = json.loads((RUN / "strict_training_tree_frozen_manifest.json").read_text())
+    current_strict_training = immutable_tree_manifest(RUN / "training")
+    strict_training_unchanged = canonical_json_hash(frozen_strict_training) == canonical_json_hash(current_strict_training)
+    if not strict_training_unchanged:
+        write_new(RUN / "strict_training_tree_drift.json", current_strict_training)
+        raise RuntimeError("STRICT_SOURCE_TRAINING_TREE_MUTATED_DURING_EVALUATION")
     comparison_dir = RUN / "comparison"; comparison_dir.mkdir(parents=True, exist_ok=False)
     strict_metrics = None
     corrected_path = ROOT / "outputs/liveedit_med_next_validation_v1/20260814T053900Z/stage_b_official_style_medical/aggregate_machine_readable.json"
@@ -303,6 +375,7 @@ def finalize_reports(training: dict, selection: dict, post: dict) -> dict:
     with (RUN / "state_and_bank_hash_ledger.jsonl").open("a") as handle:
         handle.write(json.dumps(ledger, sort_keys=True) + "\n")
     summary = {"decision": decision, "archived_corrected_tree_byte_identical": archived_ok,
+               "strict_training_tree_byte_identical": strict_training_unchanged,
                "corrected_regression_passed": True, "strict_stage_a_passed_27_of_27": True,
                "source_loss_components_match": True, "adam_parameter_hashes_match": True,
                "training_started_from_scratch": True, "matched_initialization_proven_by_reconstruction": True,

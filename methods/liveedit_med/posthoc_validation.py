@@ -135,6 +135,7 @@ def checkpoint_score(row: Mapping[str, Any]) -> tuple[Any, ...]:
     return (int(row["routed_native_success_count"]), int(row["routed_generality_success_count"]),
             int(row["locality_exact_preservation_count"]), -int(row["routing_false_positive_count"]),
             -int(row["target_contamination_count"]), int(row["forced_native_success_count"]),
+            int(row["forced_generality_success_count"]),
             -float(row["validation_source_loss"]), -int(row["step"]))
 
 
@@ -146,13 +147,10 @@ def select_checkpoint(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     if forced == 0:
         return {"status": "STOP", "label": "LIVEEDIT_SHARED_GENERATOR_NO_NATURAL_GENERATION_ON_VALIDATION",
                 "selected_step": None, "stage_f_permitted": False}
+    best = max(rows, key=checkpoint_score)
     if routed == 0:
-        best = max(rows, key=lambda row: (int(row["forced_native_success_count"]),
-                    int(row["forced_generality_success_count"]), int(row["locality_exact_preservation_count"]),
-                    -float(row["validation_source_loss"]), -int(row["step"])))
         return {"status": "SELECTED_FOR_STAGE_F_ONLY", "label": "GENERATOR_CAPABLE__ROUTER_UNDERFIT",
                 "selected_step": int(best["step"]), "stage_f_permitted": True}
-    best = max(rows, key=checkpoint_score)
     return {"status": "SELECTED", "label": "LIVEEDIT_POSTHOC_VALIDATION_CHECKPOINT_SELECTED",
             "selected_step": int(best["step"]), "stage_f_permitted": True}
 

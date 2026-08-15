@@ -246,3 +246,14 @@ def test_50_stage_q_uses_stable_hash_not_similarity():
 def test_51_stage_q_pass_contract_is_strict():
     positive={name:True for name in ("native","textual","visual","paired")}
     assert all(positive.values()) and 40==40 and 10==10
+
+
+def test_52_posthoc_selection_uses_forced_generality_tiebreak():
+    rows=[]
+    for step in (500,1000,1500,2000,2500,3000,3200):
+        rows.append({"step":step,"routed_native_success_count":1,"routed_generality_success_count":1,
+            "locality_exact_preservation_count":16,"routing_false_positive_count":0,
+            "target_contamination_count":0,"forced_native_success_count":1,
+            "forced_generality_success_count":int(step==3000),"validation_source_loss":1.0})
+    result=select_checkpoint(rows)
+    assert result["selected_step"]==3000
