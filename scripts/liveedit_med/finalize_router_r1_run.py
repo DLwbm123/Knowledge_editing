@@ -90,6 +90,7 @@ def main() -> None:
     parser.add_argument("--heldout-result", type=Path)
     parser.add_argument("--reproducibility", type=Path)
     parser.add_argument("--record953-result", type=Path)
+    parser.add_argument("--source-commit")
     args = parser.parse_args()
     selection = json.loads((args.run_dir / "validation/checkpoint_selection.json").read_text())
     training = json.loads((args.run_dir / "training/checkpoint_manifest.json").read_text())
@@ -152,6 +153,7 @@ def main() -> None:
         "clinical_failures_zero": checks.get("clinical_failures_zero"),
         "fixed_locality_exact_s0": checks.get("fixed_locality_100pct"),
         "reload_fresh_replay_rollback": reproducibility,
+        "source_only_commit": args.source_commit,
         "blind_evaluation_permitted_next": passed and all(checks.values()),
         "UNOPENED_BY_EDITED_LIVEEDIT": True, "stage2_permitted": False}
     write(args.run_dir / "router_r1_summary.json", summary)
@@ -162,13 +164,14 @@ def main() -> None:
         "selected_checkpoint": selected, "record953_scope": "DEVELOPMENT_REGRESSION_ONLY",
         "blind_set_opened": False, "UNOPENED_BY_EDITED_LIVEEDIT": True,
         "blind_evaluation_permitted_next": summary["blind_evaluation_permitted_next"],
-        "stage2_permitted": False, "source_only_commit": None}
+        "stage2_permitted": False, "source_only_commit": args.source_commit}
     write(args.run_dir / "run_manifest.json", run_manifest)
     lines = ["# LiveEdit-Med Router-Only Domain Adaptation R1", "",
         f"- Strict-source checkpoint 3200 resolved and frozen: **Yes** (`{anchor['checkpoint_tensor_hash']}`)",
         "- Generator/expert hashes unchanged: **Yes**", "- Trained parameters: **edit_extractor, input_extractor**",
         f"- Training: **{training['optimizer_steps']}/640 steps**", f"- Eligible validation checkpoint: **{'Yes' if selected else 'No'}**",
         f"- Selected checkpoint: **{selected}**", f"- Primary label: `{primary}`",
+        f"- Source-only commit: `{args.source_commit}`",
         f"- Blind evaluation permitted next: **{'Yes' if summary['blind_evaluation_permitted_next'] else 'No'}**",
         "- Stage-2 permitted: **No**", "- Sealed blind set opened: **No**"]
     if held_metrics:

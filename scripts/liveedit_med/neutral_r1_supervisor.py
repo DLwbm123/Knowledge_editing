@@ -154,9 +154,10 @@ def run() -> None:
     for path in validation_results: select_args += ["--result",path]
     call_main(select_router_r1_checkpoint,[*select_args,"--out-dir",RUN/"validation"])
     selection=json.loads((RUN/"validation/checkpoint_selection.json").read_text())
+    source_commit=(N/"k").read_text().strip()
     if selection.get("selected_step") is None:
         from scripts.liveedit_med import finalize_router_r1_run
-        call_main(finalize_router_r1_run,["--run-dir",RUN])
+        call_main(finalize_router_r1_run,["--run-dir",RUN,"--source-commit",source_commit])
         log("supervisor_complete",primary_label="ROUTER_ADAPTATION_NO_ELIGIBLE_VALIDATION_CHECKPOINT")
         return
 
@@ -183,7 +184,7 @@ def run() -> None:
     record_process=launch("record953_regression",2,0,"record953_regression",R1_STEP=step,R1_OUT=regression)
     wait_pair([("record953_regression",record_process,regression)])
     call_main(finalize_router_r1_run,["--run-dir",RUN,"--heldout-result",heldout,"--reproducibility",repro,
-        "--record953-result",regression])
+        "--record953-result",regression,"--source-commit",source_commit])
     summary=json.loads((RUN/"router_r1_summary.json").read_text())
     log("supervisor_complete",primary_label=summary["primary_label"])
 
