@@ -275,13 +275,10 @@ inference_continuation: official_layer21_output_hook_then_layer22
                 target_tensor = get_regular(rid)
                 native_row = variant(target_tensor, "native", model.lm_device)
                 semantic_row = variant(target_tensor, semantic, model.lm_device)
-                if negative in ("same_image_different_question", "same_question_different_image"):
-                    hard_entry = hard[("train", rid)]
-                    hard_tensor = hard_cache.setdefault(rid, load_file(hard_entry["file_path"], device="cpu"))
-                    negative_row = variant(hard_tensor, negative, model.lm_device)
-                else:
-                    other_id = nearest[rid]["chosen"][negative]
-                    negative_row = variant(get_regular(other_id), "native", model.lm_device)
+                hard_entry = hard[("train", rid)]
+                if rid not in hard_cache:
+                    hard_cache[rid] = load_file(hard_entry["file_path"], device="cpu")
+                negative_row = variant(hard_cache[rid], negative, model.lm_device)
                 locality_row = variant(target_tensor, "image_locality", model.lm_device)
                 target_rows.append((native_row, semantic_row, negative_row, locality_row, begin_repo, begin_repo + size))
             eqrs = torch.cat(all_eqr); evrs = torch.cat(all_evr)

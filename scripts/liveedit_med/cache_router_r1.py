@@ -201,6 +201,13 @@ def finalize(args: argparse.Namespace) -> None:
             raise RuntimeError(f"ROUTER_R1_CACHE_PARITY_FAILURE:{split}:{len(rows)}")
         splits[split] = rows
         records.extend({**row, "split": split} for row in rows)
+    positive_eqkeys: dict[str, set[tuple[str, str]]] = {}
+    for row in records:
+        for item in row["inputs"]:
+            if item["category"] in ("native", "textual", "visual", "paired"):
+                positive_eqkeys.setdefault(item["eqkey"], set()).add((row["split"], row["record_id"]))
+    if any(len(owners) > 1 for owners in positive_eqkeys.values()):
+        raise RuntimeError("ROUTER_ADAPTATION_INVALID_ENGINEERING_RUN:positive_eqkey_duplicate")
     representation = {"protocol": PROTOCOL, "kind": "representation_cache", "counts": expected,
                       "splits": splits, "clean_base_state": "S0", "layer": 21,
                       "dtype": "float16_storage_float32_router", "record953_used": False,

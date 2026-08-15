@@ -97,18 +97,23 @@ def negative_samples(record, source_by_id, nearest_row):
     chosen = nearest_row["chosen"]
     other_text = native_sample(source_by_id[chosen["same_image_different_question"]])
     other_visual = native_sample(source_by_id[chosen["same_question_different_image"]])
+    visual_near = native_sample(source_by_id[chosen["visual_nearest"]])
+    text_near = native_sample(source_by_id[chosen["text_nearest"]])
+    joint_image = native_sample(source_by_id[chosen["joint_near_miss_image"]])
+    joint_question = native_sample(source_by_id[chosen["joint_near_miss_question"]])
     return {
         "same_image_different_question": {"image": native["image"], "prompt": other_text["prompt"], "target": native["target"]},
         "same_question_different_image": {"image": other_visual["image"], "prompt": native["prompt"], "target": native["target"]},
-        "visual_nearest": native_sample(source_by_id[chosen["visual_nearest"]]),
-        "text_nearest": native_sample(source_by_id[chosen["text_nearest"]]),
-        "joint_near_miss": native_sample(source_by_id[chosen["joint_near_miss"]]),
+        "visual_nearest": {"image": native["image"], "prompt": visual_near["prompt"], "target": native["target"]},
+        "text_nearest": {"image": text_near["image"], "prompt": native["prompt"], "target": native["target"]},
+        "joint_near_miss": {"image": joint_image["image"], "prompt": joint_question["prompt"], "target": native["target"]},
         "image_locality": record["locality"]["image_or_paired"][0],
     }
 
 
 def clean_for_negative(category, rid, regular, hard, nearest_row):
-    if category in ("same_image_different_question", "same_question_different_image"):
+    if category in ("same_image_different_question", "same_question_different_image",
+                    "visual_nearest", "text_nearest", "joint_near_miss"):
         return compact_clean(find_input(hard[(rid)], category))
     if category == "image_locality":
         return compact_clean(find_input(regular[rid], "image_locality"))
@@ -179,13 +184,10 @@ def worker(args: argparse.Namespace) -> None:
                     sample["target"] if name == "image_locality" else clean["raw_output"])
                 contamination = bool(normalize_answer(native_sample(record)["target"])
                     and normalize_answer(native_sample(record)["target"]) in normalize_answer(generation["raw_output"]))
-                cached_entry = (find_input(hard[rid], name) if name in ("same_image_different_question", "same_question_different_image")
-                    else find_input(regular[rid], "image_locality") if name == "image_locality"
-                    else find_input(regular[nearest[rid]["chosen"][name]], "native"))
-                cached_tensors = load_file((hard[rid] if name in ("same_image_different_question", "same_question_different_image")
-                    else regular[rid] if name == "image_locality" else regular[nearest[rid]["chosen"][name]])["file_path"], device="cpu")
-                cache_category = name if name in ("same_image_different_question", "same_question_different_image") else (
-                    "image_locality" if name == "image_locality" else "native")
+                is_hard = name in ("same_image_different_question", "same_question_different_image",
+                                   "visual_nearest", "text_nearest", "joint_near_miss")
+                cached_tensors = load_file((hard[rid] if is_hard else regular[rid])["file_path"], device="cpu")
+                cache_category = name if is_hard else "image_locality"
                 cache_row = variant(cached_tensors, cache_category, model.lm_device)
                 routed_logits, routed_labels, route, norms = routed_tf(model, block, modules, sample, repo)
                 positions = torch.where(routed_labels[0].ne(-100))[0] - 1

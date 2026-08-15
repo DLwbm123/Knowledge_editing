@@ -94,23 +94,28 @@ def main() -> None:
             filtered = {name: [other for other in values if valid(other)] for name, values in ranks.items()}
             same_image = next(other for other in ranks["text"] if valid(other, need_question=True))
             same_question = next(other for other in ranks["visual"] if valid(other, need_image=True))
-            visual_nearest = filtered["visual"][0]
-            text_nearest = next(other for other in filtered["text"] if other != visual_nearest)
-            joint_near_miss = next(other for other in filtered["joint"]
-                                   if other not in {visual_nearest, text_nearest})
+            used = {same_image, same_question}
+            visual_nearest = next(other for other in filtered["visual"] if other not in used); used.add(visual_nearest)
+            text_nearest = next(other for other in filtered["text"] if other not in used); used.add(text_nearest)
+            joint_image = next(other for other in filtered["joint"] if other not in used); used.add(joint_image)
+            joint_question = next(other for other in filtered["joint"] if other not in used)
             chosen = {
                 "same_image_different_question": same_image,
                 "same_question_different_image": same_question,
                 "visual_nearest": visual_nearest,
                 "text_nearest": text_nearest,
-                "joint_near_miss": joint_near_miss,
+                "joint_near_miss_image": joint_image,
+                "joint_near_miss_question": joint_question,
             }
             nearest[rid] = {"split": split, "visual": filtered["visual"],
                             "text": filtered["text"], "joint": filtered["joint"], "chosen": chosen}
             native_eq = next(item["eqkey"] for item in entries[index]["inputs"] if item["category"] == "native")
             eq_rows.append({"split": split, "record_id": rid, "category": "native_positive",
                             "eqkey": native_eq, "disposition": "KEPT_POSITIVE"})
-            for category, other_id in chosen.items():
+            ledger_choices = {name: chosen[name] for name in ("same_image_different_question",
+                "same_question_different_image", "visual_nearest", "text_nearest")}
+            ledger_choices["joint_near_miss"] = f"{joint_image}|{joint_question}"
+            for category, other_id in ledger_choices.items():
                 hard_rows.append({"split": split, "record_id": rid, "category": category,
                                   "other_record_id": other_id, "target_distinct": True,
                                   "clean_s0_only": True, "eqkey": "PENDING_CROSS_INPUT_CACHE",

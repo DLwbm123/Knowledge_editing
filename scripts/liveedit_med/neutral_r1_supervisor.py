@@ -75,15 +75,13 @@ def update_eqkeys() -> None:
     regular_map = {(split, str(row["record_id"])): row for split in ("train","validation","heldout")
                    for row in regular["splits"][split]}
     hard_map = {(row["split"], str(row["record_id"])): row for row in hard["records"]}
-    hard_categories = {"same_image_different_question", "same_question_different_image"}
+    hard_categories = {"same_image_different_question", "same_question_different_image",
+                       "visual_nearest", "text_nearest", "joint_near_miss"}
     for row in rows:
         key = (row["split"], row["record_id"]); category = row["category"]
         if category in hard_categories:
             item = next(value for value in hard_map[key]["inputs"] if value["category"] == category)
             row["eqkey"] = item["eqkey"]
-        elif category in {"visual_nearest", "text_nearest", "joint_near_miss"}:
-            other = regular_map[(row["split"], row["other_record_id"])]
-            row["eqkey"] = next(value["eqkey"] for value in other["inputs"] if value["category"] == "native")
     with ledger.open("w", newline="") as handle:
         writer=csv.DictWriter(handle,fieldnames=list(rows[0]));writer.writeheader();writer.writerows(rows)
 

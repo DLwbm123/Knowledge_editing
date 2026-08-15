@@ -52,18 +52,31 @@ def worker(args: argparse.Namespace) -> None:
             chosen = nearest[rid]["chosen"]
             text_other = native_sample(by_id[chosen["same_image_different_question"]])
             visual_other = native_sample(by_id[chosen["same_question_different_image"]])
+            visual_near = native_sample(by_id[chosen["visual_nearest"]])
+            text_near = native_sample(by_id[chosen["text_nearest"]])
+            joint_image = native_sample(by_id[chosen["joint_near_miss_image"]])
+            joint_question = native_sample(by_id[chosen["joint_near_miss_question"]])
             samples = {
                 "same_image_different_question": {
                     "image": native["image"], "prompt": text_other["prompt"], "target": native["target"]},
                 "same_question_different_image": {
                     "image": visual_other["image"], "prompt": native["prompt"], "target": native["target"]},
+                "visual_nearest": {
+                    "image": native["image"], "prompt": visual_near["prompt"], "target": native["target"]},
+                "text_nearest": {
+                    "image": text_near["image"], "prompt": native["prompt"], "target": native["target"]},
+                "joint_near_miss": {
+                    "image": joint_image["image"], "prompt": joint_question["prompt"], "target": native["target"]},
             }
             tensors = {}
             metadata = []
             positive_eq = next(item["eqkey"] for item in next(
                 row for row in args.regular_manifest_data["splits"][split] if str(row["record_id"]) == rid)["inputs"]
                 if item["category"] == "native")
-            seen = {positive_eq}
+            all_positive_eq = {item["eqkey"] for split_rows in args.regular_manifest_data["splits"].values()
+                               for source_row in split_rows for item in source_row["inputs"]
+                               if item["category"] in ("native", "textual", "visual", "paired")}
+            seen = set(all_positive_eq)
             for category, sample in samples.items():
                 captured = capture(model, block, sample)
                 tensor_prefix(tensors, category, captured)
@@ -88,8 +101,7 @@ def worker(args: argparse.Namespace) -> None:
             rows.append({"split": split, "ordinal": ordinal, "record_id": rid,
                 "file": path.name, "file_path": str(path.resolve()), "file_sha256": sha256_file(path),
                 "tensor_hashes": tensor_hashes(tensors), "inputs": metadata,
-                "reference_native_negatives": {category: chosen[category]
-                    for category in ("visual_nearest", "text_nearest", "joint_near_miss")}})
+                "construction_sources": chosen})
             print(json.dumps({"event": "hard_cache", "worker": args.worker_index, "split": split,
                               "record_id": rid, "complete": len(rows)}), flush=True)
     manifest = {"protocol": PROTOCOL, "kind": "hard_negative_cache_shard",
@@ -111,8 +123,18 @@ def finalize(args: argparse.Namespace) -> None:
     expected = 512 + 64 + 64
     if len(rows) != expected or len({(row["split"], row["record_id"]) for row in rows}) != expected:
         raise RuntimeError(f"ROUTER_R1_CACHE_PARITY_FAILURE:hard_count:{len(rows)}")
+    eqkeys = [(row["split"], row["record_id"], item["category"], item["eqkey"])
+              for row in rows for item in row["inputs"]]
+    classes = {}
+    for split, record_id, category, eqkey in eqkeys:
+        row = classes.setdefault(eqkey, {"splits": set(), "provenance": []})
+        row["splits"].add(split); row["provenance"].append({"split": split, "record_id": record_id, "category": category})
+    if any(len(row["splits"]) > 1 for row in classes.values()):
+        raise RuntimeError("ROUTER_ADAPTATION_INVALID_ENGINEERING_RUN:hard_negative_cross_split_eqkey")
     output = {"protocol": PROTOCOL, "kind": "hard_negative_cache", "count": len(rows),
               "records": sorted(rows, key=lambda row: (row["split"], int(row["ordinal"]))),
+              "equivalence_classes": {key: {"split": next(iter(value["splits"])),
+                  "provenance": value["provenance"]} for key, value in classes.items()},
               "clean_s0_only": True, "record953_used": False, "blind_loaded": False}
     args.out.write_text(json.dumps(output, indent=2, sort_keys=True) + "\n")
 
