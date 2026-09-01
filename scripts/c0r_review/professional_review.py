@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Mechanically normalize private professional-review rows into C0R verdicts."""
 
+import collections
+import random
 import re
 
 from launch_local_review_fast import PRESETS
+from resolve_authorized_images import outcome
 
 
 REVIEW_ID = re.compile(r"^target_review_[0-9]{4}$")
@@ -48,3 +51,43 @@ def normalize_rows(rows, expected_count=200):
     if len({row["review_id"] for row in verdicts}) != expected_count:
         raise ValueError("duplicate review_id")
     return verdicts
+
+
+def compare_pilot_overlap(pilot_rows, expert_rows):
+    expert = {row["review_id"]: row for row in expert_rows}
+    fields = ("valid", "confidence", "relation", "issue_type", "recommended_action", "reason")
+    structured = []
+    outcome_conflicts = []
+    for pilot in pilot_rows:
+        current = expert.get(pilot["review_id"])
+        if current is None or any(pilot[key] != current[key] for key in fields):
+            structured.append(pilot["review_id"])
+        if current is None or outcome(pilot) != outcome(current):
+            outcome_conflicts.append(pilot["review_id"])
+    return {"overlap": len(pilot_rows), "structured_difference_ids": structured, "outcome_conflict_ids": outcome_conflicts}
+
+
+def build_blind_reviewer_b_selection(focus_ids, verdicts, dataset_by_id, selection_seed, queue_seed, control_count=20):
+    known = {row["review_id"] for row in verdicts}
+    if not set(focus_ids) <= known or known != set(dataset_by_id):
+        raise ValueError("reviewer B bindings changed")
+    mandatory = set(focus_ids)
+    mandatory.update(row["review_id"] for row in verdicts if outcome(row) != "VALID" or row["confidence"] != "high")
+    groups = collections.defaultdict(list)
+    for row in verdicts:
+        rid = row["review_id"]
+        if rid not in mandatory and outcome(row) == "VALID" and row["confidence"] == "high":
+            groups[dataset_by_id[rid]].append(rid)
+    rng = random.Random(selection_seed)
+    for group in groups.values():
+        rng.shuffle(group)
+    controls = []
+    while len(controls) < control_count and any(groups.values()):
+        for key in sorted(groups):
+            if groups[key] and len(controls) < control_count:
+                controls.append(groups[key].pop())
+    if len(controls) != control_count:
+        raise ValueError("insufficient high-valid controls")
+    queue = sorted(mandatory | set(controls))
+    random.Random(queue_seed).shuffle(queue)
+    return {"mandatory_ids": sorted(mandatory), "control_ids": controls, "queue": queue}

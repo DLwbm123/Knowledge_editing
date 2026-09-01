@@ -1,0 +1,37 @@
+{
+  "status": "M3BENCH_C0R_REVIEWER_A_FROZEN__REVIEWER_B_QUEUE_READY_NOT_STARTED",
+  "reviewer_a": {
+    "records": 200,
+    "valid": 189,
+    "confirmed_invalid": 10,
+    "unresolved": 1,
+    "image_bindings_verified": 200
+  },
+  "preserved_pilot": {
+    "records": 5,
+    "structured_differences": 1,
+    "outcome_conflicts": 0,
+    "overwritten": false,
+    "role": "NONAUTHORITATIVE_PILOT"
+  },
+  "reviewer_b": {
+    "queue_records": 53,
+    "controls": 20,
+    "priority_items_included_blinded": 3,
+    "started": false
+  },
+  "tests": {
+    "passed": 13,
+    "total": 13
+  },
+  "security": {
+    "source_images_copied_by_import": 0,
+    "source_images_in_public_branch": 0,
+    "item_level_outputs_in_public_branch": 0,
+    "gpu_started_by_import": false,
+    "judge_started": false,
+    "evaluator_started": false,
+    "metrics_computed": false,
+    "unblinding_started": false
+  }
+}

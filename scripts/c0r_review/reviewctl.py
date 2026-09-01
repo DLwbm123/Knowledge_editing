@@ -35,6 +35,7 @@ def layout(run_root=None):
         "session": review / "sessions/Reviewer_A/REVIEW_SESSION_MANIFEST.json",
         "roots": review / "sessions/Reviewer_A/DATASET_ROOTS.json",
         "output": review / "sessions/Reviewer_A/REVIEWER_A_OUTPUT.jsonl",
+        "active_output": review / "sessions/Reviewer_A/ACTIVE_REVIEWER_A_OUTPUT.json",
         "events": review / "sessions/Reviewer_A/SESSION_EVENTS.jsonl",
         "amendment": review / "tooling_amendments/FAST_REVIEW_UI_V1/TOOLING_AMENDMENT.json",
         "state": review / "local_console/private_state",
@@ -45,12 +46,24 @@ def load(path):
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
+def active_artifact(paths, key, fallback):
+    if not paths["active_output"].exists():
+        return fallback
+    relative = load(paths["active_output"])[key]
+    review_root = paths["review"].resolve(strict=True)
+    target = (review_root / relative).resolve(strict=True)
+    if not target.is_relative_to(review_root):
+        raise ValueError("active Reviewer A artifact escaped review root")
+    return target
+
+
 def verdict_rows(paths):
-    if not paths["output"].exists():
+    output = active_artifact(paths, "output", paths["output"])
+    if not output.exists():
         return []
-    if not verify_chain(paths["output"]):
+    if not verify_chain(output):
         raise ValueError("output hash chain failure")
-    rows = load_jsonl(paths["output"])
+    rows = load_jsonl(output)
     if len({row["review_id"] for row in rows}) != len(rows):
         raise ValueError("duplicate active verdicts")
     return rows
@@ -82,7 +95,7 @@ def verify_environment(paths, images=True):
         "images_exact": image_report["image_hashes_exact"],
         "verdict_count": len(rows),
         "unique_verdicts": len({row["review_id"] for row in rows}),
-        "output_chain": "PASS" if not rows or verify_chain(paths["output"]) else "FAIL",
+        "output_chain": "PASS" if not rows or verify_chain(active_artifact(paths, "output", paths["output"])) else "FAIL",
         "server_pid_owned": pid_matches(paths, read_pid(paths)) if read_pid(paths) else True,
     }
 
@@ -152,7 +165,7 @@ def status(paths):
         "remaining": 200 - len(rows),
         "flagged": sum(rid not in done for rid in flag_counts(paths["events"])),
         **counts(rows),
-        "hash_chain": "PASS" if not rows or verify_chain(paths["output"]) else "FAIL",
+        "hash_chain": "PASS" if not rows or verify_chain(active_artifact(paths, "output", paths["output"])) else "FAIL",
         "last_committed_review_id": rows[-1]["review_id"] if rows else None,
         "session_id": session["session_id"],
     }
@@ -240,6 +253,10 @@ def validate_freeze_rows(rows):
 
 
 def freeze(paths):
+    if paths["active_output"].exists():
+        frozen = active_artifact(paths, "freeze_manifest", paths["session"].parent / "REVIEWER_A_FREEZE_MANIFEST.json")
+        if frozen.exists():
+            return load(frozen)
     current = status(paths)
     if current["completed"] != 200:
         raise RuntimeError("freeze requires 200 unique verdicts")
@@ -247,7 +264,8 @@ def freeze(paths):
         stop(paths)
     report = verify_environment(paths, images=True); rows = verdict_rows(paths)
     validate_freeze_rows(rows)
-    output_hash = sha256_file(paths["output"]); session_dir = paths["session"].parent
+    output_path = active_artifact(paths, "output", paths["output"])
+    output_hash = sha256_file(output_path); session_dir = paths["session"].parent
     manifest = {"status": "PASS", "records": 200, "unique_review_ids": 200, "missing": 0, "duplicates": 0, "output_sha256": output_hash, "unresolved": counts(rows)["unresolved"], "package_hash": report["package_hash"], "input_hash": report["input_hash"], "order_hash": report["order_hash"], "image_export_count": 0}
     atomic_new(session_dir / "REVIEWER_A_FREEZE_MANIFEST.json", (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode())
     atomic_new(session_dir / "REVIEWER_A_FREEZE_REPORT.md", (f"# Reviewer A freeze\n\nStatus: PASS\n\n- Records: 200\n- Unresolved: {manifest['unresolved']}\n- Image exports: 0\n").encode())
@@ -257,7 +275,8 @@ def freeze(paths):
 
 def build_b(paths, selection_input=None):
     session_dir = paths["session"].parent
-    if not (session_dir / "REVIEWER_A_FREEZE_MANIFEST.json").exists():
+    freeze_manifest = active_artifact(paths, "freeze_manifest", session_dir / "REVIEWER_A_FREEZE_MANIFEST.json")
+    if not freeze_manifest.exists():
         raise RuntimeError("Reviewer A must be frozen first")
     source = Path(selection_input) if selection_input else paths["review"] / "private/REVIEWER_B_SELECTION_INPUT.json"
     if not source.exists():
