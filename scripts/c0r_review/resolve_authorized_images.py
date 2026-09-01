@@ -122,9 +122,40 @@ def verify_chain(path):
     return True
 
 
+def flag_counts(path):
+    counts = {}
+    if not Path(path).exists():
+        return counts
+    if not verify_chain(path):
+        raise ValueError("event hash chain failure")
+    for row in load_jsonl(path):
+        if row.get("event") == "flagged_for_later":
+            counts[row["review_id"]] = counts.get(row["review_id"], 0) + 1
+    return counts
+
+
+def remaining_order(base_order, completed, event_path):
+    remaining = [rid for rid in base_order if rid not in completed]
+    if not Path(event_path).exists():
+        return remaining
+    first_flag = {}
+    for index, row in enumerate(load_jsonl(event_path)):
+        if row.get("event") == "flagged_for_later":
+            first_flag.setdefault(row["review_id"], index)
+    return [rid for rid in remaining if rid not in first_flag] + sorted(
+        (rid for rid in remaining if rid in first_flag), key=first_flag.get
+    )
+
+
+def outcome(row):
+    if row.get("recommended_action") == "manual_review" or row.get("confidence") == "low" or row.get("relation") == "ambiguous":
+        return "UNRESOLVED"
+    return "VALID" if row.get("valid") else "CONFIRMED_INVALID"
+
+
 def build_reviewer_b_queue(focus_ids, a_verdicts, controls, seed):
     selected = set(focus_ids)
-    selected.update(row["review_id"] for row in a_verdicts if not row.get("valid") or row.get("confidence") != "high")
+    selected.update(row["review_id"] for row in a_verdicts if outcome(row) != "VALID" or row.get("confidence") != "high")
     selected.update(controls[:20])
     queue = sorted(selected)
     random.Random(seed).shuffle(queue)

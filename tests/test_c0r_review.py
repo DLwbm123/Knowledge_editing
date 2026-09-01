@@ -15,7 +15,7 @@ spec.loader.exec_module(resolver)
 
 
 def context():
-    return json.load(open(os.environ["C0R_TEST_CONTEXT"], encoding="utf-8"))
+    return json.loads(Path(os.environ["C0R_TEST_CONTEXT"]).read_text(encoding="utf-8"))
 
 
 class C0RReviewTests(unittest.TestCase):
@@ -33,7 +33,7 @@ class C0RReviewTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d); (root / "x.jpg").write_bytes(b"x")
             item = {"review_id":"x", "source_dataset_identifier":"D", "dataset_relative_image_id_or_path":"x.jpg", "image_sha256":resolver.sha256_file(root / "x.jpg")}
-            self.assertEqual(resolver.resolve_item(item, {"D":root.resolve()}), root / "x.jpg")
+            self.assertEqual(resolver.resolve_item(item, {"D":root.resolve()}), (root / "x.jpg").resolve())
             item["dataset_relative_image_id_or_path"] = "../x.jpg"
             with self.assertRaises(ValueError): resolver.resolve_item(item, {"D":root.resolve()})
 
