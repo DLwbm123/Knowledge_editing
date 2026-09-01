@@ -33,6 +33,11 @@ class FastReviewTests(unittest.TestCase):
         self.assertIn('id="submit" type="submit" disabled', page)
         self.assertNotIn(" checked", page)
 
+    def test_preset_json_is_valid_inline_javascript(self):
+        page = self.sample_page()
+        self.assertIn('const PRESETS={"1":', page)
+        self.assertNotIn("&quot;", page)
+
     def test_enter_without_selection_does_not_submit(self):
         self.assertIn("if(!preset.value)return false", self.sample_page())
 

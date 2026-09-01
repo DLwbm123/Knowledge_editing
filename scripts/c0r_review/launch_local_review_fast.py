@@ -79,7 +79,7 @@ def page(item, completed, total, flagged, token):
     rid = html.escape(item["review_id"])
     question = html.escape(item["question"])
     target = html.escape(item["target_reference"])
-    presets = html.escape(json.dumps(PRESETS, separators=(",", ":")))
+    presets = json.dumps(PRESETS, separators=(",", ":")).replace("<", "\\u003c")
     return f"""<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Fast local review</title>
 <style>
 body{{max-width:1200px;margin:1rem auto;padding:0 1rem;font:18px system-ui;background:#111;color:#eee}}.health,.progress,.keys{{position:sticky;top:0;background:#1b1b1b;padding:.65rem;z-index:2}}.health{{color:#7ee787}}.image{{height:58vh;display:flex;align-items:center;justify-content:center;overflow:auto;background:#000}}img{{max-width:100%;max-height:100%;object-fit:contain;transform-origin:center}}h2{{font-size:1.55rem}}.target{{font-size:1.4rem;color:#ffd580}}button{{font-size:1rem;padding:.65rem;margin:.25rem}}button.selected{{outline:4px solid #58a6ff}}label{{display:block;margin:.5rem 0}}select,textarea{{width:100%;font-size:1rem;background:#222;color:#eee}}textarea{{height:5rem}}#submit:disabled{{opacity:.35}}#confirm{{display:none;background:#7c2d12;padding:.7rem}}.keys{{bottom:0;top:auto;font-size:.9rem}}[hidden]{{display:none!important}}
@@ -95,7 +95,7 @@ body{{max-width:1200px;margin:1rem auto;padding:0 1rem;font:18px system-ui;backg
 <form id="flagForm" method="post" action="/{token}/flag"><input type="hidden" name="review_id" value="{rid}"><button type="submit">F Flag for later</button></form>
 <div id="help" class="keys">1/2/3 select valid preset · 4 invalid · 5 uncertain · 6 custom · Enter submit · Esc clear · F later · +/- zoom · 0 fit · ? help</div>
 <script>
-const PRESETS=JSON.parse('{presets}'),form=document.querySelector('#form'),fields=document.querySelector('#fields'),submit=document.querySelector('#submit'),confirmBar=document.querySelector('#confirm'),preset=document.querySelector('#preset'),confirmed=document.querySelector('#confirmed'),image=document.querySelector('#image');let confirmStage=0,zoom=1;
+const PRESETS={presets},form=document.querySelector('#form'),fields=document.querySelector('#fields'),submit=document.querySelector('#submit'),confirmBar=document.querySelector('#confirm'),preset=document.querySelector('#preset'),confirmed=document.querySelector('#confirmed'),image=document.querySelector('#image');let confirmStage=0,zoom=1;
 function setField(name,value){{form.elements[name].value=value}}
 function valid(){{if(!preset.value)return false;for(const n of ['valid','confidence','relation','issue_type','recommended_action'])if(!form.elements[n].value)return false;const reason=form.elements.reason.value.trim(),need=['4','5'].includes(preset.value)||form.elements.valid.value==='false'||form.elements.recommended_action.value==='manual_review'?12:1;return reason.length>=need}}
 function refresh(){{submit.disabled=!valid();if(!valid()){{confirmStage=0;confirmed.value='false';confirmBar.style.display='none'}}}}
