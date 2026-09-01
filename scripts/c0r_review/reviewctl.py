@@ -175,10 +175,16 @@ def start(paths, port):
         except OSError as exc:
             raise RuntimeError("port unavailable") from exc
     pidfile, logfile = state_paths(paths); session_id = load(paths["session"])["session_id"]
+    package_alias = paths["state"] / "package.zip"
+    if package_alias.exists() or package_alias.is_symlink():
+        if not package_alias.is_symlink() or package_alias.resolve() != paths["package_zip"].resolve():
+            raise RuntimeError("package alias target mismatch")
+    else:
+        package_alias.symlink_to(paths["package_zip"])
     if pidfile.exists():
         pidfile.unlink()
     args = [
-        "review-console", "launch_local_review_fast.py", "--package-dir", "..", "--package-zip", "../../../public_metadata_only/M3BENCH_FORMAL_TARGET_REVIEW_RECONSTRUCTION_200.zip",
+        "review-console", "launch_local_review_fast.py", "--package-dir", "..", "--package-zip", "../../private_state/package.zip",
         "--session-manifest", "../../../sessions/Reviewer_A/REVIEW_SESSION_MANIFEST.json", "--roots", "../../../sessions/Reviewer_A/DATASET_ROOTS.json", "--session-id", session_id, "--preverified-images", "--port", str(port),
     ]
     with open(logfile, "ab", buffering=0) as log:
