@@ -14,6 +14,11 @@
     "overwritten": false,
     "role": "NONAUTHORITATIVE_PILOT"
   },
+  "active_output_tooling": {
+    "status_records": 200,
+    "hash_chain": "PASS",
+    "historical_tool_overwrites": 0
+  },
   "reviewer_b": {
     "queue_records": 53,
     "controls": 20,

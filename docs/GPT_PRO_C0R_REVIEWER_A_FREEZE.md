@@ -11,7 +11,7 @@ The blinded Reviewer B queue is committed before review: 53 opaque items, includ
 Code for GPT Pro to inspect:
 
 - `scripts/c0r_review/professional_review.py`: expert normalization, pilot/expert overlap classification, and blinded stratified Reviewer B selection.
-- `scripts/c0r_review/reviewctl.py`: existing append-only freeze and queue controls.
+- `scripts/c0r_review/reviewctl.py`: append-only controls plus bounded active-output pointer resolution, so later status/freeze/queue operations read the frozen expert output while preserving the pilot file.
 - `scripts/c0r_review/resolve_authorized_images.py`: outcome semantics, chain verification, and local image binding.
 - `tests/test_c0r_professional_review.py`: normalization, provenance-overlap, and queue-selection tests.
 - `reports/C0R_EXPERT_IMPORT_SUMMARY.json`: public aggregate state.
