@@ -38,6 +38,11 @@ class FastReviewTests(unittest.TestCase):
         self.assertIn('const PRESETS={"1":', page)
         self.assertNotIn("&quot;", page)
 
+    def test_freeze_keeps_verdict_fields_enabled_for_post(self):
+        page = self.sample_page()
+        self.assertIn("querySelectorAll('button')", page)
+        self.assertNotIn("button,select,textarea", page)
+
     def test_enter_without_selection_does_not_submit(self):
         self.assertIn("if(!preset.value)return false", self.sample_page())
 
