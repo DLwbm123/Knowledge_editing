@@ -178,12 +178,12 @@ def start(paths, port):
     if pidfile.exists():
         pidfile.unlink()
     args = [
-        "review-console", "launch_local_review_fast.py", "--package-dir", "../package", "--package-zip", "../../../public_metadata_only/M3BENCH_FORMAL_TARGET_REVIEW_RECONSTRUCTION_200.zip",
+        "review-console", "launch_local_review_fast.py", "--package-dir", "..", "--package-zip", "../../../public_metadata_only/M3BENCH_FORMAL_TARGET_REVIEW_RECONSTRUCTION_200.zip",
         "--session-manifest", "../../../sessions/Reviewer_A/REVIEW_SESSION_MANIFEST.json", "--roots", "../../../sessions/Reviewer_A/DATASET_ROOTS.json", "--session-id", session_id, "--preverified-images", "--port", str(port),
     ]
     with open(logfile, "ab", buffering=0) as log:
         os.chmod(logfile, 0o600)
-        process = subprocess.Popen(args, executable=sys.executable, cwd=paths["resolver"], stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+        process = subprocess.Popen(args, executable=sys.executable or os.readlink("/proc/self/exe"), cwd=paths["resolver"], stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
     atomic_new(pidfile, f"{process.pid}\n".encode(), 0o600)
     url = token_url(paths, port)
     for _ in range(100):

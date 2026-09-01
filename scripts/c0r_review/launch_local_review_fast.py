@@ -114,7 +114,7 @@ def make_handler(items, order, roots, token, output_path, event_path):
         def log_message(self, *_):
             return
 
-        def headers(self, content_type):
+        def send_common_headers(self, content_type):
             self.send_header("Content-Type", content_type)
             self.send_header("Cache-Control", "no-store, max-age=0")
             self.send_header("Pragma", "no-cache")
@@ -143,16 +143,16 @@ def make_handler(items, order, roots, token, output_path, event_path):
             rows = self.completed_rows(); done = {row["review_id"] for row in rows}
             if len(parts) == 2 and parts[1] == "health":
                 body = json.dumps({"status": "PASS", "completed": len(done)}).encode()
-                self.send_response(200); self.headers("application/json"); self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body); return
+                self.send_response(200); self.send_common_headers("application/json"); self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body); return
             if len(parts) == 1:
                 queue = remaining_order(order, done, event_path)
                 active_flags = sum(rid not in done for rid in flag_counts(event_path))
                 body = (f"<!doctype html><p>Review complete: {len(done)}/{len(order)}</p>" if not queue else page(by_id[queue[0]], len(done), len(order), active_flags, token)).encode()
-                self.send_response(200); self.headers("text/html; charset=utf-8"); self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body); return
+                self.send_response(200); self.send_common_headers("text/html; charset=utf-8"); self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body); return
             if len(parts) == 3 and parts[1] == "image" and parts[2] in by_id:
                 path = resolve_item(by_id[parts[2]], roots, verify_hash=True); data = b""
                 try:
-                    data = path.read_bytes(); self.send_response(200); self.headers(mimetypes.guess_type(path.name)[0] or "application/octet-stream"); self.send_header("Content-Length", str(len(data))); self.end_headers(); self.wfile.write(data)
+                    data = path.read_bytes(); self.send_response(200); self.send_common_headers(mimetypes.guess_type(path.name)[0] or "application/octet-stream"); self.send_header("Content-Length", str(len(data))); self.end_headers(); self.wfile.write(data)
                 finally:
                     data = b""
                 return
