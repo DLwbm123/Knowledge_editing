@@ -1,0 +1,69 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "confidence": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "issue_type": {
+      "enum": [
+        "none",
+        "question_reference_mismatch",
+        "wrong_source_field",
+        "wrong_entity",
+        "wrong_location",
+        "wrong_count",
+        "wrong_modality",
+        "under_specific",
+        "over_specific",
+        "ambiguous_question",
+        "ambiguous_reference",
+        "duplicate_annotation",
+        "other"
+      ]
+    },
+    "reason": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "type": "string"
+    },
+    "recommended_action": {
+      "enum": [
+        "retain",
+        "repair",
+        "exclude",
+        "manual_review"
+      ]
+    },
+    "relation": {
+      "enum": [
+        "direct_answer",
+        "acceptable_visual_deixis",
+        "acceptable_synonym",
+        "context_dependent",
+        "ambiguous",
+        "mismatch"
+      ]
+    },
+    "review_id": {
+      "pattern": "^target_review_[0-9]{4}$",
+      "type": "string"
+    },
+    "valid": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "review_id",
+    "valid",
+    "confidence",
+    "relation",
+    "issue_type",
+    "recommended_action",
+    "reason"
+  ],
+  "type": "object"
+}
