@@ -43,6 +43,11 @@ class FastReviewTests(unittest.TestCase):
         self.assertIn("querySelectorAll('button')", page)
         self.assertNotIn("button,select,textarea", page)
 
+    def test_freeze_uses_unshadowed_native_form_submit(self):
+        page = self.sample_page()
+        self.assertIn("HTMLFormElement.prototype.submit.call(form)", page)
+        self.assertNotIn("form.submit()", page)
+
     def test_enter_without_selection_does_not_submit(self):
         self.assertIn("if(!preset.value)return false", self.sample_page())
 
