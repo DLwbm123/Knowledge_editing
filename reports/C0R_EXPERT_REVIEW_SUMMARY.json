@@ -1,0 +1,52 @@
+{
+  "status": "M3BENCH_C0R_EXPERT_REVIEW_VALIDATED__PRIVATE_IMPORT_PENDING__GPU_NOT_STARTED",
+  "prepublication_check_at_utc": "2026-09-01T13:12:33Z",
+  "source": {
+    "format": "private professional-review workbook",
+    "published": false,
+    "records": 200
+  },
+  "validation": {
+    "completed_verdicts": 200,
+    "missing_verdicts": 0,
+    "invalid_codes": 0,
+    "frozen_columns_exact": true,
+    "review_order_exact": true,
+    "unique_review_ids": 200,
+    "unique_image_filenames": 200,
+    "required_notes_present": 11,
+    "formula_errors": 0
+  },
+  "verdict_counts": {
+    "1_direct_valid": 127,
+    "2_visual_deixis_valid": 40,
+    "3_context_valid": 22,
+    "4_invalid": 10,
+    "5_uncertain": 1,
+    "6_custom": 0
+  },
+  "known_private_state": {
+    "partial_ui_verdicts_preserved": 5,
+    "reviewer_a_freeze_manifest_exists": false,
+    "review_server_running_at_prepublication_check": true,
+    "non_overwriting_import_required": true
+  },
+  "image_release_scope": {
+    "authorized_offline_expert_image_copies": 200,
+    "source_images_in_this_public_release": 0,
+    "image_derivatives_in_this_public_release": 0,
+    "prior_global_zero_image_export_claim_superseded": true
+  },
+  "not_started": [
+    "private workbook import",
+    "Reviewer A freeze",
+    "Reviewer B review",
+    "adjudication",
+    "GPU editing",
+    "Judge",
+    "evaluator",
+    "semantic metrics",
+    "method ranking",
+    "unblinding"
+  ]
+}
