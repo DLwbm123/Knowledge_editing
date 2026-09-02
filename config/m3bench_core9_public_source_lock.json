@@ -1,0 +1,13 @@
+{
+  "public_repository": "BioMed-AI-Lab-U-Michgan/M3Bench",
+  "public_commit": "03c6fda3813301dab3be5831fdc94b493c10afc9",
+  "files": {
+    "metadata/selected_processed_files/slake_metadata.csv": "2e32f024ef4e3ed975121ef7f28b2376f90345cb31a9da550c538b359c1b194a",
+    "metadata/selected_processed_files/t2l_cross_image_pairs.csv": "eecdc9ff50e7b3b78129f048c137261035a5a98edcea41cdd825f137cbfbacf5",
+    "metadata/selected_processed_files/t3_cross_modality_pairs.csv": "928376a386e611069c300c51c71b7e9f49e28e6920a1930e2eddbd3d0dc1c791",
+    "metadata/selected_processed_files/t4g_compositional_generality.csv": "6835453cdbb2ff7d81dfc69a6a3f80b719602a9ad0f180df5d99511b81e85106",
+    "metadata/selected_processed_files/t4l_compositional_locality.csv": "9232a38cc3c378df8ccdeb40f2573a0f41aa807dbcca447527aebaf5da3c59ba",
+    "metadata/selected_processed_files/vqarad_metadata.csv": "8dbc4ec287b5334b0450b9959798cc961ef391ad8b3de90b284153bb80bc99a3",
+    "scripts/build_tasks/build_all_tasks.py": "3c3c64bff48bba853890dc9e1535dae913c77f0caf4c1f0593eda24379c946a3"
+  }
+}
