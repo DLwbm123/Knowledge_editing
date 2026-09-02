@@ -18,6 +18,8 @@ from pathlib import Path
 
 GPU3_UUID = "GPU-43e3d478-7979-ea29-8130-64a467b48a5c"
 SELECTOR_SALT = "m3bench-lora-strong-v1-cohorts-v1"
+FROZEN_RUNTIME_CLASSIFICATION = "M3BENCH_PAPER_SPEC_INDEPENDENT_REIMPLEMENTATION_V1"
+CURRENT_RUNTIME_CLASSIFICATION = "M3BENCH_PAPER_SPEC_INDEPENDENT_REIMPLEMENTATION_V2_EFFECT_REPAIRED"
 GRID = tuple(
     {"max_steps": steps, "learning_rate": learning_rate}
     for steps in (10, 20, 50, 100)
@@ -108,6 +110,44 @@ def rank_config_summaries(summaries: list[dict]) -> list[dict]:
             row["config"]["learning_rate"],
         ),
     )
+
+
+def validate_runtime_locks(inventory: dict, target_lock: dict,
+                           frozen_inventory: dict, frozen_target_lock: dict) -> str:
+    if inventory == frozen_inventory and target_lock == frozen_target_lock:
+        return "exact"
+    current, frozen = dict(inventory), dict(frozen_inventory)
+    if (
+        current.pop("classification", None) != CURRENT_RUNTIME_CLASSIFICATION
+        or frozen.pop("classification", None) != FROZEN_RUNTIME_CLASSIFICATION
+        or current != frozen
+    ):
+        raise RuntimeError("formal module inventory differs beyond the authorized classification amendment")
+    current_target, frozen_target = dict(target_lock), dict(frozen_target_lock)
+    current_target.pop("inventory_sha256", None)
+    frozen_target.pop("inventory_sha256", None)
+    if current_target != frozen_target:
+        raise RuntimeError("formal edit target lock differs beyond its inventory metadata hash")
+    return "classification-metadata-amendment-v1-to-v2"
+
+
+def load_strong_runtime(run: Path, device: str):
+    from m3bench_repro.editors.llava_runtime import LlavaMedEditorRuntime
+
+    runtime = LlavaMedEditorRuntime(
+        device=device,
+        run_root=run,
+        generation_config_path=run / "inputs/frozen/llava_med_generation_frozen.json",
+    )
+    runtime.load_frozen_backbone(seed=20260828)
+    inventory, target_lock = runtime.resolve_module_inventory(freeze=False)
+    lock_status = validate_runtime_locks(
+        inventory,
+        target_lock,
+        read_json(run / "inputs/frozen/LLAVA_MED_MODULE_INVENTORY.json"),
+        read_json(run / "inputs/frozen/LLAVA_MED_EDIT_TARGET_LOCK.json"),
+    )
+    return runtime, lock_status
 
 
 def freeze(args: argparse.Namespace) -> None:
@@ -318,7 +358,7 @@ def blind_packet(rows: list[dict], output: Path) -> None:
 def run(args: argparse.Namespace) -> None:
     import torch
     from m3bench_repro.editors.methods import LoraPaperSpecEditor
-    from scripts.editor_paperspec_formal import load_runtime, probe_record
+    from scripts.editor_paperspec_formal import probe_record
 
     assert_gpu3()
     if args.output.exists():
@@ -335,7 +375,7 @@ def run(args: argparse.Namespace) -> None:
         if set(locality_by_edit) != {record.record_id for record in records}:
             raise RuntimeError("locality manifest does not bind every record exactly once")
     args.output.mkdir(parents=True)
-    runtime = load_runtime(args.parent_run, "cuda:0")
+    runtime, runtime_lock_status = load_strong_runtime(args.parent_run, "cuda:0")
     editor = LoraPaperSpecEditor(runtime)
     rows = []
     for config in configs:
@@ -381,6 +421,7 @@ def run(args: argparse.Namespace) -> None:
         "rows": rows,
         "gpu": {"physical_index": 3, "uuid": GPU3_UUID, "visible_device": "cuda:0"},
         "paper_spec_5_modified": False,
+        "runtime_lock_status": runtime_lock_status,
         "strong_deviations": {"learning_rate": sorted({c["learning_rate"] for c in configs}),
                               "max_steps": sorted({c["max_steps"] for c in configs}),
                               "adaptive": args.adaptive},
