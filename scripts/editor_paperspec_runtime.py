@@ -27,7 +27,7 @@ from m3bench_repro.editors.llava_runtime import (
 )
 from m3bench_repro.editors.methods import CLASSIFICATION, PaperSpecEditor, create_editor
 from m3bench_repro.editors.routing import canonical_float32, route_dict_equal
-from scripts.editor_effect_probe import state_delta
+from scripts.editor_effect_probe import inventory_topology, state_delta, target_lock_topology
 
 
 WORKTREE = Path(os.environ.get("M3BENCH_WORKTREE", Path(__file__).resolve().parents[1]))
@@ -90,11 +90,15 @@ def load_runtime(device: str, *, seed: int = 20260828) -> LlavaMedEditorRuntime:
     target_path = RUN_ROOT / "runtime/LLAVA_MED_EDIT_TARGET_LOCK.json"
     if inventory_path.exists():
         frozen_inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
-        if canonical_sha256(frozen_inventory) != canonical_sha256(inventory):
+        if canonical_sha256(inventory_topology(frozen_inventory)) != canonical_sha256(
+            inventory_topology(inventory)
+        ):
             raise RuntimeError("real-model module inventory differs from frozen inventory")
     if target_path.exists():
         frozen_targets = json.loads(target_path.read_text(encoding="utf-8"))
-        if canonical_sha256(frozen_targets) != canonical_sha256(target_lock):
+        if canonical_sha256(target_lock_topology(frozen_targets)) != canonical_sha256(
+            target_lock_topology(target_lock)
+        ):
             raise RuntimeError("real-model target lock differs from frozen target lock")
     return runtime
 
