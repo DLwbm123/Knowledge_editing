@@ -8,6 +8,9 @@ from m3bench_repro.editors.routed_layers import RoutedLoRALinear, safe_slot
 
 
 class BeloraEffectContractTests(unittest.TestCase):
+    def test_belora_effect_gate_uses_first_non_noop_step_count(self):
+        self.assertEqual(BeloraPaperSpecEditor.steps_per_edit, 50)
+
     def test_belora_stable_mapping_and_new_edit_preserves_old_adapter(self):
         editor = object.__new__(BeloraPaperSpecEditor)
         editor.wrappers = {

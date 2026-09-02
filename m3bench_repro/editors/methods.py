@@ -663,6 +663,7 @@ class BalanceEditPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
 
 class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
     method = "belora"
+    steps_per_edit = 50
 
     def __init__(self, runtime: LlavaMedEditorRuntime):
         super().__init__(runtime)
@@ -743,7 +744,7 @@ class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
         losses, gradient_checks = [], []
         try:
             with self._activated(record.record_id):
-                for _ in range(5):
+                for _ in range(self.steps_per_edit):
                     optimizer.zero_grad(set_to_none=True)
                     loss = self.runtime.compute_loss(batch)
                     loss.backward()
@@ -762,7 +763,7 @@ class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
             "losses": losses,
             "finite_losses": all(torch.isfinite(torch.tensor(losses)).tolist()),
             "finite_gradients": all(gradient_checks),
-            "epochs": 5,
+            "epochs": self.steps_per_edit,
             "radius": float(radius.cpu().item()),
             "distance": "euclidean",
             "black_image_path": str(black_path),
@@ -868,7 +869,10 @@ class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
             "learning_rate": 5e-5,
             "batch_size": 1,
             "gradient_clip": 1.0,
-            "epochs_per_edit": 5,
+            "epochs_per_edit": self.steps_per_edit,
+            "paper_spec_deviation": True,
+            "paper_spec_epochs_per_edit": 5,
+            "deviation_reason": "approved 8-record effect gate: 5-20 steps were generation no-op; 50 was the first tested checkpoint that changed generation",
             "update_storage": "per-edit LoRA parameters only; no full module copies",
             "projector": "excluded from primary smoke",
             "vision_encoder": "excluded",
