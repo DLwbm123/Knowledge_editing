@@ -302,7 +302,7 @@ def main() -> None:
             "t2g_derived_probe_manifest_800.jsonl",
         ):
             inputs.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(args.source_run_root / "inputs/frozen" / name, inputs / name)
+            shutil.copyfile(args.source_run_root / "inputs/frozen" / name, inputs / name)
         write_jsonl(inputs / "FORMAL_EDITOR_RECORDS_189.jsonl", records)
         write_jsonl(inputs / "FORMAL_PROBE_CATALOG.jsonl", catalog)
         for task in TASKS:
@@ -320,11 +320,11 @@ def main() -> None:
 
         locks = temporary / "locks"
         locks.mkdir(parents=True)
-        shutil.copy2(
+        shutil.copyfile(
             args.source_run_root / "locks/FORMAL_MODEL_AND_GENERATION_LOCK.json",
             locks / "FORMAL_MODEL_AND_GENERATION_LOCK.json",
         )
-        shutil.copy2(
+        shutil.copyfile(
             args.effect_repair_root / "locks/EFFECT_REPAIRED_METHOD_CONFIG_BUNDLE.json",
             locks / "FORMAL_METHOD_CONFIG_BUNDLE.json",
         )
