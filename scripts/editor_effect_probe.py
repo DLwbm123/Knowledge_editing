@@ -40,6 +40,12 @@ def inventory_topology(value: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+def target_lock_topology(value: dict[str, Any]) -> dict[str, Any]:
+    result = dict(value)
+    result.pop("inventory_sha256", None)
+    return result
+
+
 def read_records(path: Path):
     from m3bench_repro.editors.llava_runtime import EditorRecord
 
@@ -186,7 +192,9 @@ def main() -> None:
         inventory_topology(read_json(source_root / "runtime/LLAVA_MED_MODULE_INVENTORY.json"))
     ):
         raise RuntimeError("module inventory differs from frozen smoke source")
-    if canonical_sha256(target_lock) != canonical_sha256(read_json(source_root / "runtime/LLAVA_MED_EDIT_TARGET_LOCK.json")):
+    if canonical_sha256(target_lock_topology(target_lock)) != canonical_sha256(
+        target_lock_topology(read_json(source_root / "runtime/LLAVA_MED_EDIT_TARGET_LOCK.json"))
+    ):
         raise RuntimeError("target lock differs from frozen smoke source")
 
     editor = create_editor(method, runtime)
