@@ -167,6 +167,14 @@ def saved_state_path(method: str, output_dir: Path) -> Path:
     return output_dir / ("editor_state" if method == "lora" else "editor_state.pt")
 
 
+def adapter_active_before_generation(
+    prefill: list[dict[str, Any]], expected_adapter: str
+) -> bool:
+    return bool(prefill) and any(
+        event["active_adapter"] == expected_adapter for event in prefill
+    ) and all(event["active_adapter"] in {None, expected_adapter} for event in prefill)
+
+
 def main() -> None:
     if len(sys.argv) != 2:
         raise SystemExit("usage: editor_effect_probe.py CONFIG.json")
@@ -361,8 +369,8 @@ def main() -> None:
             }
         )
     if method in {"lora", "belora"}:
-        checks["active_adapter_before_model_forward"] = bool(prefill) and all(
-            event["active_adapter"] == expected_adapter for event in prefill
+        checks["active_adapter_before_model_forward"] = adapter_active_before_generation(
+            prefill, expected_adapter
         )
     report["checks"] = checks
     report["status"] = "PASS" if phase == "POSTPATCH" and all(checks.values()) else (

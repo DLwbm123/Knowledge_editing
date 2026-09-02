@@ -4,9 +4,26 @@ import torch.nn as nn
 from m3bench_repro.editors.methods import GracePaperSpecEditor
 from m3bench_repro.editors.routed_layers import GraceValueLinear
 from m3bench_repro.editors.routing import RouteDecision
+from scripts.editor_effect_probe import adapter_active_before_generation
 
 
 class GenerationRouteContextTests(unittest.TestCase):
+    def test_base_route_probe_may_precede_active_generation_prefill(self):
+        self.assertTrue(
+            adapter_active_before_generation(
+                [
+                    {"active_adapter": None},
+                    {"active_adapter": "expected"},
+                ],
+                "expected",
+            )
+        )
+        self.assertFalse(
+            adapter_active_before_generation(
+                [{"active_adapter": None}], "expected"
+            )
+        )
+
     def test_generation_route_is_fixed_and_exception_clears_it(self):
         editor = object.__new__(GracePaperSpecEditor)
         editor.wrapper = GraceValueLinear(nn.Linear(2, 2), replacement="replace_prompt")
