@@ -1,0 +1,88 @@
+{
+  "created_at_utc": "2026-09-02T13:31:26Z",
+  "family_anchor_counts": {
+    "T2L": 56,
+    "T3": 33,
+    "T4": 100
+  },
+  "record_count": 189,
+  "schema_version": "m3bench-core9-anchor-overlap-v1",
+  "status": "PASS",
+  "tasks": {
+    "T2L": {
+      "candidate_edit_count": 56,
+      "candidate_probe_relations": 1496,
+      "drop_reason_counts": {
+        "anchor_absent": 133,
+        "concept_mismatch": 0,
+        "duplicate_relation": 1240,
+        "gold_missing": 0,
+        "paired_image_missing": 0,
+        "paired_question_missing": 0,
+        "question_role_mismatch": 0,
+        "unsupported_direction": 0
+      },
+      "retained_edits_with_metadata_anchor": 56
+    },
+    "T3G": {
+      "candidate_edit_count": 33,
+      "candidate_probe_relations": 189,
+      "drop_reason_counts": {
+        "anchor_absent": 156,
+        "concept_mismatch": 0,
+        "duplicate_relation": 0,
+        "gold_missing": 0,
+        "paired_image_missing": 0,
+        "paired_question_missing": 0,
+        "question_role_mismatch": 0,
+        "unsupported_direction": 0
+      },
+      "retained_edits_with_metadata_anchor": 33
+    },
+    "T3L": {
+      "candidate_edit_count": 33,
+      "candidate_probe_relations": 189,
+      "drop_reason_counts": {
+        "anchor_absent": 156,
+        "concept_mismatch": 0,
+        "duplicate_relation": 0,
+        "gold_missing": 0,
+        "paired_image_missing": 0,
+        "paired_question_missing": 0,
+        "question_role_mismatch": 0,
+        "unsupported_direction": 0
+      },
+      "retained_edits_with_metadata_anchor": 33
+    },
+    "T4G": {
+      "candidate_edit_count": 3,
+      "candidate_probe_relations": 15,
+      "drop_reason_counts": {
+        "anchor_absent": 154,
+        "concept_mismatch": 46,
+        "duplicate_relation": 0,
+        "gold_missing": 0,
+        "paired_image_missing": 0,
+        "paired_question_missing": 2,
+        "question_role_mismatch": 0,
+        "unsupported_direction": 0
+      },
+      "retained_edits_with_metadata_anchor": 35
+    },
+    "T4L": {
+      "candidate_edit_count": 0,
+      "candidate_probe_relations": 0,
+      "drop_reason_counts": {
+        "anchor_absent": 124,
+        "concept_mismatch": 0,
+        "duplicate_relation": 0,
+        "gold_missing": 0,
+        "paired_image_missing": 0,
+        "paired_question_missing": 0,
+        "question_role_mismatch": 153,
+        "unsupported_direction": 0
+      },
+      "retained_edits_with_metadata_anchor": 65
+    }
+  }
+}

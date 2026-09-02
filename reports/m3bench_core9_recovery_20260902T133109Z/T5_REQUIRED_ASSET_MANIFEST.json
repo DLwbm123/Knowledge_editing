@@ -1,0 +1,8 @@
+{
+  "base_and_post_edit_correctness_available": false,
+  "image_assets_available": false,
+  "longitudinal_metadata_available": false,
+  "patient_timepoint_binding_available": false,
+  "source_dataset": "PadChest-GR",
+  "status": "M3BENCH_T5_SEPARATE_EXTENSION_BLOCKED__PADCHEST_GR_ASSETS_UNAVAILABLE"
+}

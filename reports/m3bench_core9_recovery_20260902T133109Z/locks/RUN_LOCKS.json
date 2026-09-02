@@ -1,0 +1,8 @@
+{
+  "amended_record_count": 189,
+  "amended_records_sha256": "ad5972dc600e7a8539d15e4573278ea7de2551a0aedc9702d4503280eacbf8ee",
+  "parent_commit": "e6ddec8c8929fc67ab20573a57cacec877bcdffb",
+  "public_source_commit": "03c6fda3813301dab3be5831fdc94b493c10afc9",
+  "scope": "M3BENCH_PUBLIC_RELEASE_ALIGNED_AMENDED189_CORE9",
+  "t5_in_scope": false
+}
