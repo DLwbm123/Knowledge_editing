@@ -27,10 +27,17 @@ from m3bench_repro.editors.methods import (
     create_editor,
     record_seed,
 )
+from m3bench_repro.editors.routing import route_dict_equal
 
 
 def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def inventory_topology(value: dict[str, Any]) -> dict[str, Any]:
+    result = dict(value)
+    result.pop("classification", None)
+    return result
 
 
 def read_records(path: Path):
@@ -104,7 +111,7 @@ def editor_parameters(editor: Any) -> list[torch.Tensor]:
 def active_name(editor: Any) -> str | list[str] | None:
     if isinstance(editor, LoraPaperSpecEditor):
         value = getattr(editor.peft_model, "active_adapter", None)
-        return list(value) if isinstance(value, (list, tuple)) else value
+        return tuple(value) if isinstance(value, (list, tuple)) else value
     if isinstance(editor, GracePaperSpecEditor):
         return editor.wrapper.active_logical_id
     if isinstance(editor, BalanceEditPaperSpecEditor):
@@ -143,12 +150,26 @@ def record_forward(events: list[dict[str, Any]], editor: Any):
     return hook
 
 
+def generation_equal(left: dict[str, Any], right: dict[str, Any]) -> bool:
+    return all(
+        left[key] == right[key]
+        for key in ("decoded_text", "raw_token_ids", "sequence_contract")
+    )
+
+
+def saved_state_path(method: str, output_dir: Path) -> Path:
+    return output_dir / ("editor_state" if method == "lora" else "editor_state.pt")
+
+
 def main() -> None:
     if len(sys.argv) != 2:
         raise SystemExit("usage: editor_effect_probe.py CONFIG.json")
     config = read_json(Path(sys.argv[1]))
     source_root = Path(config["source_root"])
     output_dir = Path(config["output_dir"])
+    phase = str(config.get("phase", "PREPATCH")).upper()
+    if phase not in {"PREPATCH", "POSTPATCH"}:
+        raise ValueError(f"unsupported phase: {phase}")
     method = config["method"]
     records = read_records(Path(config["records_path"]))
     wanted_id = config["record_id"]
@@ -161,7 +182,9 @@ def main() -> None:
     )
     runtime.load_frozen_backbone(seed=20260828)
     inventory, target_lock = runtime.resolve_module_inventory(freeze=False)
-    if canonical_sha256(inventory) != canonical_sha256(read_json(source_root / "runtime/LLAVA_MED_MODULE_INVENTORY.json")):
+    if canonical_sha256(inventory_topology(inventory)) != canonical_sha256(
+        inventory_topology(read_json(source_root / "runtime/LLAVA_MED_MODULE_INVENTORY.json"))
+    ):
         raise RuntimeError("module inventory differs from frozen smoke source")
     if canonical_sha256(target_lock) != canonical_sha256(read_json(source_root / "runtime/LLAVA_MED_EDIT_TARGET_LOCK.json")):
         raise RuntimeError("target lock differs from frozen smoke source")
@@ -199,9 +222,35 @@ def main() -> None:
     prompt_hash = hashlib.sha256(batch.prompt.encode("utf-8")).hexdigest()
     prefill = [event for event in generation_events if (event["sequence_length"] or 0) > 1]
     decode = [event for event in generation_events if event["sequence_length"] == 1]
+    reload_report: dict[str, Any] = {}
+    if phase == "POSTPATCH":
+        output_dir.mkdir(parents=True, exist_ok=False)
+        state = editor.save_editor_state(saved_state_path(method, output_dir))
+        state_summary = editor.state_summary()
+        editor.reset_editor_state()
+        reset_generation = runtime.generate(record, use_cache=True)
+        editor.load_editor_state(saved_state_path(method, output_dir))
+        reloaded_generation = editor.generate(record, use_cache=True)
+        reloaded_nll = editor.score_target_nll(record)
+        with editor.disabled():
+            miss_generation = runtime.generate(record, use_cache=True)
+        route_mode = "float32" if method in {"grace", "balancedit", "belora"} else "exact"
+        reload_report = {
+            "state": state,
+            "state_summary": state_summary,
+            "save_reload_generation_parity": generation_equal(
+                generated["generation"], reloaded_generation["generation"]
+            ),
+            "save_reload_route_parity": route_dict_equal(
+                generated.get("route"), reloaded_generation.get("route"), radius_mode=route_mode
+            ),
+            "save_reload_nll_parity": post["nll"] == reloaded_nll["nll"],
+            "reset_base_generation_parity": generation_equal(base_generation, reset_generation),
+            "miss_base_token_parity": generation_equal(base_generation, miss_generation),
+        }
     report = {
-        "schema_version": "m3bench-prepatch-one-edit-trace-v2",
-        "phase": "PREPATCH",
+        "schema_version": "m3bench-one-edit-effect-trace-v2",
+        "phase": phase,
         "record_id": record.record_id,
         "method": method,
         "actual_source_files": {
@@ -254,13 +303,70 @@ def main() -> None:
         "base_weights_unchanged": base_after["unchanged"],
         "finite_gradient": math.isfinite(gradient_norm),
         "finite_state_delta": math.isfinite(delta_norm),
+        "reload": reload_report,
         "edit": edit,
     }
-    output_dir.mkdir(parents=True, exist_ok=False)
-    json_path = output_dir / f"prepatch_one_edit_trace_{method}.json"
+    expected_adapter = (
+        "default"
+        if method == "lora"
+        else editor.edit_to_adapter[record.record_id]
+        if method == "belora"
+        else record.record_id
+    )
+    route_context_stable = (
+        bool(prefill)
+        and bool(decode)
+        and any(event["active_adapter"] == expected_adapter for event in prefill)
+        and all(event["active_adapter"] in {None, expected_adapter} for event in prefill)
+        and all(event["active_adapter"] == expected_adapter for event in decode)
+    )
+    checks = {
+        "image_present_in_edit_forward": bool(batch.image_tensor_shape),
+        "multimodal_expansion_verified": batch.mask_report()["multimodal_expansion_verified"],
+        "target_token_count_positive": batch.mask_report()["target_token_count"] > 0,
+        "finite_positive_gradient_or_value_update": math.isfinite(gradient_norm)
+        and gradient_norm > 0
+        and math.isfinite(delta_norm)
+        and delta_norm > 0,
+        "post_target_nll_lower": post["nll"] < pre["nll"],
+        "target_logprob_delta_positive": pre["nll"] - post["nll"] > 0,
+        "base_weights_unchanged": base_after["unchanged"],
+        "post_generation_nonempty": bool(generated["generation"]["raw_token_ids"]),
+        "save_reload_parity": all(
+            reload_report.get(key, False)
+            for key in (
+                "save_reload_generation_parity",
+                "save_reload_route_parity",
+                "save_reload_nll_parity",
+            )
+        ),
+        "reset_or_disable_base_parity": reload_report.get("reset_base_generation_parity", False)
+        and reload_report.get("miss_base_token_parity", False),
+        "route_context_stable_across_decode": route_context_stable,
+    }
+    if method != "lora":
+        checks.update(
+            {
+                "self_route_hit": report["self_route_hit"] is True,
+                "selected_id_is_current": report["selected_logical_edit_id"] == record.record_id,
+                "miss_base_token_parity": reload_report.get("miss_base_token_parity", False),
+            }
+        )
+    if method in {"lora", "belora"}:
+        checks["active_adapter_before_model_forward"] = bool(prefill) and all(
+            event["active_adapter"] == expected_adapter for event in prefill
+        )
+    report["checks"] = checks
+    report["status"] = "PASS" if phase == "POSTPATCH" and all(checks.values()) else (
+        "TRACE_COMPLETE" if phase == "PREPATCH" else "FAIL"
+    )
+    stem = "prepatch_one_edit_trace" if phase == "PREPATCH" else "ONE_EDIT_EFFECT_GATE"
+    if phase == "PREPATCH":
+        output_dir.mkdir(parents=True, exist_ok=False)
+    json_path = output_dir / f"{stem}_{method}.json"
     write_json_atomic(json_path, report, read_only=True)
     md = [
-        f"# Pre-patch one-edit trace: {method}",
+        f"# {phase.title()} one-edit effect trace: {method}",
         "",
         f"- Record: `{record.record_id}`",
         f"- NLL: `{pre['nll']:.6f}` -> `{post['nll']:.6f}`",
@@ -271,17 +377,20 @@ def main() -> None:
         f"- Generation equals base: `{report['post_generation_equals_base']}`",
         f"- Post generation nonempty: `{report['post_generation_nonempty']}`",
         f"- Base weights unchanged: `{report['base_weights_unchanged']}`",
+        f"- Status: `{report['status']}`",
         "",
         "The adjacent JSON contains the private raw trace required for root-cause analysis.",
     ]
-    md_path = output_dir / f"prepatch_one_edit_trace_{method}.md"
+    md_path = output_dir / f"{stem}_{method}.md"
     md_path.write_text("\n".join(md) + "\n", encoding="utf-8")
     os.chmod(md_path, 0o444)
     print(json.dumps({key: report[key] for key in (
         "method", "record_id", "pre_target_nll", "post_target_nll", "gradient_norm",
         "state_delta_norm", "self_route_hit", "post_generation_equals_base",
-        "post_generation_nonempty", "base_weights_unchanged"
+        "post_generation_nonempty", "base_weights_unchanged", "status", "checks"
     )}, indent=2))
+    if phase == "POSTPATCH" and report["status"] != "PASS":
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
