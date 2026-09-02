@@ -1,0 +1,38 @@
+{
+  "claims": {
+    "clinical_consensus": false,
+    "cohens_kappa_computed": false,
+    "dual_reader_validation": false,
+    "inter_rater_agreement_computed": false
+  },
+  "created_at_utc": "2026-09-02T02:14:24Z",
+  "final_amendment_selected": false,
+  "forbidden_processes_started": false,
+  "parent": {
+    "branch": "audit-v6-c0r-reviewer-a-freeze-20260901_133242",
+    "commit": "6afd33a561f60ccc9cf9d9855541950833b7938f"
+  },
+  "protocol": "SINGLE_REVIEWER_IMAGE_AWARE_AUDIT",
+  "reviewer_a": {
+    "active_output_pointer_preserved": true,
+    "counts": {
+      "CONFIRMED_INVALID": 10,
+      "UNRESOLVED": 1,
+      "VALID": 189
+    },
+    "freeze_preserved": true,
+    "hash_chain": "PASS",
+    "pilot_rows_preserved": 5,
+    "records": 200,
+    "role": "sole authoritative image-aware reviewer"
+  },
+  "reviewer_b": {
+    "frozen_queue_preserved": true,
+    "frozen_queue_rows": 53,
+    "required_gate": false,
+    "session_started": false,
+    "status": "OPTIONAL_REVIEW_NOT_EXECUTED_DUE_RESOURCE_CONSTRAINT"
+  },
+  "schema": "SINGLE_REVIEWER_PROTOCOL_AMENDMENT_PUBLIC_V1",
+  "status": "M3BENCH_C0R_SINGLE_REVIEWER_AUDIT_ACCEPTED__AMENDMENT_PLAN_READY__GPU_NOT_STARTED"
+}

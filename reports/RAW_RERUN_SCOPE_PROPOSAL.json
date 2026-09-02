@@ -1,0 +1,24 @@
+{
+  "evaluator_started": false,
+  "gpu_started": false,
+  "judge_started": false,
+  "proposed_amended_sequence_length": 189,
+  "ranking_started": false,
+  "schema": "RAW_RERUN_SCOPE_PROPOSAL_PUBLIC_V1",
+  "semantic_metrics_started": false,
+  "sequential": {
+    "affected_event_rows": 24752,
+    "anonymous_groups": 4,
+    "full_rerun_recommended_if_amendment_is_approved": true,
+    "proposed_edit_steps": 756,
+    "reason": "The sequence diverges at position 19 and the common pre-position-19 state snapshot is incomplete.",
+    "rerun_selected": false
+  },
+  "single": {
+    "affected_event_rows": 612,
+    "exclusion_only_handling": "Omit nonretained target events and retain unaffected frozen single outputs.",
+    "rerun_selected": false
+  },
+  "status": "PROPOSAL_ONLY__OPERATOR_APPROVAL_REQUIRED__GPU_NOT_STARTED",
+  "unblinding_started": false
+}

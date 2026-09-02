@@ -1,0 +1,37 @@
+{
+  "evidence_gates": {
+    "authoritative_item_bound_source_repairs_found": 0,
+    "formal_selection_reconstruction": "EXACT_200_OF_200",
+    "pre_formal_frozen_reserve_binding_found": false,
+    "structural_preflight": "PASS_200_OF_200"
+  },
+  "operator_selected_option": null,
+  "options": [
+    {
+      "available": false,
+      "available_targets": 0,
+      "id": "AUTHORITATIVE_SOURCE_REPAIR",
+      "reason": "No pre-existing item-bound authoritative correction artifact was found."
+    },
+    {
+      "available": false,
+      "available_targets": 0,
+      "id": "PRE_FORMAL_FROZEN_RESERVE_REPLACEMENT",
+      "reason": "The frozen selection did not define a continuation ranking or replacement binding."
+    },
+    {
+      "available": true,
+      "eligible_targets": 11,
+      "id": "EXCLUSION_ONLY",
+      "operator_approval_required": true,
+      "proposed_sequence_length": 189
+    }
+  ],
+  "recommendation_for_operator_consideration": {
+    "option": "EXCLUSION_ONLY",
+    "reason": "It is the only option supported by the frozen evidence currently available.",
+    "selected": false
+  },
+  "schema": "AMENDMENT_OPTIONS_PUBLIC_V1",
+  "status": "OPTIONS_PREPARED__NO_FINAL_AMENDMENT_SELECTED"
+}

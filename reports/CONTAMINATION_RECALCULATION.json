@@ -1,0 +1,16 @@
+{
+  "affected_sequential_event_rows": 24752,
+  "affected_single_event_rows": 612,
+  "anonymous_group_count": 4,
+  "earliest_affected_position": 19,
+  "item_level_positions_public": false,
+  "judge_or_performance_evidence_used": false,
+  "methods_unblinded": false,
+  "nonretained_target_count": 11,
+  "raw_model_answers_read_or_exported": false,
+  "schema": "CONTAMINATION_RECALCULATION_PUBLIC_V1",
+  "sequential_group_symmetric": true,
+  "sequential_per_anonymous_group": 6188,
+  "single_group_symmetric": true,
+  "single_per_anonymous_group": 153
+}

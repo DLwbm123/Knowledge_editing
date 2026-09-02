@@ -1,0 +1,18 @@
+{
+  "authoritative_source_repairs_available": 0,
+  "confirmed_invalid_count": 10,
+  "exclusions_required": 11,
+  "final_amendment_selected": false,
+  "nonretained_count": 11,
+  "pre_formal_frozen_replacements_available": 0,
+  "recommended_amended_sequence_length": 189,
+  "retain_count": 189,
+  "reviewer_a_counts": {
+    "CONFIRMED_INVALID": 10,
+    "UNRESOLVED": 1,
+    "VALID": 189
+  },
+  "schema": "SINGLE_REVIEWER_FINAL_TARGET_CENSUS_PUBLIC_V1",
+  "source_target_count": 200,
+  "unresolved_count": 1
+}
