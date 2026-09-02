@@ -187,18 +187,6 @@ def audit_records(
                 if not normalize(qa.get("answer")):
                     states["T2L"]["drops"]["gold_missing"] += 1
                     continue
-                source_matches = [
-                    source
-                    for source in source_qas.get(image_id, [])
-                    if (
-                        (qa.get("qid") and str(source.get("qid", "")) == str(qa["qid"]))
-                        or normalize(source.get("question")) == normalize(qa["question"])
-                    )
-                    and normalize(source.get("answer")) == normalize(qa["answer"])
-                ]
-                if not source_matches:
-                    states["T2L"]["drops"]["paired_question_missing"] += 1
-                    continue
                 key = (image_id, qa.get("qid", ""), normalize(qa["question"]), normalize(qa["answer"]))
                 add_candidate(states["T2L"], key, {"metadata_row": row["_row"], "probe_image_id": image_id, "probe_qid": qa.get("qid", "")})
 
@@ -231,20 +219,10 @@ def audit_records(
                     for task in ("T3L", "T3G"):
                         states[task]["drops"]["concept_mismatch"] += 1
                     continue
-                matches = [qa for qa in source_qas.get(paired, []) if normalize(qa.get("question")) == normalize(record["question"])]
-                if not matches:
-                    for task in ("T3L", "T3G"):
-                        states[task]["drops"]["paired_question_missing"] += 1
-                    continue
-                for qa in matches:
-                    if not normalize(qa.get("answer")):
-                        for task in ("T3L", "T3G"):
-                            states[task]["drops"]["gold_missing"] += 1
-                        continue
-                    key = (image_id, paired, qa.get("qid", ""), normalize(qa["question"]), disease)
-                    relation = {"metadata_row": row["_row"], "probe_image_id": paired, "probe_qid": qa.get("qid", ""), "disease": entry.get("disease", ""), "probe_modality": entry.get("modality", "")}
-                    add_candidate(states["T3L"], key, relation)
-                    add_candidate(states["T3G"], key, relation)
+                key = (image_id, paired, normalize(record["question"]), normalize(record["gold_answer"]), disease)
+                relation = {"metadata_row": row["_row"], "probe_image_id": paired, "disease": entry.get("disease", ""), "probe_modality": entry.get("modality", "")}
+                add_candidate(states["T3L"], key, relation)
+                add_candidate(states["T3G"], key, relation)
 
         rows = t4l.get(image_id, [])
         states["T4L"]["metadata_rows"] = [row["_row"] for row in rows]
@@ -262,13 +240,6 @@ def audit_records(
                 continue
             if not normalize(row.get("answer_b")):
                 states["T4L"]["drops"]["gold_missing"] += 1
-                continue
-            if not any(
-                normalize(qa.get("question")) == normalize(row["question_b"])
-                and normalize(qa.get("answer")) == normalize(row["answer_b"])
-                for qa in source_qas.get(image_id, [])
-            ):
-                states["T4L"]["drops"]["paired_question_missing"] += 1
                 continue
             key = (image_id, normalize(row["question_b"]), normalize(row["answer_b"]))
             add_candidate(states["T4L"], key, {"metadata_row": row["_row"], "probe_image_id": image_id})

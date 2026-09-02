@@ -31,7 +31,7 @@ class Core9AnchorAuditTest(unittest.TestCase):
                     writer.writerows(rows)
 
             qas = "[{'qid':'q1','question':'Does this show edema?','answer':'yes'}, {'qid':'q2','question':'Where is the lesion?','answer':'left'}]"
-            write_csv("slake_metadata.csv", ["image_id", "qa_list"], [{"image_id": "imgA", "qa_list": qas}, {"image_id": "imgB", "qa_list": qas}])
+            write_csv("slake_metadata.csv", ["image_id", "qa_list"], [{"image_id": "imgA", "qa_list": "[]"}, {"image_id": "imgB", "qa_list": qas}])
             write_csv("vqarad_metadata.csv", ["image_id", "qa_list"], [])
             write_csv("t2l_cross_image_pairs.csv", ["image_id_1", "image_id_2", "qa_list"], [{"image_id_1": "imgA", "image_id_2": "imgB", "qa_list": qas}])
             write_csv("t3_cross_modality_pairs.csv", ["image_A", "modality_A", "diseases", "same_disease_images_in_other_modalities"], [{"image_A": "imgA", "modality_A": "xray", "diseases": "['edema']", "same_disease_images_in_other_modalities": "[{'image_id':'imgB','modality':'ct','disease':'edema'}]"}])
