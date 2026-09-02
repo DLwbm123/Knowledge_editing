@@ -78,8 +78,9 @@ def state_delta(editor: Any, record_id: str) -> float:
     if isinstance(editor, BeloraPaperSpecEditor):
         # Every B matrix starts at exactly zero; its post-edit norm is a strict
         # lower bound on total adapter-state movement.
+        adapter_name = editor.edit_to_adapter[record_id]
         return norm(
-            [wrapper.lora_B[wrapper.logical_to_slot[record_id]] for wrapper in editor.wrappers.values()]
+            [wrapper.lora_B[wrapper.logical_to_slot[adapter_name]] for wrapper in editor.wrappers.values()]
         )
     raise TypeError(type(editor))
 

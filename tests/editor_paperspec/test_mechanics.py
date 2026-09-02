@@ -106,7 +106,8 @@ class GraceCodebookTests(unittest.TestCase):
         self.assertEqual(result.action, "insert_far")
 
     def test_source_label_match(self):
-        self.assertTrue(GraceCodebook.source_label_match([1, 3], [2, 2]))
+        self.assertTrue(GraceCodebook.source_label_match([1, 3], [1, 3]))
+        self.assertFalse(GraceCodebook.source_label_match([1, 3], [2, 2]))
         self.assertFalse(GraceCodebook.source_label_match([1, 3], [2, 3]))
 
 
@@ -148,8 +149,7 @@ class RoutedLayerTests(unittest.TestCase):
         self.assertTrue(torch.equal(miss, torch.zeros_like(miss)))
         wrapper.set_active("edit.one", token_index=3)
         hit = wrapper(inputs)
-        self.assertTrue(torch.equal(hit[0, :3], torch.tensor([[1.0, 2.0, 3.0]]).expand(3, -1)))
-        self.assertTrue(torch.equal(hit[0, 3], torch.zeros(3)))
+        self.assertTrue(torch.equal(hit, torch.tensor([[[1.0, 2.0, 3.0]]]).expand(1, 4, -1)))
         state = wrapper.export_state()
         restored = GraceValueLinear(copy.deepcopy(base), replacement="replace_prompt")
         restored.load_exported_state(state)

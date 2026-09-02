@@ -147,7 +147,11 @@ class PreparedBatch:
     raw_labels: torch.Tensor
     target_token_ids: tuple[int, ...]
     target_start_expanded: int | None
+    key_token_index_text: int
+    key_token_text: str
     key_token_index: int
+    image_token_count: int
+    image_tensor_shape: list[int] | list[list[int]]
     prompt: str
     image_sha256: str
     preprocessing_seed: int
@@ -176,7 +180,14 @@ class PreparedBatch:
             "target_token_count": int(len(target_positions)),
             "target_token_ids": list(self.target_token_ids),
             "target_start_expanded": first_target,
+            "key_token_index_text": self.key_token_index_text,
+            "key_token_text": self.key_token_text,
+            "key_token_role": "last_non_padding_prompt_text_token",
             "key_token_index": self.key_token_index,
+            "text_space_sequence_length": int(self.raw_input_ids.shape[1]),
+            "image_token_count": self.image_token_count,
+            "image_tensor_shape": self.image_tensor_shape,
+            "multimodal_expansion_verified": self.labels.shape[1] > self.raw_input_ids.shape[1],
             "prompt_and_image_positions_masked": bool(
                 first_target is not None
                 and torch.all(self.labels[0, :first_target] == IGNORE_INDEX).item()
@@ -354,7 +365,7 @@ class LlavaMedEditorRuntime:
         vision_path = select_unique_outer_module(vision_candidates, label="vision encoder")
         inventory = {
             "schema_version": "m3bench-llava-med-module-inventory-v1",
-            "classification": "M3BENCH_PAPER_SPEC_INDEPENDENT_REIMPLEMENTATION_V1",
+            "classification": "M3BENCH_PAPER_SPEC_INDEPENDENT_REIMPLEMENTATION_V2_EFFECT_REPAIRED",
             "model_class": self.llava_model().__class__.__name__,
             "model_path": str(self.model_path),
             "vision_tower_cache": str(self.vision_path),
@@ -440,6 +451,9 @@ class LlavaMedEditorRuntime:
         labels: torch.Tensor,
         images: torch.Tensor | list[torch.Tensor],
     ) -> tuple[torch.Tensor, torch.Tensor | None, torch.Tensor | None, torch.Tensor]:
+        tensors = images if isinstance(images, list) else [images]
+        if not tensors or any(not isinstance(item, torch.Tensor) or item.numel() == 0 for item in tensors):
+            raise RuntimeError("multimodal edit requires a non-empty image tensor")
         core = self.llava_model()
         with torch.no_grad():
             _, position_ids, expanded_attention, _, inputs_embeds, expanded_labels = (
@@ -455,6 +469,10 @@ class LlavaMedEditorRuntime:
             )
         if inputs_embeds is None or expanded_labels is None:
             raise RuntimeError("multimodal expansion failed")
+        if inputs_embeds.shape[1] <= raw_input_ids.shape[1]:
+            raise RuntimeError("image token was not expanded into multimodal embeddings")
+        if expanded_labels.shape[:2] != inputs_embeds.shape[:2]:
+            raise RuntimeError("expanded labels and embeddings are misaligned")
         return (
             inputs_embeds.detach(),
             expanded_attention,
@@ -487,6 +505,18 @@ class LlavaMedEditorRuntime:
         key_index = target_start - 1
         if key_index < 0:
             raise RuntimeError("expanded prompt is empty")
+        expanded_target_ids = tuple(int(x) for x in labels[0, target_positions].tolist())
+        if expanded_target_ids != target_ids:
+            raise RuntimeError("multimodal expansion changed target token IDs")
+        image_count = int((raw_input_ids == IMAGE_TOKEN_INDEX).sum().item())
+        if image_count != 1:
+            raise RuntimeError("edit batch must contain exactly one image token")
+        images = full["images"] if isinstance(full["images"], list) else [full["images"]]
+        image_shape: list[int] | list[list[int]] = (
+            [list(item.shape) for item in images]
+            if isinstance(full["images"], list)
+            else list(full["images"].shape)
+        )
         return PreparedBatch(
             inputs_embeds=inputs_embeds,
             attention_mask=attention,
@@ -496,7 +526,13 @@ class LlavaMedEditorRuntime:
             raw_labels=raw_labels,
             target_token_ids=target_ids,
             target_start_expanded=target_start,
+            key_token_index_text=prefix_ids.shape[1] - 1,
+            key_token_text=self.adapter.tokenizer.decode(
+                [int(prefix_ids[0, -1].item())], skip_special_tokens=False
+            ),
             key_token_index=key_index,
+            image_token_count=image_count,
+            image_tensor_shape=image_shape,
             prompt=full["prompt"],
             image_sha256=full["image_sha256"],
             preprocessing_seed=int(full["preprocessing_seed"]),
@@ -513,6 +549,7 @@ class LlavaMedEditorRuntime:
         selected_image = image_path if image_path is not None else record.image_path
         raw = self.adapter.prepare_inputs(selected_image, selected_question, None)
         raw_input_ids = raw["input_ids"]
+        from llava.constants import IMAGE_TOKEN_INDEX
         raw_labels = torch.full_like(raw_input_ids, IGNORE_INDEX)
         inputs_embeds, attention, position_ids, labels = self._expand_multimodal(
             raw_input_ids=raw_input_ids,
@@ -525,6 +562,14 @@ class LlavaMedEditorRuntime:
             key_index = int(valid_positions[-1].item())
         else:
             key_index = inputs_embeds.shape[1] - 1
+        image_count = int((raw_input_ids == IMAGE_TOKEN_INDEX).sum().item())
+        if image_count != 1:
+            raise RuntimeError("question batch must contain exactly one image token")
+        image_shape = (
+            [list(item.shape) for item in raw["images"]]
+            if isinstance(raw["images"], list)
+            else list(raw["images"].shape)
+        )
         return PreparedBatch(
             inputs_embeds=inputs_embeds,
             attention_mask=attention,
@@ -534,7 +579,13 @@ class LlavaMedEditorRuntime:
             raw_labels=raw_labels,
             target_token_ids=(),
             target_start_expanded=None,
+            key_token_index_text=raw_input_ids.shape[1] - 1,
+            key_token_text=self.adapter.tokenizer.decode(
+                [int(raw_input_ids[0, -1].item())], skip_special_tokens=False
+            ),
             key_token_index=key_index,
+            image_token_count=image_count,
+            image_tensor_shape=image_shape,
             prompt=raw["prompt"],
             image_sha256=raw["image_sha256"],
             preprocessing_seed=int(raw["preprocessing_seed"]),

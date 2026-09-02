@@ -22,7 +22,7 @@ from .llava_runtime import (
     seed_everything,
     write_json_atomic,
 )
-from .routed_layers import GraceValueLinear, RoutedFullLinear, RoutedLoRALinear
+from .routed_layers import GraceValueLinear, RoutedFullLinear, RoutedLoRALinear, safe_slot
 from .routing import (
     GraceCodebook,
     MemoryRouter,
@@ -31,7 +31,7 @@ from .routing import (
 )
 
 
-CLASSIFICATION = "M3BENCH_PAPER_SPEC_INDEPENDENT_REIMPLEMENTATION_V1"
+CLASSIFICATION = "M3BENCH_PAPER_SPEC_INDEPENDENT_REIMPLEMENTATION_V2_EFFECT_REPAIRED"
 SEED = 20260828
 
 
@@ -120,6 +120,7 @@ class LoraPaperSpecEditor(PaperSpecEditor):
         peft_model = get_peft_model(runtime.adapter.model, config)
         runtime.adapter.model = peft_model
         self.peft_model = peft_model
+        self.adapter_name = "default"
         self.targets = targets
         self._set_enabled(True)
         self._freeze_non_lora()
@@ -132,6 +133,7 @@ class LoraPaperSpecEditor(PaperSpecEditor):
 
     def _set_enabled(self, enabled: bool) -> None:
         if enabled:
+            self.peft_model.set_adapter(self.adapter_name)
             self.peft_model.enable_adapter_layers()
         else:
             self.peft_model.disable_adapter_layers()
@@ -227,12 +229,14 @@ class LoraPaperSpecEditor(PaperSpecEditor):
         }
 
     def load_editor_state(self, path: Path) -> None:
-        from peft import PeftModel
+        from peft.utils.save_and_load import load_peft_weights, set_peft_model_state_dict
 
-        base = self.runtime.llava_model()
-        loaded = PeftModel.from_pretrained(base, path, is_trainable=False)
-        self.runtime.adapter.model = loaded
-        self.peft_model = loaded
+        weights = load_peft_weights(path, device=str(self.runtime.device))
+        result = set_peft_model_state_dict(
+            self.peft_model, weights, adapter_name=self.adapter_name
+        )
+        if getattr(result, "unexpected_keys", None):
+            raise RuntimeError(f"unexpected LoRA state keys: {result.unexpected_keys}")
         metadata = json.loads((path / "m3bench_editor_state.json").read_text(encoding="utf-8"))
         self.edit_history = list(metadata["edit_history"])
         self._set_enabled(True)
@@ -258,6 +262,7 @@ class LoraPaperSpecEditor(PaperSpecEditor):
         return {
             "method": self.method,
             "edit_history": list(self.edit_history),
+            "active_adapter": self.adapter_name,
             "adapter_parameter_count": sum(parameter.numel() for _, parameter in adapters),
             "adapter_parameter_bytes": sum(
                 parameter.numel() * parameter.element_size() for _, parameter in adapters
@@ -303,11 +308,29 @@ class GracePaperSpecEditor(PaperSpecEditor):
     @contextmanager
     def disabled(self) -> Iterator[None]:
         previous = self.wrapper.active_logical_id
+        previous_token_index = self.wrapper.token_index
         self.wrapper.disable()
         try:
             yield
         finally:
-            self.wrapper.set_active(previous) if previous is not None else self.wrapper.disable()
+            if previous is None:
+                self.wrapper.disable()
+            else:
+                self.wrapper.set_active(previous, token_index=previous_token_index)
+
+    @contextmanager
+    def _activated(self, logical_id: str | None, *, token_index: int) -> Iterator[None]:
+        self.wrapper.set_active(logical_id, token_index=token_index)
+        try:
+            yield
+        finally:
+            self.wrapper.disable()
+
+    @contextmanager
+    def route_generation(self, record: EditorRecord) -> Iterator[Any]:
+        decision = self._route(record)
+        with self._activated(decision.logical_edit_id, token_index=-1):
+            yield decision
 
     def _question_key(self, record: EditorRecord) -> torch.Tensor:
         with self.disabled():
@@ -330,18 +353,20 @@ class GracePaperSpecEditor(PaperSpecEditor):
         parameters = self.wrapper.train_only(effective_id)
         if len(parameters) != 1:
             raise RuntimeError("GRACE must train exactly one entry value")
-        self.wrapper.set_active(effective_id, token_index=batch.key_token_index)
         optimizer = torch.optim.Adam(parameters, lr=1.0)
         losses, gradient_checks = [], []
-        for _ in range(100):
-            optimizer.zero_grad(set_to_none=True)
-            loss = self.runtime.compute_loss(batch)
-            loss.backward()
-            gradient_checks.append(finite_gradients(parameters))
-            optimizer.step()
-            losses.append(float(loss.detach().cpu().item()))
-        self.wrapper.train_only(None)
-        self.wrapper.disable()
+        try:
+            with self._activated(effective_id, token_index=batch.key_token_index):
+                for _ in range(100):
+                    optimizer.zero_grad(set_to_none=True)
+                    loss = self.runtime.compute_loss(batch)
+                    loss.backward()
+                    gradient_checks.append(finite_gradients(parameters))
+                    optimizer.step()
+                    losses.append(float(loss.detach().cpu().item()))
+        finally:
+            self.wrapper.train_only(None)
+            self.wrapper.disable()
         self.requested_to_effective[record.record_id] = effective_id
         self.edit_history.append(record.record_id)
         return {
@@ -365,10 +390,9 @@ class GracePaperSpecEditor(PaperSpecEditor):
     def score_target_nll(self, record: EditorRecord) -> dict[str, Any]:
         decision = self._route(record)
         batch = self.runtime.build_edit_batch(record)
-        self.wrapper.set_active(decision.logical_edit_id, token_index=batch.key_token_index)
-        with torch.no_grad():
-            loss = self.runtime.compute_loss(batch)
-        self.wrapper.disable()
+        with self._activated(decision.logical_edit_id, token_index=batch.key_token_index):
+            with torch.no_grad():
+                loss = self.runtime.compute_loss(batch)
         return {
             "nll": float(loss.cpu().item()),
             "route": decision_as_json(decision),
@@ -376,10 +400,8 @@ class GracePaperSpecEditor(PaperSpecEditor):
         }
 
     def generate(self, record: EditorRecord, *, use_cache: bool = True) -> dict[str, Any]:
-        decision = self._route(record)
-        self.wrapper.set_active(decision.logical_edit_id, token_index=-1)
-        output = self.runtime.generate(record, use_cache=use_cache)
-        self.wrapper.disable()
+        with self.route_generation(record) as decision:
+            output = self.runtime.generate(record, use_cache=use_cache)
         return {"route": decision_as_json(decision), "generation": output}
 
     def save_editor_state(self, path: Path) -> dict[str, Any]:
@@ -449,7 +471,7 @@ class GracePaperSpecEditor(PaperSpecEditor):
             "learning_rate": 1.0,
             "trainable": "selected entry value only",
             "value_init": "cold uniform [0,1), source lock",
-            "replacement": "replace_prompt, source lock",
+            "replacement": "replace_prompt inclusive through expanded key token",
             "collision_and_radius_update": "locked source semantics",
             "euclidean": "diagnostic only, not primary smoke",
             "source": "GRACE @ f674183f17a995d109e10ee6140d4c3e6d016115",
@@ -502,6 +524,20 @@ class BalanceEditPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
         finally:
             self.wrapper.set_active(previous)
 
+    @contextmanager
+    def _activated(self, logical_id: str | None) -> Iterator[None]:
+        self.wrapper.set_active(logical_id)
+        try:
+            yield
+        finally:
+            self.wrapper.set_active(None)
+
+    @contextmanager
+    def route_generation(self, record: EditorRecord) -> Iterator[Any]:
+        decision = self._route(record)
+        with self._activated(decision.logical_edit_id):
+            yield decision
+
     def apply_edit(self, record: EditorRecord) -> dict[str, Any]:
         seed = record_seed(record.record_id, self.method)
         seed_everything(seed)
@@ -515,19 +551,21 @@ class BalanceEditPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
         self.router.add(record.record_id, key, radius, batch.target_token_ids)
         edited = self.wrapper.add_edit(record.record_id)
         parameters = self.wrapper.train_only(record.record_id)
-        self.wrapper.set_active(record.record_id)
         optimizer = torch.optim.Adam(parameters, lr=0.01)
         losses, gradient_checks = [], []
-        for _ in range(50):
-            optimizer.zero_grad(set_to_none=True)
-            loss = self.runtime.compute_loss(batch)
-            loss.backward()
-            gradient_checks.append(finite_gradients(parameters))
-            torch.nn.utils.clip_grad_norm_(parameters, 1.0)
-            optimizer.step()
-            losses.append(float(loss.detach().cpu().item()))
-        self.wrapper.train_only(None)
-        self.wrapper.set_active(None)
+        try:
+            with self._activated(record.record_id):
+                for _ in range(50):
+                    optimizer.zero_grad(set_to_none=True)
+                    loss = self.runtime.compute_loss(batch)
+                    loss.backward()
+                    gradient_checks.append(finite_gradients(parameters))
+                    torch.nn.utils.clip_grad_norm_(parameters, 1.0)
+                    optimizer.step()
+                    losses.append(float(loss.detach().cpu().item()))
+        finally:
+            self.wrapper.train_only(None)
+            self.wrapper.set_active(None)
         self.edit_history.append(record.record_id)
         return {
             "record_id": record.record_id,
@@ -548,18 +586,15 @@ class BalanceEditPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
 
     def score_target_nll(self, record: EditorRecord) -> dict[str, Any]:
         decision = self._route(record)
-        self.wrapper.set_active(decision.logical_edit_id)
         batch = self.runtime.build_edit_batch(record)
-        with torch.no_grad():
-            loss = self.runtime.compute_loss(batch)
-        self.wrapper.set_active(None)
+        with self._activated(decision.logical_edit_id):
+            with torch.no_grad():
+                loss = self.runtime.compute_loss(batch)
         return {"nll": float(loss.cpu().item()), "route": decision_as_json(decision), "target_mask": batch.mask_report()}
 
     def generate(self, record: EditorRecord, *, use_cache: bool = True) -> dict[str, Any]:
-        decision = self._route(record)
-        self.wrapper.set_active(decision.logical_edit_id)
-        output = self.runtime.generate(record, use_cache=use_cache)
-        self.wrapper.set_active(None)
+        with self.route_generation(record) as decision:
+            output = self.runtime.generate(record, use_cache=use_cache)
         return {"route": decision_as_json(decision), "generation": output}
 
     def save_editor_state(self, path: Path) -> dict[str, Any]:
@@ -642,6 +677,7 @@ class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
             runtime.replace_module(path, wrapper)
             self.wrappers[path] = wrapper
         self.router = MemoryRouter("euclidean")
+        self.edit_to_adapter: dict[str, str] = {}
 
     @contextmanager
     def disabled(self) -> Iterator[None]:
@@ -655,8 +691,36 @@ class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
                 wrapper.set_active(previous[path])
 
     def _set_active(self, logical_id: str | None) -> None:
+        adapter_name = self.edit_to_adapter[logical_id] if logical_id is not None else None
         for wrapper in self.wrappers.values():
-            wrapper.set_active(logical_id)
+            wrapper.set_active(adapter_name)
+
+    @contextmanager
+    def _activated(self, logical_id: str | None) -> Iterator[None]:
+        self._set_active(logical_id)
+        try:
+            yield
+        finally:
+            self._set_active(None)
+
+    @contextmanager
+    def route_generation(self, record: EditorRecord) -> Iterator[Any]:
+        decision = self._route(record)
+        with self._activated(decision.logical_edit_id):
+            yield decision
+
+    def adapter_state_sha256(self, logical_id: str) -> str:
+        adapter_name = self.edit_to_adapter[logical_id]
+        digest = hashlib.sha256()
+        for path, wrapper in sorted(self.wrappers.items()):
+            slot = wrapper.logical_to_slot[adapter_name]
+            digest.update(path.encode("utf-8"))
+            for label, value in (("A", wrapper.lora_A[slot]), ("B", wrapper.lora_B[slot])):
+                tensor = value.detach().to(device="cpu", dtype=torch.float32).contiguous()
+                digest.update(label.encode("ascii"))
+                digest.update(str(tuple(tensor.shape)).encode("ascii"))
+                digest.update(tensor.numpy().tobytes())
+        return digest.hexdigest()
 
     def apply_edit(self, record: EditorRecord) -> dict[str, Any]:
         seed = record_seed(record.record_id, self.method)
@@ -667,24 +731,30 @@ class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
         radius = balanced_radius(key, positive, negative, alpha=0.2, distance="euclidean")
         batch = self.runtime.build_edit_batch(record)
         self.router.add(record.record_id, key, radius, batch.target_token_ids)
+        adapter_name = safe_slot(record.record_id)
+        if adapter_name in self.edit_to_adapter.values():
+            raise RuntimeError("BELoRA adapter-name collision")
+        self.edit_to_adapter[record.record_id] = adapter_name
         parameters = []
         for index, wrapper in enumerate(self.wrappers.values()):
-            wrapper.add_adapter(record.record_id, seed=seed + index)
-            parameters.extend(wrapper.train_only(record.record_id))
-        self._set_active(record.record_id)
+            wrapper.add_adapter(adapter_name, seed=seed + index)
+            parameters.extend(wrapper.train_only(adapter_name))
         optimizer = torch.optim.AdamW(parameters, lr=5e-5)
         losses, gradient_checks = [], []
-        for _ in range(5):
-            optimizer.zero_grad(set_to_none=True)
-            loss = self.runtime.compute_loss(batch)
-            loss.backward()
-            gradient_checks.append(finite_gradients(parameters))
-            torch.nn.utils.clip_grad_norm_(parameters, 1.0)
-            optimizer.step()
-            losses.append(float(loss.detach().cpu().item()))
-        for wrapper in self.wrappers.values():
-            wrapper.train_only(None)
-        self._set_active(None)
+        try:
+            with self._activated(record.record_id):
+                for _ in range(5):
+                    optimizer.zero_grad(set_to_none=True)
+                    loss = self.runtime.compute_loss(batch)
+                    loss.backward()
+                    gradient_checks.append(finite_gradients(parameters))
+                    torch.nn.utils.clip_grad_norm_(parameters, 1.0)
+                    optimizer.step()
+                    losses.append(float(loss.detach().cpu().item()))
+        finally:
+            for wrapper in self.wrappers.values():
+                wrapper.train_only(None)
+            self._set_active(None)
         self.edit_history.append(record.record_id)
         return {
             "record_id": record.record_id,
@@ -699,6 +769,8 @@ class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
             "black_image_sha256": hashlib.sha256(black_path.read_bytes()).hexdigest(),
             "entry_count": len(self.router),
             "logical_adapter_set_size": len(self.wrappers),
+            "adapter_name": adapter_name,
+            "adapter_state_sha256": self.adapter_state_sha256(record.record_id),
             "trainable_parameter_count": sum(p.numel() for p in parameters),
             "trainable_parameter_bytes": parameter_bytes(parameters),
             "target_mask": batch.mask_report(),
@@ -706,18 +778,15 @@ class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
 
     def score_target_nll(self, record: EditorRecord) -> dict[str, Any]:
         decision = self._route(record)
-        self._set_active(decision.logical_edit_id)
         batch = self.runtime.build_edit_batch(record)
-        with torch.no_grad():
-            loss = self.runtime.compute_loss(batch)
-        self._set_active(None)
+        with self._activated(decision.logical_edit_id):
+            with torch.no_grad():
+                loss = self.runtime.compute_loss(batch)
         return {"nll": float(loss.cpu().item()), "route": decision_as_json(decision), "target_mask": batch.mask_report()}
 
     def generate(self, record: EditorRecord, *, use_cache: bool = True) -> dict[str, Any]:
-        decision = self._route(record)
-        self._set_active(decision.logical_edit_id)
-        output = self.runtime.generate(record, use_cache=use_cache)
-        self._set_active(None)
+        with self.route_generation(record) as decision:
+            output = self.runtime.generate(record, use_cache=use_cache)
         return {"route": decision_as_json(decision), "generation": output}
 
     def save_editor_state(self, path: Path) -> dict[str, Any]:
@@ -728,6 +797,7 @@ class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
                 "targets": self.targets,
                 "router": self.router.export_state(),
                 "wrappers": {path: wrapper.export_state() for path, wrapper in self.wrappers.items()},
+                "edit_to_adapter": self.edit_to_adapter,
                 "edit_history": self.edit_history,
             },
             path,
@@ -741,6 +811,7 @@ class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
         self.router = MemoryRouter.from_state(state["router"], device=self.runtime.device)
         for target, wrapper_state in state["wrappers"].items():
             self.wrappers[target].load_exported_state(wrapper_state)
+        self.edit_to_adapter = dict(state["edit_to_adapter"])
         self.edit_history = list(state["edit_history"])
 
     def reset_editor_state(self) -> None:
@@ -751,6 +822,7 @@ class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
             wrapper.logical_to_slot.clear()
             wrapper.slot_to_logical.clear()
             wrapper.set_active(None)
+        self.edit_to_adapter.clear()
         self.edit_history.clear()
 
     def state_summary(self) -> dict[str, Any]:
@@ -761,7 +833,7 @@ class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
         ]
         return {
             "method": self.method,
-            "implementation_label": "BELORA_PAPER_SPEC_REIMPLEMENTATION_V1",
+            "implementation_label": "BELORA_PAPER_SPEC_INDEPENDENT_REIMPLEMENTATION_V2_EFFECT_REPAIRED",
             "entry_count": len(self.router),
             "logical_edit_ids": list(self.router.logical_ids),
             "radii": list(self.router.radii),
@@ -769,6 +841,11 @@ class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
             "adapter_parameter_count": sum(p.numel() for p in parameters),
             "adapter_parameter_bytes": parameter_bytes(parameters),
             "full_weight_copies": 0,
+            "edit_to_adapter": dict(self.edit_to_adapter),
+            "adapter_hashes": {
+                logical_id: self.adapter_state_sha256(logical_id)
+                for logical_id in self.edit_history
+            },
             "edit_history": list(self.edit_history),
         }
 
@@ -776,7 +853,7 @@ class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
         return {
             "schema_version": "m3bench-editor-method-config-v2",
             "method": "BELoRA",
-            "implementation_label": "BELORA_PAPER_SPEC_REIMPLEMENTATION_V1",
+            "implementation_label": "BELORA_PAPER_SPEC_INDEPENDENT_REIMPLEMENTATION_V2_EFFECT_REPAIRED",
             "classification": "independent paper-spec reimplementation; not author implementation",
             "scope": "final-layer LM MLP internal linears",
             "targets": self.targets,

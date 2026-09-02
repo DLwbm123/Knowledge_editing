@@ -67,12 +67,15 @@ def _matrix(value: torch.Tensor) -> torch.Tensor:
 
 
 def cosine_distances(keys: torch.Tensor, query: torch.Tensor) -> torch.Tensor:
-    """Return ``1 - cosine_similarity`` from every key to one query."""
+    """Return stable float32 cosine distances after explicit normalization."""
     key_matrix = _matrix(keys)
     query_vector = _vector(query).to(key_matrix.device)
     if key_matrix.shape[-1] != query_vector.shape[-1]:
         raise ValueError("key/query dimension mismatch")
-    return 1.0 - F.cosine_similarity(key_matrix, query_vector.unsqueeze(0), dim=-1)
+    normalized_keys = F.normalize(key_matrix, p=2, dim=-1)
+    normalized_query = F.normalize(query_vector, p=2, dim=-1)
+    similarity = (normalized_keys * normalized_query.unsqueeze(0)).sum(dim=-1).clamp(-1.0, 1.0)
+    return (1.0 - similarity).clamp_min(0.0)
 
 
 def euclidean_distances(keys: torch.Tensor, query: torch.Tensor) -> torch.Tensor:
@@ -155,7 +158,10 @@ class MemoryRouter:
         if not torch.isfinite(torch.tensor(radius_value)) or radius_value < 0:
             raise ValueError(f"invalid route radius: {radius_value}")
         self.logical_ids.append(logical_edit_id)
-        self.keys.append(_vector(key).clone())
+        stored_key = _vector(key).clone()
+        if self.distance == "cosine":
+            stored_key = F.normalize(stored_key, p=2, dim=0)
+        self.keys.append(stored_key)
         self.radii.append(radius_value)
         self.labels.append(tuple(int(x) for x in label))
 
@@ -235,14 +241,7 @@ class GraceCodebook(MemoryRouter):
 
     @staticmethod
     def source_label_match(left: Iterable[int], right: Iterable[int]) -> bool:
-        left_values = tuple(int(x) for x in left)
-        right_values = tuple(int(x) for x in right)
-        if not left_values or not right_values:
-            return left_values == right_values
-        # Upstream GRACE compares float means of edit-label tensors.
-        left_mean = sum(left_values) / len(left_values)
-        right_mean = sum(right_values) / len(right_values)
-        return left_mean == right_mean
+        return tuple(int(x) for x in left) == tuple(int(x) for x in right)
 
     def insert_with_source_semantics(
         self,

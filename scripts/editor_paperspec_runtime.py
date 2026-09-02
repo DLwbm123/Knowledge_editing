@@ -170,7 +170,8 @@ def freeze_method_documents(editor: PaperSpecEditor) -> None:
         write_frozen_text(
             method_dir / "METHOD_STATE_CONTRACT_V2.md",
             "# BELoRA State Contract V2\n\n"
-            "Implementation label: `BELORA_PAPER_SPEC_REIMPLEMENTATION_V1`. Each logical edit owns one pooled "
+            "Implementation label: `BELORA_PAPER_SPEC_INDEPENDENT_REIMPLEMENTATION_V2_EFFECT_REPAIRED`. "
+            "Each logical edit owns one pooled "
             "key, one radius, and a coordinated set of LoRA A/B tensors across the final LM MLP gate/up/down "
             "linears. Exactly one routed logical ID may be active. A miss activates none and executes the frozen "
             "base linears exactly. No full module weight copies are stored. State never crosses method processes.\n",

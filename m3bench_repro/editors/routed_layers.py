@@ -103,7 +103,8 @@ class GraceValueLinear(nn.Module):
         else:
             raise ValueError(f"unexpected linear output shape: {tuple(base_output.shape)}")
         sequence_length = expanded.shape[1]
-        token_index = min(self.token_index, sequence_length - 1)
+        token_index = self.token_index if self.token_index >= 0 else sequence_length + self.token_index
+        token_index = min(max(token_index, 0), sequence_length - 1)
         replacement = value.view(1, 1, -1).expand(expanded.shape[0], sequence_length, -1)
         mask = torch.zeros(
             (expanded.shape[0], sequence_length, 1), dtype=torch.bool, device=expanded.device
@@ -113,7 +114,7 @@ class GraceValueLinear(nn.Module):
         elif self.replacement == "replace_last":
             mask[:, token_index, :] = True
         elif self.replacement == "replace_prompt":
-            mask[:, :token_index, :] = True
+            mask[:, : token_index + 1, :] = True
         output = torch.where(mask, replacement, expanded)
         return output.squeeze(0) if squeeze else output
 
