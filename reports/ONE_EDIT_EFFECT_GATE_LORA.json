@@ -1,0 +1,16 @@
+{
+  "schema_version": "m3bench-public-one-edit-effect-gate-v2",
+  "status": "PASS",
+  "method": "LoRA",
+  "pre_target_nll": 6.629342555999756,
+  "post_target_nll": 2.671121597290039,
+  "target_logprob_delta": 3.958220958709717,
+  "gradient_norm": 0.9999997924059938,
+  "state_delta_norm": 0.9941199201917829,
+  "post_generation_nonempty": true,
+  "post_generation_changed": false,
+  "save_reload_parity": true,
+  "disable_base_parity": true,
+  "base_weights_unchanged": true,
+  "private_raw_included": false
+}

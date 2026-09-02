@@ -1,0 +1,21 @@
+{
+  "schema_version": "m3bench-public-one-edit-effect-gate-v2",
+  "status": "PASS",
+  "method": "BELoRA",
+  "implementation_label": "paper-spec independent reimplementation; author implementation unavailable",
+  "pre_target_nll": 6.629342555999756,
+  "post_target_nll": 6.375093936920166,
+  "target_logprob_delta": 0.25424861907958984,
+  "gradient_norm": 0.99999963678413,
+  "state_delta_norm": 0.17701376908423982,
+  "self_route_hit": true,
+  "post_generation_nonempty": true,
+  "post_generation_changed": false,
+  "save_reload_parity": true,
+  "miss_base_parity": true,
+  "route_context_stable": true,
+  "active_adapter_before_generation": true,
+  "base_weights_unchanged": true,
+  "private_raw_included": false,
+  "note": "A preserved first gate report failed only because the checker counted the expected no-adapter base route-key forward as a generation forward. A new non-overwriting attempt passed after correcting that checker condition."
+}

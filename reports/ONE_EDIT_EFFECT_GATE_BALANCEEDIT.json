@@ -1,0 +1,18 @@
+{
+  "schema_version": "m3bench-public-one-edit-effect-gate-v2",
+  "status": "PASS",
+  "method": "BalanceEdit",
+  "pre_target_nll": 6.629342555999756,
+  "post_target_nll": 0.0005213607219047844,
+  "target_logprob_delta": 6.628821195277851,
+  "gradient_norm": 0.000234360415301478,
+  "state_delta_norm": 450.71484887897805,
+  "self_route_hit": true,
+  "post_generation_nonempty": true,
+  "post_generation_changed": true,
+  "save_reload_parity": true,
+  "miss_base_parity": true,
+  "route_context_stable": true,
+  "base_weights_unchanged": true,
+  "private_raw_included": false
+}
