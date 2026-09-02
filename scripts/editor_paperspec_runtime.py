@@ -121,8 +121,8 @@ def state_count(editor: PaperSpecEditor) -> int:
     return int(summary.get("entry_count", len(summary.get("edit_history", []))))
 
 
-def freeze_method_documents(editor: PaperSpecEditor) -> None:
-    method_dir = RUN_ROOT / editor.method
+def freeze_method_documents(editor: PaperSpecEditor, method_dir: Path | None = None) -> None:
+    method_dir = method_dir or RUN_ROOT / editor.method
     method_dir.mkdir(parents=True, exist_ok=True)
     config = editor.config_lock()
     config["config_sha256"] = canonical_sha256(config)
@@ -253,7 +253,7 @@ def command_single_run(args: argparse.Namespace) -> None:
     started = time.perf_counter()
     runtime = load_runtime(args.device)
     editor = create_editor(args.method, runtime)
-    freeze_method_documents(editor)
+    freeze_method_documents(editor, output / "method_lock")
     mask = runtime.verify_target_mask_determinism(record)
     pre_cached = runtime.generate(record, use_cache=True)
     pre_uncached = runtime.generate(record, use_cache=False)
@@ -372,7 +372,7 @@ def command_smoke_eight(args: argparse.Namespace) -> None:
     records = load_frozen_smoke_records()
     runtime = load_runtime(args.device)
     editor = create_editor(args.method, runtime)
-    freeze_method_documents(editor)
+    freeze_method_documents(editor, output / "method_lock")
     rows, all_checks = [], []
     started = time.perf_counter()
     for index, record in enumerate(records, 1):
@@ -471,7 +471,7 @@ def command_stream_run(args: argparse.Namespace) -> None:
     records = mini_records()
     runtime = load_runtime(args.device)
     editor = create_editor(args.method, runtime)
-    freeze_method_documents(editor)
+    freeze_method_documents(editor, output / "method_lock")
     started = time.perf_counter()
     steps = []
     all_checks = []
