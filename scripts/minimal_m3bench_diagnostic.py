@@ -13,6 +13,7 @@ import subprocess
 import tempfile
 import unicodedata
 from collections import Counter, defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 
@@ -194,14 +195,17 @@ def judge_schema(path: Path) -> None:
     path.write_text(json.dumps(schema), encoding="utf-8")
 
 
-def run_judge(payloads: list[dict], cache_path: Path, codex_bin: Path, batch_size: int) -> dict[str, bool]:
+def run_judge(
+    payloads: list[dict], cache_path: Path, codex_bin: Path, batch_size: int, workers: int = 1
+) -> dict[str, bool]:
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     cache = load_cache(cache_path)
     schema_path = cache_path.parent / "judge_schema.json"
     judge_schema(schema_path)
     pending = [item for item in payloads if item["opaque_event_id"] not in cache]
-    for offset in range(0, len(pending), batch_size):
-        batch = pending[offset:offset + batch_size]
+    batches = [pending[offset:offset + batch_size] for offset in range(0, len(pending), batch_size)]
+
+    def judge_batch(batch: list[dict]) -> list[dict]:
         expected = {item["opaque_event_id"] for item in batch}
         prompt = JUDGE_PROMPT + "\nFixed configuration:\n" + json.dumps({
             "model": JUDGE_MODEL,
@@ -225,14 +229,20 @@ def run_judge(payloads: list[dict], cache_path: Path, codex_bin: Path, batch_siz
             actual = {row.get("opaque_event_id") for row in rows}
             if actual != expected or any(not isinstance(row.get("correct"), bool) for row in rows):
                 raise RuntimeError("judge output coverage/type mismatch")
+            return rows
+        finally:
+            output_path.unlink(missing_ok=True)
+
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = [executor.submit(judge_batch, batch) for batch in batches]
+        for future in as_completed(futures):
+            rows = future.result()
             with cache_path.open("a", encoding="utf-8") as handle:
                 for row in rows:
                     handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
                     cache[row["opaque_event_id"]] = row["correct"]
                 handle.flush()
                 os.fsync(handle.fileno())
-        finally:
-            output_path.unlink(missing_ok=True)
     expected_all = {item["opaque_event_id"] for item in payloads}
     if not expected_all <= cache.keys():
         raise RuntimeError("semantic judge coverage incomplete")
@@ -282,7 +292,8 @@ def score(config: dict) -> dict:
     preflight_result = validate_events(events, int(config["expected_event_count"]))
     event_to_judge, payloads = semantic_payloads(events)
     verdicts = run_judge(
-        payloads, Path(config["judge_cache_path"]), Path(config["codex_bin"]), int(config.get("batch_size", 50))
+        payloads, Path(config["judge_cache_path"]), Path(config["codex_bin"]),
+        int(config.get("batch_size", 50)), int(config.get("judge_workers", 1)),
     )
     if config.get("stop_after_judge"):
         return {
