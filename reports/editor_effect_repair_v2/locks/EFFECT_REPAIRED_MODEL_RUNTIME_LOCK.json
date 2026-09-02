@@ -1,0 +1,11 @@
+{
+  "classification": "M3BENCH_PAPER_SPEC_INDEPENDENT_REIMPLEMENTATION_V2_EFFECT_REPAIRED",
+  "language_block_count": 32,
+  "model_class": "LlavaMistralForCausalLM",
+  "model_dtype": "torch.float16",
+  "model_id": "llava_med_v1_5_mistral_7b",
+  "schema_version": "m3bench-effect-repaired-model-runtime-lock-v1",
+  "source_commit": "e5da74ae5892186835b2f431cf05345fe76f1707",
+  "total_model_parameters": 7566219264,
+  "vision_tower_id": "clip-vit-large-patch14-336"
+}

@@ -1,0 +1,42 @@
+{
+  "active_decision": "C",
+  "active_sequence": {
+    "count": 0,
+    "path": null,
+    "sha256": null,
+    "status": "NO_OPERATOR_APPROVED_AMENDMENT"
+  },
+  "blocker": "M3BENCH_EFFECT_REPAIR_BLOCKED__FORMAL_SEQUENCE_UNRESOLVED",
+  "operator_selected_option": null,
+  "original_sequence_candidate": {
+    "authorized_for_effect_repaired_formal_rerun": false,
+    "count": 200,
+    "path": "private metadata-only formal selection",
+    "reconstruction_status": "EXACT_200_OF_200",
+    "sha256": "9feb8da5b7a7b8c36f6bdd506c6ba4a1490ba27e0d6af4c4f6b949a1cd89aeec"
+  },
+  "position_handling": {
+    "19": "CONFIRMED_INVALID__EXCLUSION_PROPOSED_NOT_APPROVED",
+    "57": "VALID__RETAINED_BY_AUTHORITATIVE_REVIEWER_A",
+    "67": "VALID__RETAINED_BY_AUTHORITATIVE_REVIEWER_A"
+  },
+  "recommended_amended_sequence_count": 189,
+  "reviewer_a_counts": {
+    "CONFIRMED_INVALID": 10,
+    "UNRESOLVED": 1,
+    "VALID": 189
+  },
+  "schema_version": "m3bench-current-formal-sequence-authority-v1",
+  "source_branch": "audit-v7-c0r-single-reviewer-amendment-20260902_021424",
+  "source_commit": "f57ab0054b8cbde75836be48f86a422048beb751",
+  "superseded_reports": [
+    {
+      "decision": "EARLY_TEXT_ONLY_POSITIONS_19_57_67_INVALID",
+      "status": "SUPERSEDED_BY_REVIEWER_A_IMAGE_AWARE_AUDIT"
+    },
+    {
+      "decision": "REVIEWER_B_REQUIRED_GATE",
+      "status": "SUPERSEDED_BY_APPROVED_SINGLE_REVIEWER_PROTOCOL"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "branch": "m3bench-editor-effect-repair-v2-20260902_064710",
+  "classification": "M3BENCH_PAPER_SPEC_INDEPENDENT_REIMPLEMENTATION_V2_EFFECT_REPAIRED",
+  "code_sha256": {
+    "m3bench_repro/editors/llava_runtime.py": "5e36b3522e7e014e3f027c0a735e912d55260d7500adff312f3bb0831b218047",
+    "m3bench_repro/editors/methods.py": "cbf1f1b6c82593471c8539bbbf42d6fbfdfcf1e74cc40814114c554a211a4069",
+    "m3bench_repro/editors/routed_layers.py": "3ebda8bb65feb39128cbf0ec6dc2f24063631901c9e37f041153c56a9814b664",
+    "m3bench_repro/editors/routing.py": "0b31e82532f306b42638af037fa01c42c0ac43b8c379c36b157dfd31cfeee3e0",
+    "scripts/editor_effect_probe.py": "78ca265d9a495b7e753cdeecc7d80ede8ddd33fb9818fbcc01899ee68c9899c1",
+    "scripts/editor_paperspec_runtime.py": "76cc6fb49e9115b5ef456e4584d603c2f8e1d93bffad1062449be2d155d2d3c5",
+    "scripts/finalize_m3bench_editor_effect_repair.py": "1e927669439e82e2944381df1fedb8c49a882062864ed0192502f574b95fcb2b"
+  },
+  "commit": "e5da74ae5892186835b2f431cf05345fe76f1707",
+  "schema_version": "m3bench-effect-repaired-source-manifest-v1",
+  "worktree_clean_before_finalization": true
+}
