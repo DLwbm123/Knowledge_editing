@@ -284,6 +284,12 @@ def score(config: dict) -> dict:
     verdicts = run_judge(
         payloads, Path(config["judge_cache_path"]), Path(config["codex_bin"]), int(config.get("batch_size", 50))
     )
+    if config.get("stop_after_judge"):
+        return {
+            "status": "ANONYMOUS_JUDGE_VERDICTS_FROZEN",
+            "semantic_events": len(event_to_judge),
+            "unique_semantic_payloads": len(payloads),
+        }
     correct = []
     for index, row in enumerate(events):
         if index in event_to_judge:
