@@ -177,7 +177,7 @@ def main() -> None:
             "classification": index["classification"], "source_commit": commit,
             "cohort_sha256": index["cohort_sha256"],
             "one_edit": one_edit, "smoke_8": smoke_8, "stream_4": stream_4,
-            "formal_experiment": false,
+            "formal_experiment": False,
         },
     }
     for name, value in locks.items():
