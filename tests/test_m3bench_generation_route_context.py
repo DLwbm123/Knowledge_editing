@@ -5,9 +5,17 @@ from m3bench_repro.editors.methods import GracePaperSpecEditor
 from m3bench_repro.editors.routed_layers import GraceValueLinear
 from m3bench_repro.editors.routing import RouteDecision
 from scripts.editor_effect_probe import adapter_active_before_generation
+from scripts.editor_paperspec_runtime import route_hits_record
 
 
 class GenerationRouteContextTests(unittest.TestCase):
+    def test_smoke_route_check_is_exact_for_routed_methods(self):
+        hit = {"route": {"activated": True, "logical_edit_id": "current"}}
+        miss = {"route": {"activated": True, "logical_edit_id": "other"}}
+        self.assertTrue(route_hits_record("grace", hit, "current"))
+        self.assertFalse(route_hits_record("grace", miss, "current"))
+        self.assertTrue(route_hits_record("lora", {"route": None}, "current"))
+
     def test_base_route_probe_may_precede_active_generation_prefill(self):
         self.assertTrue(
             adapter_active_before_generation(

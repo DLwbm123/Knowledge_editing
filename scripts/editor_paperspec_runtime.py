@@ -11,6 +11,7 @@ import subprocess
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from statistics import median
 from typing import Any
 
 import torch
@@ -26,6 +27,7 @@ from m3bench_repro.editors.llava_runtime import (
 )
 from m3bench_repro.editors.methods import CLASSIFICATION, PaperSpecEditor, create_editor
 from m3bench_repro.editors.routing import canonical_float32, route_dict_equal
+from scripts.editor_effect_probe import state_delta
 
 
 WORKTREE = Path(os.environ.get("M3BENCH_WORKTREE", Path(__file__).resolve().parents[1]))
@@ -101,6 +103,18 @@ def state_path(method: str, output_dir: Path, name: str = "editor_state") -> Pat
     if method == "lora":
         return output_dir / name
     return output_dir / f"{name}.pt"
+
+
+def route_hits_record(method: str, result: dict[str, Any], record_id: str) -> bool:
+    if method == "lora":
+        return True
+    route = result.get("route") or {}
+    return bool(route.get("activated") and route.get("logical_edit_id") == record_id)
+
+
+def state_count(editor: PaperSpecEditor) -> int:
+    summary = editor.state_summary()
+    return int(summary.get("entry_count", len(summary.get("edit_history", []))))
 
 
 def freeze_method_documents(editor: PaperSpecEditor) -> None:
@@ -348,6 +362,96 @@ def command_single_replay(args: argparse.Namespace) -> None:
         raise SystemExit(1)
 
 
+def command_smoke_eight(args: argparse.Namespace) -> None:
+    output = Path(args.output_dir)
+    output.mkdir(parents=True, exist_ok=True)
+    records = load_frozen_smoke_records()
+    runtime = load_runtime(args.device)
+    editor = create_editor(args.method, runtime)
+    freeze_method_documents(editor)
+    rows, all_checks = [], []
+    started = time.perf_counter()
+    for index, record in enumerate(records, 1):
+        record_output = output / f"record_{index:02d}"
+        record_output.mkdir()
+        with editor.disabled():
+            base_generation = runtime.generate(record, use_cache=True)
+        batch = runtime.build_edit_batch(record)
+        pre = editor.score_target_nll(record)
+        edit = editor.apply_edit(record)
+        delta = state_delta(editor, record.record_id)
+        post = editor.score_target_nll(record)
+        generated = editor.generate(record, use_cache=True)
+        base = editor.base_integrity()
+        state = editor.save_editor_state(state_path(args.method, record_output))
+        editor.reset_editor_state()
+        reset_generation = runtime.generate(record, use_cache=True)
+        editor.load_editor_state(state_path(args.method, record_output))
+        reloaded = editor.generate(record, use_cache=True)
+        reloaded_nll = editor.score_target_nll(record)
+        radius_mode = "float32" if args.method in {"grace", "balancedit", "belora"} else "exact"
+        checks = {
+            "multimodal_batch": bool(batch.image_tensor_shape)
+            and batch.mask_report()["multimodal_expansion_verified"],
+            "target_mask": batch.mask_report()["target_token_count"] > 0
+            and batch.mask_report()["prompt_and_image_positions_masked"],
+            "finite_update": bool(edit["finite_losses"] and edit["finite_gradients"])
+            and torch.isfinite(torch.tensor(delta)).item()
+            and delta > 0,
+            "post_nll_lower": post["nll"] < pre["nll"],
+            "base_unchanged": base["unchanged"],
+            "generation_nonempty": bool(generated["generation"]["raw_token_ids"]),
+            "save_reload_parity": generation_equal(generated["generation"], reloaded["generation"])
+            and route_dict_equal(generated.get("route"), reloaded.get("route"), radius_mode=radius_mode)
+            and post["nll"] == reloaded_nll["nll"],
+            "reset_parity": generation_equal(base_generation, reset_generation),
+            "self_route": route_hits_record(args.method, generated, record.record_id),
+        }
+        all_checks.extend(checks.values())
+        rows.append({
+            "opaque_record_index": index,
+            "record_id": record.record_id,
+            "dataset": record.dataset,
+            "question_type": record.question_type,
+            "question": record.question,
+            "gold_or_reference": record.target,
+            "pre_target_nll": pre["nll"],
+            "post_target_nll": post["nll"],
+            "target_logprob_delta": pre["nll"] - post["nll"],
+            "state_delta_norm": delta,
+            "base_generation": base_generation,
+            "post_generation": generated,
+            "reload_generation": reloaded,
+            "state": state,
+            "checks": checks,
+        })
+        editor.reset_editor_state()
+    summary = {
+        "schema_version": "m3bench-editor-eight-record-effect-smoke-v2",
+        "status": "PASS" if all(all_checks) else "FAIL",
+        "method": args.method,
+        "records": 8,
+        "record_gate_pass_count": sum(all(row["checks"].values()) for row in rows),
+        "raw_output_changed_count": sum(
+            row["post_generation"]["generation"]["raw_token_ids"]
+            != row["base_generation"]["raw_token_ids"] for row in rows
+        ),
+        "median_target_nll_decrease": median(row["target_logprob_delta"] for row in rows),
+        "route_hit_count": sum(row["checks"]["self_route"] for row in rows),
+        "empty_output_count": sum(
+            not row["post_generation"]["generation"]["raw_token_ids"] for row in rows
+        ),
+        "t0_corrected_count": None,
+        "correctness_status": "PENDING_FROZEN_EXACT_FUZZY_AND_SEMANTIC_JUDGE",
+        "runtime_seconds": time.perf_counter() - started,
+    }
+    write_json_atomic(output / "SMOKE_8_PRIVATE.json", {"summary": summary, "rows": rows}, read_only=True)
+    write_json_atomic(output / "SMOKE_8_SUMMARY_PREJUDGE.json", summary, read_only=True)
+    print(json.dumps(summary, indent=2))
+    if summary["status"] != "PASS":
+        raise SystemExit(1)
+
+
 def mini_records():
     all_records = {record.record_id: record for record in load_frozen_smoke_records()}
     rows = [json.loads(line) for line in MINI_SOURCE.read_text(encoding="utf-8").splitlines() if line]
@@ -368,29 +472,66 @@ def command_stream_run(args: argparse.Namespace) -> None:
     steps = []
     all_checks = []
     for step, record in enumerate(records, 1):
+        pre_nll = editor.score_target_nll(record)
+        prior_adapter_hashes = (
+            {item.record_id: editor.adapter_state_sha256(item.record_id) for item in records[: step - 1]}
+            if args.method == "belora" else {}
+        )
         edit = editor.apply_edit(record)
+        post_nll = editor.score_target_nll(record)
         new_generation = editor.generate(record, use_cache=True)
-        replays = {old.record_id: editor.generate(old, use_cache=True) for old in records[:step]}
+        replays = {
+            old.record_id: {
+                "generation": editor.generate(old, use_cache=True),
+                "target_nll": editor.score_target_nll(old),
+            }
+            for old in records[:step]
+        }
         state = editor.state_summary()
+        adapter_hashes = (
+            {item.record_id: editor.adapter_state_sha256(item.record_id) for item in records[:step]}
+            if args.method == "belora" else {}
+        )
         checkpoint = editor.save_editor_state(state_path(args.method, output / "checkpoints", f"step_{step}"))
         base = editor.base_integrity()
         checks = {
             "finite_loss": edit["finite_losses"],
             "finite_gradients": edit["finite_gradients"],
+            "current_target_nll_lower": post_nll["nll"] < pre_nll["nll"],
+            "current_self_route": route_hits_record(args.method, new_generation, record.record_id),
             "new_edit_generation": bool(new_generation["generation"]["raw_token_ids"]),
             "old_edit_replay_count": len(replays) == step,
+            "old_edit_generations_nonempty": all(
+                value["generation"]["generation"]["raw_token_ids"] for value in replays.values()
+            ),
+            "state_count": state_count(editor) == step,
             "base_unchanged": base["unchanged"],
             "checkpoint_nonempty": checkpoint["size_bytes"] > 0,
         }
+        if args.method == "belora":
+            checks.update({
+                "unique_logical_ids": len(editor.edit_to_adapter) == step,
+                "unique_adapter_names": len(set(editor.edit_to_adapter.values())) == step,
+                "prior_adapter_hashes_unchanged": all(
+                    adapter_hashes[key] == value for key, value in prior_adapter_hashes.items()
+                ),
+                "all_self_routes": all(
+                    route_hits_record(args.method, value["generation"], key)
+                    for key, value in replays.items()
+                ),
+            })
         all_checks.extend(checks.values())
         steps.append(
             {
                 "step": step,
                 "record_id": record.record_id,
+                "pre_target_nll": pre_nll,
+                "post_target_nll": post_nll,
                 "edit": edit,
                 "new_generation": new_generation,
                 "replays": replays,
                 "state_summary": state,
+                "adapter_hashes": adapter_hashes,
                 "checkpoint": checkpoint,
                 "base_integrity": base,
                 "checks": checks,
@@ -426,23 +567,30 @@ def command_stream_replay(args: argparse.Namespace) -> None:
     runtime = load_runtime(args.device)
     editor = create_editor(args.method, runtime)
     editor.load_editor_state(checkpoint_path)
-    replays = {record.record_id: editor.generate(record, use_cache=True) for record in records}
+    replays = {
+        record.record_id: {
+            "generation": editor.generate(record, use_cache=True),
+            "target_nll": editor.score_target_nll(record),
+        }
+        for record in records
+    }
     expected = prior["steps"][-1]["replays"]
     per_record = {}
     replay_diagnostics = {}
     for record in records:
         record_id = record.record_id
-        expected_generation = expected[record_id]["generation"]
-        replay_generation = replays[record_id]["generation"]
-        expected_route = expected[record_id]["route"]
-        replay_route = replays[record_id]["route"]
+        expected_generation = expected[record_id]["generation"]["generation"]
+        replay_generation = replays[record_id]["generation"]["generation"]
+        expected_route = expected[record_id]["generation"]["route"]
+        replay_route = replays[record_id]["generation"]["route"]
         generation_exact = generation_equal(expected_generation, replay_generation)
         route_exact = route_dict_equal(
             expected_route,
             replay_route,
             radius_mode=radius_mode,
         )
-        per_record[record_id] = generation_exact and route_exact
+        nll_exact = expected[record_id]["target_nll"]["nll"] == replays[record_id]["target_nll"]["nll"]
+        per_record[record_id] = generation_exact and route_exact and nll_exact
         expected_radius = expected_route.get("radius") if expected_route else None
         replay_radius = replay_route.get("radius") if replay_route else None
         replay_diagnostics[record_id] = {
@@ -452,6 +600,7 @@ def command_stream_replay(args: argparse.Namespace) -> None:
             "decoded_text_exact": expected_generation["decoded_text"]
             == replay_generation["decoded_text"],
             "route_exact_under_contract": route_exact,
+            "target_nll_exact": nll_exact,
             "radius_mode": radius_mode,
             "expected_radius": expected_radius,
             "replay_radius": replay_radius,
@@ -465,7 +614,7 @@ def command_stream_replay(args: argparse.Namespace) -> None:
     base = editor.base_integrity()
     checks = {
         "all_four_fresh_process_replay_exact": all(per_record.values()),
-        "state_entry_count_compatible": editor.state_summary().get("entry_count", 4) > 0,
+        "state_entry_count_exact": state_count(editor) == 4,
         "base_unchanged": base["unchanged"],
         "base_frozen": len(base["base_parameters_requiring_grad"]) == 0,
     }
@@ -520,6 +669,11 @@ def parser() -> argparse.ArgumentParser:
         command.add_argument("--output-dir", required=True)
         command.add_argument("--stage", default="preflight")
         command.set_defaults(func=func)
+    smoke = sub.add_parser("smoke-eight")
+    smoke.add_argument("--method", required=True, choices=METHODS)
+    smoke.add_argument("--device", default="cuda:0")
+    smoke.add_argument("--output-dir", required=True)
+    smoke.set_defaults(func=command_smoke_eight)
     stream_run = sub.add_parser("stream-run")
     stream_run.add_argument("--method", required=True, choices=METHODS)
     stream_run.add_argument("--device", default="cuda:0")
