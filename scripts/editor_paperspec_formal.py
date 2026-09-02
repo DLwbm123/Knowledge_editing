@@ -24,8 +24,9 @@ from m3bench_repro.editors.routing import route_dict_equal
 
 
 METHODS = ("lora", "grace", "balancedit", "belora")
-PREFIXES = (1, 50, 100, 200)
 EXPECTED_GPU_UUID = "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b"
+DEFAULT_RECORDS_PATH = "inputs/frozen/FORMAL_EDITOR_RECORDS_200.jsonl"
+DEFAULT_SEQUENCE_LABEL = "M3BENCH_FORMAL_ORIGINAL_200"
 
 
 def utc_now() -> str:
@@ -158,14 +159,44 @@ def assert_authorized_device() -> None:
         raise RuntimeError("formal runner requires exactly one visible CUDA device")
 
 
-def load_records(run: Path) -> list[EditorRecord]:
-    rows = read_jsonl(run / "inputs/frozen/FORMAL_EDITOR_RECORDS_200.jsonl")
+def resolve_run_path(run: Path, value: str) -> Path:
+    path = Path(value)
+    return path if path.is_absolute() else run / path
+
+
+def load_records(run: Path, records_path: str, expected_count: int) -> list[EditorRecord]:
+    rows = read_jsonl(resolve_run_path(run, records_path))
     records = [EditorRecord.from_dict(row) for row in rows]
-    if len(records) != 200 or len({record.record_id for record in records}) != 200:
+    if len(records) != expected_count or len({record.record_id for record in records}) != expected_count:
         raise RuntimeError("formal editor record lock failed")
-    if [record.formal_sequence_position for record in records] != list(range(1, 201)):
+    if [record.formal_sequence_position for record in records] != list(range(1, expected_count + 1)):
         raise RuntimeError("formal editor record order drift")
     return records
+
+
+def sequence_lock(run: Path, args: argparse.Namespace) -> dict[str, Any]:
+    root = Path(__file__).resolve().parent.parent
+    code_paths = (
+        Path(__file__).resolve(),
+        root / "m3bench_repro/editors/llava_runtime.py",
+        root / "m3bench_repro/editors/methods.py",
+        root / "m3bench_repro/editors/routed_layers.py",
+        root / "m3bench_repro/editors/routing.py",
+    )
+    return {
+        "sequence_label": args.sequence_label,
+        "expected_record_count": args.expected_record_count,
+        "prefixes": list(args.prefix_values),
+        "final_prefix": args.final_prefix,
+        "records_sha256": sha256(resolve_run_path(run, args.records_path)),
+        "model_lock_sha256": sha256(run / "locks/FORMAL_MODEL_AND_GENERATION_LOCK.json"),
+        "method_config_bundle_sha256": sha256(run / "locks/FORMAL_METHOD_CONFIG_BUNDLE.json"),
+        "code_sha256": {str(path.relative_to(root)): sha256(path) for path in code_paths},
+    }
+
+
+def checkpoint_manifest_path(output: Path, position: int) -> Path:
+    return output / "checkpoints" / f"step_{position:03d}.manifest.json"
 
 
 def load_catalog(run: Path) -> dict[str, list[dict[str, Any]]]:
@@ -333,8 +364,13 @@ def command_single_chunk(args: argparse.Namespace) -> None:
     if output.exists():
         raise RuntimeError(f"single chunk output already exists: {output}")
     output.mkdir(parents=True)
-    records = load_records(run)
-    if args.start < 1 or args.end > 200 or args.end < args.start or args.end - args.start + 1 > 25:
+    records = load_records(run, args.records_path, args.expected_record_count)
+    if (
+        args.start < 1
+        or args.end > args.expected_record_count
+        or args.end < args.start
+        or args.end - args.start + 1 > 25
+    ):
         raise ValueError("single chunk must be a valid <=25-record interval")
     selected = records[args.start - 1 : args.end]
     catalog = load_catalog(run)
@@ -426,6 +462,7 @@ def command_single_chunk(args: argparse.Namespace) -> None:
         "created_at_utc": utc_now(),
         "status": "PASS" if all(chunk_checks.values()) else "FAIL",
         "method": args.method,
+        "sequence": sequence_lock(run, args),
         "start": args.start,
         "end": args.end,
         "checks": chunk_checks,
@@ -470,6 +507,7 @@ def run_prefix(
     method: str,
     generation_lock_hash: str,
     base_full_sha256: str,
+    sequence: dict[str, Any],
 ) -> dict[str, Any]:
     prefix_dir = output / "prefixes" / f"prefix_{prefix:03d}"
     prefix_dir.mkdir(parents=True, exist_ok=True)
@@ -523,6 +561,7 @@ def run_prefix(
         "created_at_utc": utc_now(),
         "status": "PASS" if all(checks.values()) else "FAIL",
         "method": method,
+        "sequence": sequence,
         "prefix": prefix,
         "checks": checks,
         "task_counts": task_counts,
@@ -545,19 +584,24 @@ def command_sequential_run(args: argparse.Namespace) -> None:
     final_report_path = output / "SEQUENTIAL_RUN_REPORT.json"
     if final_report_path.exists():
         existing = read_json(final_report_path)
-        if existing.get("status") != "PASS" or not all(existing.get("checks", {}).values()):
+        if (
+            existing.get("status") != "PASS"
+            or not all(existing.get("checks", {}).values())
+            or existing.get("sequence") != sequence_lock(run, args)
+        ):
             raise RuntimeError("existing sequential report is not PASS")
         write_frozen_text(output / "RUN_PASS", "PASS\n")
         print(json.dumps({"status": "PASS", "method": args.method, "resumed_from_final_report": True}, indent=2))
         return
     output.mkdir(parents=True, exist_ok=True)
-    records = load_records(run)
+    records = load_records(run, args.records_path, args.expected_record_count)
     catalog = load_catalog(run)
     generation_lock_hash = sha256(run / "locks/FORMAL_MODEL_AND_GENERATION_LOCK.json")
     runtime = load_runtime(run, args.device)
     editor = create_formal_editor(args.method, runtime, output, sequential=True)
     environment = runtime_environment(args.device)
     base_full = full_base_hash(runtime)
+    locked_sequence = sequence_lock(run, args)
     steps_dir = output / "steps"
     steps_dir.mkdir(exist_ok=True)
     existing_positions = sorted(
@@ -568,7 +612,7 @@ def command_sequential_run(args: argparse.Namespace) -> None:
     contiguous = max(existing_positions, default=0)
     orphan_audits = []
     next_position = contiguous + 1
-    if next_position <= 200:
+    if next_position <= args.expected_record_count:
         next_checkpoint = checkpoint_path(output, args.method, next_position)
         for candidate, label in (
             (next_checkpoint, f"step_{next_position:03d}.checkpoint_without_report"),
@@ -582,6 +626,9 @@ def command_sequential_run(args: argparse.Namespace) -> None:
         state = checkpoint_path(output, args.method, contiguous)
         if not state.exists():
             raise RuntimeError("latest sequential report lacks checkpoint")
+        state_manifest = checkpoint_manifest_path(output, contiguous)
+        if not state_manifest.exists() or read_json(state_manifest).get("sequence") != locked_sequence:
+            raise RuntimeError("latest sequential checkpoint lock differs from current run")
         editor.load_editor_state(state)
         prior = read_json(steps_dir / f"step_{contiguous:03d}.json")
         replay = editor.generate(records[contiguous - 1], use_cache=True)
@@ -605,7 +652,7 @@ def command_sequential_run(args: argparse.Namespace) -> None:
         write_frozen_json(output / f"RESUME_AUDIT_{contiguous:03d}_{utc_now().replace(':', '')}.json", resume_audit)
         if resume_audit["status"] != "PASS":
             raise RuntimeError("sequential resume replay failed")
-        if contiguous in PREFIXES and not (
+        if contiguous in args.prefix_values and not (
             output / "prefixes" / f"prefix_{contiguous:03d}" / "PASS"
         ).exists():
             run_prefix(
@@ -618,9 +665,10 @@ def command_sequential_run(args: argparse.Namespace) -> None:
                 method=args.method,
                 generation_lock_hash=generation_lock_hash,
                 base_full_sha256=base_full,
+                sequence=locked_sequence,
             )
     started = time.perf_counter()
-    for position in range(contiguous + 1, 201):
+    for position in range(contiguous + 1, args.expected_record_count + 1):
         record = records[position - 1]
         step_started = time.perf_counter()
         pre_nll = editor.score_target_nll(record)
@@ -631,6 +679,17 @@ def command_sequential_run(args: argparse.Namespace) -> None:
             post_generation = editor.generate(record, use_cache=True)
             state_summary = editor.state_summary()
             state = save_state_atomic(editor, args.method, checkpoint_path(output, args.method, position))
+            write_frozen_json(
+                checkpoint_manifest_path(output, position),
+                {
+                    "schema_version": "m3bench-formal-checkpoint-manifest-v2",
+                    "created_at_utc": utc_now(),
+                    "method": args.method,
+                    "position": position,
+                    "sequence": locked_sequence,
+                    "state": state,
+                },
+            )
         base = editor.base_integrity()
         expected_history = [item.record_id for item in records[:position]]
         state_checks = {
@@ -676,7 +735,7 @@ def command_sequential_run(args: argparse.Namespace) -> None:
         write_frozen_json(steps_dir / f"step_{position:03d}.json", report)
         if report["status"] != "PASS":
             raise RuntimeError(f"sequential step {position} failed")
-        if position in PREFIXES:
+        if position in args.prefix_values:
             run_prefix(
                 run=run,
                 output=output,
@@ -687,22 +746,29 @@ def command_sequential_run(args: argparse.Namespace) -> None:
                 method=args.method,
                 generation_lock_hash=generation_lock_hash,
                 base_full_sha256=base_full,
+                sequence=locked_sequence,
             )
     end_full = full_base_hash(runtime)
     final_summary = editor.state_summary()
     final_checks = {
-        "steps_200": len(list(steps_dir.glob("step_*.json"))) == 200,
-        "prefixes_complete": all((output / "prefixes" / f"prefix_{prefix:03d}" / "PASS").exists() for prefix in PREFIXES),
+        "steps_complete": len(list(steps_dir.glob("step_*.json"))) == args.expected_record_count,
+        "prefixes_complete": all(
+            (output / "prefixes" / f"prefix_{prefix:03d}" / "PASS").exists()
+            for prefix in args.prefix_values
+        ),
         "base_full_hash_exact": end_full == base_full,
         "base_sentinel_unchanged": editor.base_integrity()["unchanged"],
-        "edit_history_200": final_summary.get("edit_history") == [record.record_id for record in records],
-        "method_state_contract": method_state_contract(args.method, final_summary, 200),
+        "edit_history_complete": final_summary.get("edit_history") == [record.record_id for record in records],
+        "method_state_contract": method_state_contract(
+            args.method, final_summary, args.expected_record_count
+        ),
     }
     report = {
         "schema_version": "m3bench-formal-sequential-run-report-v1",
         "created_at_utc": utc_now(),
         "status": "PASS" if all(final_checks.values()) else "FAIL",
         "method": args.method,
+        "sequence": locked_sequence,
         "checks": final_checks,
         "base_full_sha256_before": base_full,
         "base_full_sha256_after": end_full,
@@ -715,7 +781,7 @@ def command_sequential_run(args: argparse.Namespace) -> None:
     }
     write_frozen_json(final_report_path, report)
     write_frozen_text(output / ("RUN_PASS" if report["status"] == "PASS" else "RUN_FAIL"), report["status"] + "\n")
-    print(json.dumps({"status": report["status"], "method": args.method, "steps": 200, "runtime_seconds_this_process": report["runtime_seconds_this_process"]}, indent=2))
+    print(json.dumps({"status": report["status"], "method": args.method, "steps": args.expected_record_count, "runtime_seconds_this_process": report["runtime_seconds_this_process"]}, indent=2))
     if report["status"] != "PASS":
         raise SystemExit(1)
 
@@ -726,16 +792,25 @@ def command_sequential_replay(args: argparse.Namespace) -> None:
     replay_report_path = output / "SEQUENTIAL_FRESH_REPLAY_REPORT.json"
     if replay_report_path.exists():
         existing = read_json(replay_report_path)
-        if existing.get("status") != "PASS" or not all(existing.get("checks", {}).values()):
+        if (
+            existing.get("status") != "PASS"
+            or not all(existing.get("checks", {}).values())
+            or existing.get("sequence") != sequence_lock(run, args)
+        ):
             raise RuntimeError("existing sequential replay report is not PASS")
         write_frozen_text(output / "REPLAY_PASS", "PASS\n")
         print(json.dumps({"status": "PASS", "method": args.method, "resumed_from_replay_report": True}, indent=2))
         return
-    records = load_records(run)
+    records = load_records(run, args.records_path, args.expected_record_count)
     runtime = load_runtime(run, args.device)
     editor = create_formal_editor(args.method, runtime, output, sequential=True)
-    editor.load_editor_state(checkpoint_path(output, args.method, 200))
-    expected = read_json(output / "steps/step_200.json")["post_edit_generation"]
+    locked_sequence = sequence_lock(run, args)
+    final_position = args.final_prefix
+    state_manifest = checkpoint_manifest_path(output, final_position)
+    if not state_manifest.exists() or read_json(state_manifest).get("sequence") != locked_sequence:
+        raise RuntimeError("final checkpoint lock differs from current run")
+    editor.load_editor_state(checkpoint_path(output, args.method, final_position))
+    expected = read_json(output / f"steps/step_{final_position:03d}.json")["post_edit_generation"]
     actual = editor.generate(records[-1], use_cache=True)
     summary = editor.state_summary()
     checks = {
@@ -743,8 +818,10 @@ def command_sequential_replay(args: argparse.Namespace) -> None:
         "decoded_text_exact": actual["generation"]["decoded_text"] == expected["generation"]["decoded_text"],
         "sequence_contract_exact": actual["generation"]["sequence_contract"] == expected["generation"]["sequence_contract"],
         "route_exact": route_equal(args.method, expected["route"], actual["route"]),
-        "edit_history_200": summary.get("edit_history") == [record.record_id for record in records],
-        "method_state_contract": method_state_contract(args.method, summary, 200),
+        "edit_history_complete": summary.get("edit_history") == [record.record_id for record in records],
+        "method_state_contract": method_state_contract(
+            args.method, summary, args.expected_record_count
+        ),
         "base_sentinel_unchanged": editor.base_integrity()["unchanged"],
     }
     report = {
@@ -752,7 +829,8 @@ def command_sequential_replay(args: argparse.Namespace) -> None:
         "created_at_utc": utc_now(),
         "status": "PASS" if all(checks.values()) else "FAIL",
         "method": args.method,
-        "position": 200,
+        "position": final_position,
+        "sequence": locked_sequence,
         "checks": checks,
         "state_summary": summary,
         "base_integrity": editor.base_integrity(),
@@ -771,6 +849,13 @@ def command_sequential_replay(args: argparse.Namespace) -> None:
 
 
 def parser() -> argparse.ArgumentParser:
+    def add_sequence_arguments(command: argparse.ArgumentParser) -> None:
+        command.add_argument("--records-path", default=DEFAULT_RECORDS_PATH)
+        command.add_argument("--expected-record-count", type=int, default=200)
+        command.add_argument("--prefixes", default="1,50,100,200")
+        command.add_argument("--final-prefix", type=int, default=200)
+        command.add_argument("--sequence-label", default=DEFAULT_SEQUENCE_LABEL)
+
     result = argparse.ArgumentParser()
     sub = result.add_subparsers(dest="command", required=True)
     single = sub.add_parser("single-chunk")
@@ -780,24 +865,46 @@ def parser() -> argparse.ArgumentParser:
     single.add_argument("--start", type=int, required=True)
     single.add_argument("--end", type=int, required=True)
     single.add_argument("--device", default="cuda:0")
+    add_sequence_arguments(single)
     single.set_defaults(func=command_single_chunk)
     sequential = sub.add_parser("sequential-run")
     sequential.add_argument("--run-root", required=True)
     sequential.add_argument("--output-dir", required=True)
     sequential.add_argument("--method", choices=METHODS, required=True)
     sequential.add_argument("--device", default="cuda:0")
+    add_sequence_arguments(sequential)
     sequential.set_defaults(func=command_sequential_run)
     replay = sub.add_parser("sequential-replay")
     replay.add_argument("--run-root", required=True)
     replay.add_argument("--output-dir", required=True)
     replay.add_argument("--method", choices=METHODS, required=True)
     replay.add_argument("--device", default="cuda:0")
+    add_sequence_arguments(replay)
     replay.set_defaults(func=command_sequential_replay)
     return result
 
 
+def normalize_sequence_args(args: argparse.Namespace) -> argparse.Namespace:
+    try:
+        args.prefix_values = tuple(int(value) for value in args.prefixes.split(","))
+    except ValueError as exc:
+        raise ValueError("prefixes must be comma-separated integers") from exc
+    if (
+        args.expected_record_count < 1
+        or not args.sequence_label.strip()
+        or not args.prefix_values
+        or tuple(sorted(set(args.prefix_values))) != args.prefix_values
+        or args.prefix_values[0] < 1
+        or args.prefix_values[-1] > args.expected_record_count
+        or args.final_prefix != args.expected_record_count
+        or args.final_prefix not in args.prefix_values
+    ):
+        raise ValueError("invalid sequence count/prefix/final-prefix contract")
+    return args
+
+
 def main() -> None:
-    args = parser().parse_args()
+    args = normalize_sequence_args(parser().parse_args())
     run = Path(args.run_root)
     if not (run / "M3BENCH_FORMAL_EDITOR_PREFLIGHT_PASS").exists():
         raise RuntimeError("formal preflight PASS marker is absent")
