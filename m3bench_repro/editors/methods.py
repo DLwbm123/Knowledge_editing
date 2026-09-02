@@ -1,0 +1,817 @@
+"""Four authorized M3Bench paper-spec editor implementations."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+from abc import ABC, abstractmethod
+from contextlib import contextmanager
+from dataclasses import asdict
+from pathlib import Path
+from typing import Any, Iterator
+
+import torch
+import torch.nn as nn
+
+from .llava_runtime import (
+    EditorRecord,
+    LlavaMedEditorRuntime,
+    PreparedBatch,
+    canonical_sha256,
+    seed_everything,
+    write_json_atomic,
+)
+from .routed_layers import GraceValueLinear, RoutedFullLinear, RoutedLoRALinear
+from .routing import (
+    GraceCodebook,
+    MemoryRouter,
+    balanced_radius,
+    decision_as_json,
+)
+
+
+CLASSIFICATION = "M3BENCH_PAPER_SPEC_INDEPENDENT_REIMPLEMENTATION_V1"
+SEED = 20260828
+
+
+def record_seed(record_id: str, namespace: str) -> int:
+    payload = f"{SEED}:{namespace}:{record_id}".encode("utf-8")
+    return int(hashlib.sha256(payload).hexdigest()[:8], 16)
+
+
+def finite_gradients(parameters: list[nn.Parameter]) -> bool:
+    gradients = [parameter.grad for parameter in parameters if parameter.grad is not None]
+    return bool(gradients) and all(torch.isfinite(gradient).all().item() for gradient in gradients)
+
+
+def parameter_bytes(parameters: list[nn.Parameter]) -> int:
+    return sum(parameter.numel() * parameter.element_size() for parameter in parameters)
+
+
+class PaperSpecEditor(ABC):
+    method: str
+
+    def __init__(self, runtime: LlavaMedEditorRuntime):
+        if runtime.target_lock is None:
+            raise RuntimeError("resolve and freeze module inventory before installing an editor")
+        self.runtime = runtime
+        self.edit_history: list[str] = []
+
+    @abstractmethod
+    def apply_edit(self, record: EditorRecord) -> dict[str, Any]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def score_target_nll(self, record: EditorRecord) -> dict[str, Any]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def generate(self, record: EditorRecord, *, use_cache: bool = True) -> dict[str, Any]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def save_editor_state(self, path: Path) -> dict[str, Any]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def load_editor_state(self, path: Path) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def reset_editor_state(self) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def state_summary(self) -> dict[str, Any]:
+        raise NotImplementedError
+
+    def base_integrity(self) -> dict[str, Any]:
+        if self.runtime.base_guard is None:
+            raise RuntimeError("base guard was not captured")
+        return self.runtime.base_guard.verify()
+
+    def write_config_lock(self, output_dir: Path) -> None:
+        config = self.config_lock()
+        config["config_sha256"] = canonical_sha256(config)
+        write_json_atomic(output_dir / "METHOD_CONFIG_LOCK_V2.json", config)
+
+    @abstractmethod
+    def config_lock(self) -> dict[str, Any]:
+        raise NotImplementedError
+
+
+class LoraPaperSpecEditor(PaperSpecEditor):
+    method = "lora"
+
+    def __init__(self, runtime: LlavaMedEditorRuntime):
+        super().__init__(runtime)
+        from peft import LoraConfig, get_peft_model
+
+        targets = list(runtime.target_lock["lora"]["targets"])
+        config = LoraConfig(
+            r=16,
+            lora_alpha=16,
+            lora_dropout=0.0,
+            bias="none",
+            target_modules=targets,
+            task_type="CAUSAL_LM",
+        )
+        peft_model = get_peft_model(runtime.adapter.model, config)
+        runtime.adapter.model = peft_model
+        self.peft_model = peft_model
+        self.targets = targets
+        self._set_enabled(True)
+        self._freeze_non_lora()
+        self._initial_adapter_state = self._capture_adapter_state()
+        self.initial_adapter_sha256 = self.adapter_state_sha256()
+
+    def _freeze_non_lora(self) -> None:
+        for name, parameter in self.peft_model.named_parameters():
+            parameter.requires_grad_("lora_" in name)
+
+    def _set_enabled(self, enabled: bool) -> None:
+        if enabled:
+            self.peft_model.enable_adapter_layers()
+        else:
+            self.peft_model.disable_adapter_layers()
+
+    @contextmanager
+    def disabled(self) -> Iterator[None]:
+        self._set_enabled(False)
+        try:
+            yield
+        finally:
+            self._set_enabled(True)
+
+    def trainable(self) -> list[nn.Parameter]:
+        self._freeze_non_lora()
+        return [parameter for parameter in self.peft_model.parameters() if parameter.requires_grad]
+
+    def _capture_adapter_state(self) -> dict[str, torch.Tensor]:
+        return {
+            name: parameter.detach().to(device="cpu", dtype=torch.float32).clone()
+            for name, parameter in self.peft_model.named_parameters()
+            if "lora_" in name
+        }
+
+    def adapter_state_sha256(self) -> str:
+        digest = hashlib.sha256()
+        for name, parameter in sorted(self.peft_model.named_parameters()):
+            if "lora_" not in name:
+                continue
+            value = parameter.detach().to(device="cpu", dtype=torch.float32).contiguous()
+            digest.update(name.encode("utf-8"))
+            digest.update(str(tuple(value.shape)).encode("ascii"))
+            digest.update(value.numpy().tobytes())
+        return digest.hexdigest()
+
+    def apply_edit(self, record: EditorRecord) -> dict[str, Any]:
+        seed = record_seed(record.record_id, self.method)
+        seed_everything(seed)
+        self._set_enabled(True)
+        batch = self.runtime.build_edit_batch(record)
+        parameters = self.trainable()
+        if not parameters:
+            raise RuntimeError("LoRA has no trainable parameters")
+        optimizer = torch.optim.AdamW(parameters, lr=5e-5)
+        losses = []
+        gradients_finite = []
+        self.peft_model.eval()
+        for _ in range(5):
+            optimizer.zero_grad(set_to_none=True)
+            loss = self.runtime.compute_loss(batch)
+            loss.backward()
+            gradients_finite.append(finite_gradients(parameters))
+            torch.nn.utils.clip_grad_norm_(parameters, 1.0)
+            optimizer.step()
+            losses.append(float(loss.detach().cpu().item()))
+        self.edit_history.append(record.record_id)
+        return {
+            "record_id": record.record_id,
+            "seed": seed,
+            "losses": losses,
+            "finite_losses": all(torch.isfinite(torch.tensor(losses)).tolist()),
+            "finite_gradients": all(gradients_finite),
+            "epochs": 5,
+            "trainable_parameter_count": sum(p.numel() for p in parameters),
+            "trainable_parameter_bytes": parameter_bytes(parameters),
+            "target_mask": batch.mask_report(),
+        }
+
+    def score_target_nll(self, record: EditorRecord) -> dict[str, Any]:
+        batch = self.runtime.build_edit_batch(record)
+        with torch.no_grad():
+            loss = self.runtime.compute_loss(batch)
+        return {"nll": float(loss.cpu().item()), "route": None, "target_mask": batch.mask_report()}
+
+    def generate(self, record: EditorRecord, *, use_cache: bool = True) -> dict[str, Any]:
+        self._set_enabled(True)
+        return {"route": None, "generation": self.runtime.generate(record, use_cache=use_cache)}
+
+    def save_editor_state(self, path: Path) -> dict[str, Any]:
+        path.mkdir(parents=True, exist_ok=True)
+        self.peft_model.save_pretrained(path, safe_serialization=True)
+        metadata = {"method": self.method, "edit_history": self.edit_history, "targets": self.targets}
+        write_json_atomic(path / "m3bench_editor_state.json", metadata)
+        files = sorted(p for p in path.rglob("*") if p.is_file())
+        digest = hashlib.sha256()
+        for file in files:
+            digest.update(str(file.relative_to(path)).encode("utf-8"))
+            digest.update(file.read_bytes())
+        return {
+            "path": str(path),
+            "sha256": digest.hexdigest(),
+            "size_bytes": sum(file.stat().st_size for file in files),
+            "file_count": len(files),
+        }
+
+    def load_editor_state(self, path: Path) -> None:
+        from peft import PeftModel
+
+        base = self.runtime.llava_model()
+        loaded = PeftModel.from_pretrained(base, path, is_trainable=False)
+        self.runtime.adapter.model = loaded
+        self.peft_model = loaded
+        metadata = json.loads((path / "m3bench_editor_state.json").read_text(encoding="utf-8"))
+        self.edit_history = list(metadata["edit_history"])
+        self._set_enabled(True)
+
+    def reset_editor_state(self) -> None:
+        current = dict(self.peft_model.named_parameters())
+        with torch.no_grad():
+            for name, initial in self._initial_adapter_state.items():
+                if name not in current:
+                    raise RuntimeError(f"LoRA reset target disappeared: {name}")
+                current[name].copy_(initial.to(device=current[name].device, dtype=current[name].dtype))
+        if self.adapter_state_sha256() != self.initial_adapter_sha256:
+            raise RuntimeError("LoRA reset did not restore the exact initial adapter state")
+        self._set_enabled(False)
+        self.edit_history.clear()
+
+    def state_summary(self) -> dict[str, Any]:
+        adapters = [
+            (name, parameter)
+            for name, parameter in self.peft_model.named_parameters()
+            if "lora_" in name
+        ]
+        return {
+            "method": self.method,
+            "edit_history": list(self.edit_history),
+            "adapter_parameter_count": sum(parameter.numel() for _, parameter in adapters),
+            "adapter_parameter_bytes": sum(
+                parameter.numel() * parameter.element_size() for _, parameter in adapters
+            ),
+            "target_count": len(self.targets),
+        }
+
+    def config_lock(self) -> dict[str, Any]:
+        return {
+            "schema_version": "m3bench-editor-method-config-v2",
+            "method": "LoRA",
+            "classification": CLASSIFICATION,
+            "scope": "all language-model MLP blocks",
+            "targets": self.targets,
+            "rank": 16,
+            "lora_alpha": 16,
+            "dropout": 0.0,
+            "optimizer": "AdamW",
+            "learning_rate": 5e-5,
+            "batch_size": 1,
+            "gradient_clip": 1.0,
+            "epochs_per_edit": 5,
+            "projector": "excluded",
+            "vision_encoder": "excluded",
+            "source": "PEFT 0.19.1 @ ba6a19060d6ab54a87538a6e77e3e4d5a907375b",
+        }
+
+
+class GracePaperSpecEditor(PaperSpecEditor):
+    method = "grace"
+
+    def __init__(self, runtime: LlavaMedEditorRuntime):
+        super().__init__(runtime)
+        self.target = runtime.target_lock["grace"]["targets"][0]
+        base = runtime.get_module(self.target)
+        if not isinstance(base, nn.Linear):
+            raise TypeError(f"GRACE target must resolve to nn.Linear, got {type(base)}")
+        self.wrapper = GraceValueLinear(base, replacement="replace_prompt")
+        runtime.replace_module(self.target, self.wrapper)
+        self.codebook = GraceCodebook(distance="cosine", eps_init=1.0)
+        self.requested_to_effective: dict[str, str] = {}
+
+    @contextmanager
+    def disabled(self) -> Iterator[None]:
+        previous = self.wrapper.active_logical_id
+        self.wrapper.disable()
+        try:
+            yield
+        finally:
+            self.wrapper.set_active(previous) if previous is not None else self.wrapper.disable()
+
+    def _question_key(self, record: EditorRecord) -> torch.Tensor:
+        with self.disabled():
+            question_batch = self.runtime.build_question_batch(record)
+            return self.runtime.extract_layer_input_key(
+                question_batch, module_path=self.target, pooling="last_prompt"
+            )
+
+    def apply_edit(self, record: EditorRecord) -> dict[str, Any]:
+        seed = record_seed(record.record_id, self.method)
+        seed_everything(seed)
+        key = self._question_key(record)
+        batch = self.runtime.build_edit_batch(record)
+        insertion = self.codebook.insert_with_source_semantics(
+            record.record_id, key, batch.target_token_ids
+        )
+        effective_id = insertion.effective_logical_edit_id
+        if effective_id not in self.wrapper.logical_to_slot:
+            self.wrapper.add_cold_value(effective_id, seed=seed)
+        parameters = self.wrapper.train_only(effective_id)
+        if len(parameters) != 1:
+            raise RuntimeError("GRACE must train exactly one entry value")
+        self.wrapper.set_active(effective_id, token_index=batch.key_token_index)
+        optimizer = torch.optim.Adam(parameters, lr=1.0)
+        losses, gradient_checks = [], []
+        for _ in range(100):
+            optimizer.zero_grad(set_to_none=True)
+            loss = self.runtime.compute_loss(batch)
+            loss.backward()
+            gradient_checks.append(finite_gradients(parameters))
+            optimizer.step()
+            losses.append(float(loss.detach().cpu().item()))
+        self.wrapper.train_only(None)
+        self.wrapper.disable()
+        self.requested_to_effective[record.record_id] = effective_id
+        self.edit_history.append(record.record_id)
+        return {
+            "record_id": record.record_id,
+            "seed": seed,
+            "losses": losses,
+            "finite_losses": all(torch.isfinite(torch.tensor(losses)).tolist()),
+            "finite_gradients": all(gradient_checks),
+            "steps": 100,
+            "insert": asdict(insertion),
+            "key_norm": float(torch.linalg.vector_norm(key).cpu().item()),
+            "entry_count": len(self.codebook),
+            "trainable_parameter_count": sum(p.numel() for p in parameters),
+            "target_mask": batch.mask_report(),
+        }
+
+    def _route(self, record: EditorRecord):
+        key = self._question_key(record)
+        return self.codebook.route(key)
+
+    def score_target_nll(self, record: EditorRecord) -> dict[str, Any]:
+        decision = self._route(record)
+        batch = self.runtime.build_edit_batch(record)
+        self.wrapper.set_active(decision.logical_edit_id, token_index=batch.key_token_index)
+        with torch.no_grad():
+            loss = self.runtime.compute_loss(batch)
+        self.wrapper.disable()
+        return {
+            "nll": float(loss.cpu().item()),
+            "route": decision_as_json(decision),
+            "target_mask": batch.mask_report(),
+        }
+
+    def generate(self, record: EditorRecord, *, use_cache: bool = True) -> dict[str, Any]:
+        decision = self._route(record)
+        self.wrapper.set_active(decision.logical_edit_id, token_index=-1)
+        output = self.runtime.generate(record, use_cache=use_cache)
+        self.wrapper.disable()
+        return {"route": decision_as_json(decision), "generation": output}
+
+    def save_editor_state(self, path: Path) -> dict[str, Any]:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        state = {
+            "method": self.method,
+            "target": self.target,
+            "codebook": self.codebook.export_state(),
+            "wrapper": self.wrapper.export_state(),
+            "requested_to_effective": self.requested_to_effective,
+            "edit_history": self.edit_history,
+        }
+        torch.save(state, path)
+        return {"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest(), "size_bytes": path.stat().st_size}
+
+    def load_editor_state(self, path: Path) -> None:
+        state = torch.load(path, map_location=self.runtime.device, weights_only=False)
+        if state["target"] != self.target:
+            raise ValueError("GRACE target mismatch")
+        self.codebook = GraceCodebook.from_state(state["codebook"], device=self.runtime.device)
+        self.wrapper.load_exported_state(state["wrapper"])
+        self.requested_to_effective = dict(state["requested_to_effective"])
+        self.edit_history = list(state["edit_history"])
+
+    def reset_editor_state(self) -> None:
+        self.codebook.clear()
+        self.wrapper.values = nn.ParameterDict()
+        self.wrapper.logical_to_slot.clear()
+        self.wrapper.slot_to_logical.clear()
+        self.wrapper.disable()
+        self.requested_to_effective.clear()
+        self.edit_history.clear()
+
+    def state_summary(self) -> dict[str, Any]:
+        values = list(self.wrapper.values.values())
+        logical_edit_ids = list(self.codebook.logical_ids)
+        requested_ids = list(self.requested_to_effective)
+        resident_ids = set(logical_edit_ids)
+        return {
+            "method": self.method,
+            "entry_count": len(self.codebook),
+            "logical_edit_ids": logical_edit_ids,
+            "radii": list(self.codebook.radii),
+            "value_entry_count": len(values),
+            "value_parameter_count": sum(p.numel() for p in values),
+            "value_parameter_bytes": parameter_bytes(values),
+            "edit_history": list(self.edit_history),
+            "requested_to_effective_count": len(self.requested_to_effective),
+            "requested_mapping_keys_match_history": requested_ids == self.edit_history,
+            "requested_mapping_values_resident": all(
+                effective_id in resident_ids for effective_id in self.requested_to_effective.values()
+            ),
+        }
+
+    def config_lock(self) -> dict[str, Any]:
+        return {
+            "schema_version": "m3bench-editor-method-config-v2",
+            "method": "GRACE",
+            "classification": "M3Bench-paper-spec adaptation of locked GRACE source",
+            "scope": "final-layer LM up_projection adaptor",
+            "target": self.target,
+            "distance": "1 - cosine_similarity",
+            "activation": "nearest_distance <= stored_radius",
+            "eps_init": 1.0,
+            "steps_per_edit": 100,
+            "optimizer": "Adam",
+            "learning_rate": 1.0,
+            "trainable": "selected entry value only",
+            "value_init": "cold uniform [0,1), source lock",
+            "replacement": "replace_prompt, source lock",
+            "collision_and_radius_update": "locked source semantics",
+            "euclidean": "diagnostic only, not primary smoke",
+            "source": "GRACE @ f674183f17a995d109e10ee6140d4c3e6d016115",
+        }
+
+
+class _BalanceRoutingMixin:
+    target: str
+    router: MemoryRouter
+
+    def _question_key(self, record: EditorRecord) -> torch.Tensor:
+        with self.disabled():
+            batch = self.runtime.build_question_batch(record)
+            return self.runtime.extract_layer_input_key(batch, module_path=self.target, pooling="mean")
+
+    def _anchors(self, record: EditorRecord, black_dir: Path) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, Path]:
+        with self.disabled():
+            original_batch = self.runtime.build_question_batch(record)
+            positive_batch = self.runtime.build_question_batch(record, question=record.official_rephrase)
+            black_path = self.runtime.make_black_image(record, black_dir)
+            negative_batch = self.runtime.build_question_batch(record, image_path=black_path)
+            key = self.runtime.extract_layer_input_key(original_batch, module_path=self.target, pooling="mean")
+            positive = self.runtime.extract_layer_input_key(positive_batch, module_path=self.target, pooling="mean")
+            negative = self.runtime.extract_layer_input_key(negative_batch, module_path=self.target, pooling="mean")
+        return key, positive, negative, black_path
+
+    def _route(self, record: EditorRecord):
+        return self.router.route(self._question_key(record))
+
+
+class BalanceEditPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
+    method = "balancedit"
+
+    def __init__(self, runtime: LlavaMedEditorRuntime, *, inactive_store_dir: Path | None = None):
+        super().__init__(runtime)
+        self.target = runtime.target_lock["balancedit"]["targets"][0]
+        base = runtime.get_module(self.target)
+        if not isinstance(base, nn.Linear):
+            raise TypeError("BalanceEdit target must be a linear up_projection")
+        self.wrapper = RoutedFullLinear(base, inactive_store_dir=inactive_store_dir)
+        runtime.replace_module(self.target, self.wrapper)
+        self.router = MemoryRouter("euclidean")
+
+    @contextmanager
+    def disabled(self) -> Iterator[None]:
+        previous = self.wrapper.active_logical_id
+        self.wrapper.set_active(None)
+        try:
+            yield
+        finally:
+            self.wrapper.set_active(previous)
+
+    def apply_edit(self, record: EditorRecord) -> dict[str, Any]:
+        seed = record_seed(record.record_id, self.method)
+        seed_everything(seed)
+        key, positive, negative, black_path = self._anchors(
+            record, self.runtime.run_root / "inputs/black_images"
+        )
+        radius = balanced_radius(
+            key, positive, negative, alpha=0.2, distance="euclidean"
+        )
+        batch = self.runtime.build_edit_batch(record)
+        self.router.add(record.record_id, key, radius, batch.target_token_ids)
+        edited = self.wrapper.add_edit(record.record_id)
+        parameters = self.wrapper.train_only(record.record_id)
+        self.wrapper.set_active(record.record_id)
+        optimizer = torch.optim.Adam(parameters, lr=0.01)
+        losses, gradient_checks = [], []
+        for _ in range(50):
+            optimizer.zero_grad(set_to_none=True)
+            loss = self.runtime.compute_loss(batch)
+            loss.backward()
+            gradient_checks.append(finite_gradients(parameters))
+            torch.nn.utils.clip_grad_norm_(parameters, 1.0)
+            optimizer.step()
+            losses.append(float(loss.detach().cpu().item()))
+        self.wrapper.train_only(None)
+        self.wrapper.set_active(None)
+        self.edit_history.append(record.record_id)
+        return {
+            "record_id": record.record_id,
+            "seed": seed,
+            "losses": losses,
+            "finite_losses": all(torch.isfinite(torch.tensor(losses)).tolist()),
+            "finite_gradients": all(gradient_checks),
+            "steps": 50,
+            "radius": float(radius.cpu().item()),
+            "distance": "euclidean",
+            "black_image_path": str(black_path),
+            "black_image_sha256": hashlib.sha256(black_path.read_bytes()).hexdigest(),
+            "entry_count": len(self.router),
+            "trainable_parameter_count": sum(p.numel() for p in parameters),
+            "trainable_parameter_bytes": parameter_bytes(parameters),
+            "target_mask": batch.mask_report(),
+        }
+
+    def score_target_nll(self, record: EditorRecord) -> dict[str, Any]:
+        decision = self._route(record)
+        self.wrapper.set_active(decision.logical_edit_id)
+        batch = self.runtime.build_edit_batch(record)
+        with torch.no_grad():
+            loss = self.runtime.compute_loss(batch)
+        self.wrapper.set_active(None)
+        return {"nll": float(loss.cpu().item()), "route": decision_as_json(decision), "target_mask": batch.mask_report()}
+
+    def generate(self, record: EditorRecord, *, use_cache: bool = True) -> dict[str, Any]:
+        decision = self._route(record)
+        self.wrapper.set_active(decision.logical_edit_id)
+        output = self.runtime.generate(record, use_cache=use_cache)
+        self.wrapper.set_active(None)
+        return {"route": decision_as_json(decision), "generation": output}
+
+    def save_editor_state(self, path: Path) -> dict[str, Any]:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        torch.save(
+            {
+                "method": self.method,
+                "target": self.target,
+                "router": self.router.export_state(),
+                "wrapper": self.wrapper.export_state(),
+                "edit_history": self.edit_history,
+            },
+            path,
+        )
+        return {"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest(), "size_bytes": path.stat().st_size}
+
+    def load_editor_state(self, path: Path) -> None:
+        state = torch.load(path, map_location=self.runtime.device, weights_only=False)
+        if state["target"] != self.target:
+            raise ValueError("BalanceEdit target mismatch")
+        self.router = MemoryRouter.from_state(state["router"], device=self.runtime.device)
+        self.wrapper.load_exported_state(state["wrapper"])
+        self.edit_history = list(state["edit_history"])
+
+    def reset_editor_state(self) -> None:
+        self.router.clear()
+        self.wrapper.clear()
+        self.edit_history.clear()
+
+    def state_summary(self) -> dict[str, Any]:
+        statistics = self.wrapper.parameter_statistics()
+        return {
+            "method": self.method,
+            "entry_count": len(self.router),
+            "logical_edit_ids": list(self.router.logical_ids),
+            "radii": list(self.router.radii),
+            "edited_parameter_count": statistics["parameter_count"],
+            "edited_parameter_bytes": statistics["parameter_bytes"],
+            "full_weight_copies_per_edit": 1,
+            "inactive_storage": statistics["storage_mode"],
+            "archived_entry_count": statistics["archived_entry_count"],
+            "edit_history": list(self.edit_history),
+        }
+
+    def config_lock(self) -> dict[str, Any]:
+        return {
+            "schema_version": "m3bench-editor-method-config-v2",
+            "method": "BalanceEdit",
+            "classification": "paper-spec LLaVA-Med adaptation of locked BalanceEdit source",
+            "scope": "final-layer LM MLP up_projection",
+            "target": self.target,
+            "key": "mean input hidden representation at edited up_projection",
+            "positive": "same image plus frozen official question rephrase",
+            "negative": "same-size black image plus original question",
+            "distance": "euclidean from minigpt4_euc source config",
+            "radius_formula": "(1-alpha)*negative_distance + alpha*positive_distance",
+            "alpha": 0.2,
+            "optimizer": "Adam",
+            "learning_rate": 0.01,
+            "gradient_clip": 1.0,
+            "steps_per_edit": 50,
+            "edited_state_precision": "float32; outputs cast to frozen backbone dtype",
+            "source": "BalanceEdit @ 83749e52a1d27331d21cfec845b6089294730c2f; hparams/BalancEdit/minigpt4_euc.yaml",
+        }
+
+
+class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
+    method = "belora"
+
+    def __init__(self, runtime: LlavaMedEditorRuntime):
+        super().__init__(runtime)
+        self.targets = list(runtime.target_lock["belora"]["targets"])
+        self.target = next(path for path in self.targets if path.endswith("up_proj"))
+        self.wrappers: dict[str, RoutedLoRALinear] = {}
+        for path in self.targets:
+            base = runtime.get_module(path)
+            if not isinstance(base, nn.Linear):
+                raise TypeError(f"BELoRA target is not linear: {path}")
+            wrapper = RoutedLoRALinear(base, rank=16, alpha=16, dropout=0.0)
+            runtime.replace_module(path, wrapper)
+            self.wrappers[path] = wrapper
+        self.router = MemoryRouter("euclidean")
+
+    @contextmanager
+    def disabled(self) -> Iterator[None]:
+        previous = {path: wrapper.active_logical_id for path, wrapper in self.wrappers.items()}
+        for wrapper in self.wrappers.values():
+            wrapper.set_active(None)
+        try:
+            yield
+        finally:
+            for path, wrapper in self.wrappers.items():
+                wrapper.set_active(previous[path])
+
+    def _set_active(self, logical_id: str | None) -> None:
+        for wrapper in self.wrappers.values():
+            wrapper.set_active(logical_id)
+
+    def apply_edit(self, record: EditorRecord) -> dict[str, Any]:
+        seed = record_seed(record.record_id, self.method)
+        seed_everything(seed)
+        key, positive, negative, black_path = self._anchors(
+            record, self.runtime.run_root / "inputs/black_images"
+        )
+        radius = balanced_radius(key, positive, negative, alpha=0.2, distance="euclidean")
+        batch = self.runtime.build_edit_batch(record)
+        self.router.add(record.record_id, key, radius, batch.target_token_ids)
+        parameters = []
+        for index, wrapper in enumerate(self.wrappers.values()):
+            wrapper.add_adapter(record.record_id, seed=seed + index)
+            parameters.extend(wrapper.train_only(record.record_id))
+        self._set_active(record.record_id)
+        optimizer = torch.optim.AdamW(parameters, lr=5e-5)
+        losses, gradient_checks = [], []
+        for _ in range(5):
+            optimizer.zero_grad(set_to_none=True)
+            loss = self.runtime.compute_loss(batch)
+            loss.backward()
+            gradient_checks.append(finite_gradients(parameters))
+            torch.nn.utils.clip_grad_norm_(parameters, 1.0)
+            optimizer.step()
+            losses.append(float(loss.detach().cpu().item()))
+        for wrapper in self.wrappers.values():
+            wrapper.train_only(None)
+        self._set_active(None)
+        self.edit_history.append(record.record_id)
+        return {
+            "record_id": record.record_id,
+            "seed": seed,
+            "losses": losses,
+            "finite_losses": all(torch.isfinite(torch.tensor(losses)).tolist()),
+            "finite_gradients": all(gradient_checks),
+            "epochs": 5,
+            "radius": float(radius.cpu().item()),
+            "distance": "euclidean",
+            "black_image_path": str(black_path),
+            "black_image_sha256": hashlib.sha256(black_path.read_bytes()).hexdigest(),
+            "entry_count": len(self.router),
+            "logical_adapter_set_size": len(self.wrappers),
+            "trainable_parameter_count": sum(p.numel() for p in parameters),
+            "trainable_parameter_bytes": parameter_bytes(parameters),
+            "target_mask": batch.mask_report(),
+        }
+
+    def score_target_nll(self, record: EditorRecord) -> dict[str, Any]:
+        decision = self._route(record)
+        self._set_active(decision.logical_edit_id)
+        batch = self.runtime.build_edit_batch(record)
+        with torch.no_grad():
+            loss = self.runtime.compute_loss(batch)
+        self._set_active(None)
+        return {"nll": float(loss.cpu().item()), "route": decision_as_json(decision), "target_mask": batch.mask_report()}
+
+    def generate(self, record: EditorRecord, *, use_cache: bool = True) -> dict[str, Any]:
+        decision = self._route(record)
+        self._set_active(decision.logical_edit_id)
+        output = self.runtime.generate(record, use_cache=use_cache)
+        self._set_active(None)
+        return {"route": decision_as_json(decision), "generation": output}
+
+    def save_editor_state(self, path: Path) -> dict[str, Any]:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        torch.save(
+            {
+                "method": self.method,
+                "targets": self.targets,
+                "router": self.router.export_state(),
+                "wrappers": {path: wrapper.export_state() for path, wrapper in self.wrappers.items()},
+                "edit_history": self.edit_history,
+            },
+            path,
+        )
+        return {"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest(), "size_bytes": path.stat().st_size}
+
+    def load_editor_state(self, path: Path) -> None:
+        state = torch.load(path, map_location=self.runtime.device, weights_only=False)
+        if state["targets"] != self.targets:
+            raise ValueError("BELoRA target set mismatch")
+        self.router = MemoryRouter.from_state(state["router"], device=self.runtime.device)
+        for target, wrapper_state in state["wrappers"].items():
+            self.wrappers[target].load_exported_state(wrapper_state)
+        self.edit_history = list(state["edit_history"])
+
+    def reset_editor_state(self) -> None:
+        self.router.clear()
+        for wrapper in self.wrappers.values():
+            wrapper.lora_A = nn.ParameterDict()
+            wrapper.lora_B = nn.ParameterDict()
+            wrapper.logical_to_slot.clear()
+            wrapper.slot_to_logical.clear()
+            wrapper.set_active(None)
+        self.edit_history.clear()
+
+    def state_summary(self) -> dict[str, Any]:
+        parameters = [
+            parameter
+            for wrapper in self.wrappers.values()
+            for parameter in list(wrapper.lora_A.values()) + list(wrapper.lora_B.values())
+        ]
+        return {
+            "method": self.method,
+            "implementation_label": "BELORA_PAPER_SPEC_REIMPLEMENTATION_V1",
+            "entry_count": len(self.router),
+            "logical_edit_ids": list(self.router.logical_ids),
+            "radii": list(self.router.radii),
+            "wrapped_linear_count": len(self.wrappers),
+            "adapter_parameter_count": sum(p.numel() for p in parameters),
+            "adapter_parameter_bytes": parameter_bytes(parameters),
+            "full_weight_copies": 0,
+            "edit_history": list(self.edit_history),
+        }
+
+    def config_lock(self) -> dict[str, Any]:
+        return {
+            "schema_version": "m3bench-editor-method-config-v2",
+            "method": "BELoRA",
+            "implementation_label": "BELORA_PAPER_SPEC_REIMPLEMENTATION_V1",
+            "classification": "independent paper-spec reimplementation; not author implementation",
+            "scope": "final-layer LM MLP internal linears",
+            "targets": self.targets,
+            "routing": "BalanceEdit pooled-key nearest route",
+            "distance": "euclidean from BalanceEdit minigpt4_euc source config",
+            "radius_formula": "(1-alpha)*negative_distance + alpha*positive_distance",
+            "alpha": 0.2,
+            "rank": 16,
+            "lora_alpha": 16,
+            "dropout": 0.0,
+            "optimizer": "AdamW",
+            "learning_rate": 5e-5,
+            "batch_size": 1,
+            "gradient_clip": 1.0,
+            "epochs_per_edit": 5,
+            "update_storage": "per-edit LoRA parameters only; no full module copies",
+            "projector": "excluded from primary smoke",
+            "vision_encoder": "excluded",
+            "author_runtime": "unavailable",
+        }
+
+
+def create_editor(
+    method: str,
+    runtime: LlavaMedEditorRuntime,
+    *,
+    balancedit_inactive_store_dir: Path | None = None,
+) -> PaperSpecEditor:
+    normalized = method.lower()
+    if normalized == "lora":
+        return LoraPaperSpecEditor(runtime)
+    if normalized == "grace":
+        return GracePaperSpecEditor(runtime)
+    if normalized in {"balancedit", "be"}:
+        return BalanceEditPaperSpecEditor(runtime, inactive_store_dir=balancedit_inactive_store_dir)
+    if normalized == "belora":
+        return BeloraPaperSpecEditor(runtime)
+    raise ValueError(f"unknown editor method: {method}")

@@ -1,0 +1,35 @@
+{
+  "schema_version": "m3bench-actual-editor-source-binding-v1",
+  "created_at_utc": "2026-09-02T06:47:10Z",
+  "classification": "SOURCE_BINDING_BEFORE_EDITOR_EFFECT_REPAIR",
+  "runtime_source": {
+    "private_worktree": "<actual-source-worktree>",
+    "source_commit": "9c38d467268fb455a5ede7601aa87408cb26b264",
+    "worktree_clean_at_capture": true,
+    "published_history_note": "Source files were copied onto the public repository history; private absolute paths were replaced by environment variables only."
+  },
+  "entrypoints": [
+    "scripts/editor_paperspec_formal.py",
+    "scripts/editor_paperspec_runtime.py"
+  ],
+  "import_chain": [
+    "scripts/editor_paperspec_formal.py -> m3bench_repro.editors.llava_runtime",
+    "scripts/editor_paperspec_formal.py -> m3bench_repro.editors.methods",
+    "m3bench_repro.editors.methods -> m3bench_repro.editors.routed_layers",
+    "m3bench_repro.editors.methods -> m3bench_repro.editors.routing",
+    "m3bench_repro.editors.llava_runtime -> m3bench_repro.inference.llava_med"
+  ],
+  "source_blob_sha256": {
+    "m3bench_repro/editors/llava_runtime.py": "61f51685914373fc3ca9069bd96823b0645272ff6617ea880591960e8b04c76d",
+    "m3bench_repro/editors/methods.py": "218df95fc7e41ed0c084429312584eb6ad40de26f7990ca6d7f78cbce8405e2d",
+    "m3bench_repro/editors/routed_layers.py": "32e8ce570a6b290a850e40443bca15febb5acb8a8126ebc71cd1ea59f11ee253",
+    "m3bench_repro/editors/routing.py": "40dabcc64bd7a69aef80ee188bdb5abe079c98e2eae83eb8ba3a579edb8f2f93",
+    "m3bench_repro/inference/llava_med.py": "f5759092ebaa47d180410ab9788b5aa13683791c93cb612dca0f2da910bc1937",
+    "scripts/editor_paperspec_formal.py": "8de5d768c0ff06f086badeb268575f6d193d7a828f1edbcdd104b4278ba16fbf",
+    "scripts/editor_paperspec_runtime.py": "5a5e4693c57427bb3c5e278da48c7e2b156fd4efa6aef4f007401595c8629a17"
+  },
+  "privacy_only_changes_before_publication": [
+    "model, vision tower, external source, worktree, and run-root paths are injected through environment variables"
+  ],
+  "algorithm_changes_before_binding": []
+}
