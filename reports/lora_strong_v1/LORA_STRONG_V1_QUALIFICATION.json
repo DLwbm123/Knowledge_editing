@@ -1,0 +1,65 @@
+{
+  "status": "LORA_STRONG_HELDOUT_HARD_STOP__LOCALITY_COLLAPSE__PROTOCOL_AMENDMENT_REQUIRED",
+  "experiment_code_commit": "2a1d7d694bf3b7aaeb87c8cf37835d3db8abc1c9",
+  "paper_spec_5_modified": false,
+  "cohorts": {
+    "pairwise_disjoint": true,
+    "prior_smoke_excluded": true,
+    "target_leakage": false,
+    "overfit": 4,
+    "dev8": 8,
+    "dev16": 16,
+    "heldout16": 16,
+    "sequential16": 16
+  },
+  "overfit_gate": {
+    "status": "PASS",
+    "semantic_t0": "4/4",
+    "target_nll_under_0_5": "4/4",
+    "first_target_token_rank_1": "4/4",
+    "empty": 0,
+    "base_unchanged": "4/4",
+    "save_reload_parity": "4/4"
+  },
+  "calibration": {
+    "dev8_grid_configs": 16,
+    "dev8_gpu_runs": 128,
+    "dev8_nll_decrease": "128/128",
+    "dev8_empty": 0,
+    "dev16_top2": [
+      {"learning_rate": 0.0005, "max_steps": 100},
+      {"learning_rate": 0.0005, "max_steps": 50}
+    ],
+    "selected_learning_rate": 0.0005,
+    "selected_fixed_steps": 50,
+    "selected_dev16_semantic_t0": "16/16"
+  },
+  "heldout_adaptive": {
+    "status": "FAIL",
+    "learning_rate": 0.0005,
+    "min_steps": 10,
+    "check_interval": 5,
+    "max_steps": 100,
+    "steps_run_distribution": {"15": 16},
+    "semantic_t0": "16/16",
+    "target_nll_decrease": "16/16",
+    "first_target_token_rank_1": "16/16",
+    "empty": 0,
+    "base_unchanged": "16/16",
+    "save_reload_parity": "16/16",
+    "locality_semantic_retention": "2/16",
+    "locality_semantic_retention_value": 0.125,
+    "locality_exact_fuzzy": "4/16",
+    "locality_output_equal_to_current_edit_target": "16/16"
+  },
+  "rescue_started": false,
+  "rescue_reason": "The frozen rescue trigger is semantic T0 below 12/16; observed semantic T0 was 16/16.",
+  "sequential_smoke_started": false,
+  "formal_189_started": false,
+  "gpu": {
+    "physical_index": 3,
+    "neutral_process_name_verified": true,
+    "observed_peak_memory_mib_approx": 21637
+  },
+  "private_material_published": false
+}
