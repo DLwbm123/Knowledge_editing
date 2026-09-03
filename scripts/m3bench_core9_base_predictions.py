@@ -65,6 +65,16 @@ def read_jsonl(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
+def semantic_verdict_index(path: Path | None) -> dict[str, bool]:
+    if path is None:
+        return {}
+    rows = read_jsonl(path)
+    verdicts = {row["opaque_query_id"]: row["is_correct"] for row in rows}
+    if len(verdicts) != len(rows) or any(type(value) is not bool for value in verdicts.values()):
+        raise RuntimeError("invalid or duplicate semantic verdicts")
+    return verdicts
+
+
 def atomic(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -234,6 +244,7 @@ def finalize(args: argparse.Namespace) -> None:
     canonical = {row["record_id"]: row for row in read_jsonl(args.canonical_verdicts)}
     new_rows = read_jsonl(args.output_dir / "BASE_NEW_PREDICTIONS.jsonl") if (args.output_dir / "BASE_NEW_PREDICTIONS.jsonl").exists() else []
     new = {row["query_id"]: row for row in new_rows}
+    semantic_verdicts = semantic_verdict_index(args.semantic_verdicts)
     if len(new) != len(new_rows):
         raise RuntimeError("duplicate new prediction query IDs")
     predictions, verdicts, judge_packet = [], [], []
@@ -266,8 +277,11 @@ def finalize(args: argparse.Namespace) -> None:
                 source_id = row["legacy_source_record_ids"][0]
                 is_correct, route = bool(canonical[source_id]["is_correct"]), "exact_triple_source_judge_reuse"
             elif semantic_required(row["gold_answer"]):
-                judge_packet.append({"opaque_query_id": row["query_id"], "question": row["question"], "gold_answer": row["gold_answer"], "model_answer": answer})
-                continue
+                if row["query_id"] in semantic_verdicts:
+                    is_correct, route = semantic_verdicts[row["query_id"]], "fixed_method_blind_semantic_judge"
+                else:
+                    judge_packet.append({"opaque_query_id": row["query_id"], "question": row["question"], "gold_answer": row["gold_answer"], "model_answer": answer})
+                    continue
             else:
                 is_correct, route = exact_fuzzy(answer, row["gold_answer"])[0], "frozen_exact_fuzzy"
         route_counts[route] += 1
@@ -316,6 +330,7 @@ def main() -> None:
     parser.add_argument("--source-predictions", type=Path, required=True)
     parser.add_argument("--derived-predictions", type=Path, required=True)
     parser.add_argument("--canonical-verdicts", type=Path)
+    parser.add_argument("--semantic-verdicts", type=Path)
     parser.add_argument("--runtime-config", type=Path, required=True)
     parser.add_argument("--adapter-root", type=Path)
     parser.add_argument("--output-dir", type=Path, required=True)

@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.m3bench_core9_base_predictions import inference_targets, replay_record_pass
+from scripts.m3bench_core9_base_predictions import inference_targets, replay_record_pass, semantic_verdict_index
 from scripts.m3bench_core9_public_query_inventory import assert_no_method_fields
 from scripts.m3bench_core9_task_specific_cohorts import build_t3, macro_per_edit
 
@@ -22,6 +22,15 @@ class TaskSpecificDataTests(unittest.TestCase):
         source = {"r": {"model_answer_raw": "x"}}
         self.assertEqual([row["query_id"] for row in inference_targets(rows, source, {}, True)], ["reused", "new"])
         self.assertEqual([row["query_id"] for row in inference_targets(rows, source, {}, False)], ["new"])
+
+    def test_semantic_verdicts_are_boolean_and_unique(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "verdicts.jsonl"
+            path.write_text('{"opaque_query_id":"q","is_correct":true}\n', encoding="utf-8")
+            self.assertEqual(semantic_verdict_index(path), {"q": True})
+            path.write_text('{"opaque_query_id":"q","is_correct":true}\n{"opaque_query_id":"q","is_correct":false}\n', encoding="utf-8")
+            with self.assertRaises(RuntimeError):
+                semantic_verdict_index(path)
 
     def test_macro_is_per_edit_not_pooled(self):
         self.assertAlmostEqual(macro_per_edit({"a": [True], "b": [True, False, False]}), 2 / 3)
