@@ -53,6 +53,23 @@ class TaskSpecificT4LTest(unittest.TestCase):
         self.assertEqual(len(candidates), 257)
         self.assertTrue(all(row["amended189_used_as_t4l_anchor"] is False for row in candidates))
 
+    def test_vqarad_image_is_not_rejected_as_missing(self):
+        root = Path(self.temp.name)
+        rows = [valid_row(f"img{i}") for i in range(1, 258)]
+        rows[0]["image_id"] = "synpic1.jpg"
+        for row in rows[1:]:
+            path = root / "slake" / row["image_id"] / "source.jpg"
+            path.parent.mkdir(parents=True, exist_ok=True); path.write_bytes(b"slake")
+        vqa = root / "vqa"; vqa.mkdir(); (vqa / "synpic1.jpg").write_bytes(b"vqa")
+        source = root / "t4l.csv"
+        with source.open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=FIELDS); writer.writeheader(); writer.writerows(rows)
+        digest = hashlib.sha256(source.read_bytes()).hexdigest()
+        candidates, _, rejected = build_candidates(source, root / "slake", digest, vqa)
+        self.assertEqual(len(candidates), 257)
+        self.assertEqual(candidates[0]["dataset"], "VQA-RAD")
+        self.assertEqual(rejected, [])
+
     def test_role_mismatch_filtered(self):
         candidates, _, rejected = self.build({"question_a": "Is edema present?"})
         self.assertEqual(len(candidates), 256)

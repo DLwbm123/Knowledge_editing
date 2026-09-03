@@ -45,8 +45,8 @@ def malformed_scalar(value: object) -> bool:
     return bool(re.search(r"[\u3400-\u9fff]", text) or re.search(r"[\[\]{}]", text))
 
 
-def query_key(image_id: str, image_hash: str, question: str, gold: str) -> tuple[str, ...]:
-    return ("SLAKE", image_id, image_hash, normalize(question), normalize(gold))
+def query_key(dataset: str, image_id: str, image_hash: str, question: str, gold: str) -> tuple[str, ...]:
+    return (dataset, image_id, image_hash, normalize(question), normalize(gold))
 
 
 def query_id(key: tuple[str, ...]) -> str:
@@ -81,7 +81,7 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
 def dedupe_queries(rows: list[dict]) -> list[dict]:
     merged: dict[tuple[str, ...], dict] = {}
     for row in rows:
-        key = query_key(row["image_id"], row["image_sha256"], row["question"], row["gold_answer"])
+        key = query_key(row.get("dataset", "SLAKE"), row["image_id"], row["image_sha256"], row["question"], row["gold_answer"])
         if key not in merged:
             merged[key] = {**row, "query_id": query_id(key), "lineage": []}
         for lineage in row.get("lineage", []):
@@ -90,7 +90,10 @@ def dedupe_queries(rows: list[dict]) -> list[dict]:
     return sorted(merged.values(), key=lambda row: row["query_id"])
 
 
-def build_candidates(csv_path: Path, image_root: Path, expected_sha256: str = T4L_SHA256) -> tuple[list[dict], list[dict], list[dict]]:
+def build_candidates(
+    csv_path: Path, slake_image_root: Path, expected_sha256: str = T4L_SHA256,
+    vqarad_image_root: Path | None = None,
+) -> tuple[list[dict], list[dict], list[dict]]:
     actual_sha = sha256(csv_path)
     if actual_sha != expected_sha256:
         raise RuntimeError(f"T4L source SHA mismatch: {actual_sha}")
@@ -119,7 +122,12 @@ def build_candidates(csv_path: Path, image_root: Path, expected_sha256: str = T4
             reasons.append("question_a_lesion_a_role_mismatch")
         if not phrase_in(row["lesion_b"], row["question_b"]):
             reasons.append("question_b_lesion_b_role_mismatch")
-        image_path = image_root / row["image_id"] / "source.jpg"
+        dataset = "VQA-RAD" if row["image_id"].endswith(".jpg") else "SLAKE"
+        image_path = (
+            vqarad_image_root / row["image_id"]
+            if dataset == "VQA-RAD" and vqarad_image_root is not None
+            else slake_image_root / row["image_id"] / "source.jpg"
+        )
         if not image_path.is_file():
             reasons.append("missing_image")
         exact = tuple(normalize(row[key]) for key in SCALAR_FIELDS)
@@ -134,14 +142,14 @@ def build_candidates(csv_path: Path, image_root: Path, expected_sha256: str = T4
             image_hashes[image_path] = sha256(image_path)
         image_hash = image_hashes[image_path]
         lineage_base = {"source_task": "T4L", "source_metadata_file": csv_path.name, "source_metadata_row": index}
-        key_a = query_key(row["image_id"], image_hash, row["question_a"], row["answer_a"])
-        key_b = query_key(row["image_id"], image_hash, row["question_b"], row["answer_b"])
+        key_a = query_key(dataset, row["image_id"], image_hash, row["question_a"], row["answer_a"])
+        key_b = query_key(dataset, row["image_id"], image_hash, row["question_b"], row["answer_b"])
         cid = candidate_id(row)
         candidates.append({
             "candidate_id": cid,
-            "dataset": "SLAKE",
+            "dataset": dataset,
             "image_id": row["image_id"],
-            "relative_image_path": f"{row['image_id']}/source.jpg",
+            "relative_image_path": f"{row['image_id']}/source.jpg" if dataset == "SLAKE" else row["image_id"],
             "image_sha256": image_hash,
             "lesion_a": row["lesion_a"],
             "question_a": row["question_a"],
@@ -157,9 +165,9 @@ def build_candidates(csv_path: Path, image_root: Path, expected_sha256: str = T4
         })
         for role, question, gold in (("edit_target_a", row["question_a"], row["answer_a"]), ("locality_probe_b", row["question_b"], row["answer_b"])):
             queries.append({
-                "dataset": "SLAKE",
+                "dataset": dataset,
                 "image_id": row["image_id"],
-                "relative_image_path": f"{row['image_id']}/source.jpg",
+                "relative_image_path": f"{row['image_id']}/source.jpg" if dataset == "SLAKE" else row["image_id"],
                 "image_sha256": image_hash,
                 "question": question,
                 "normalized_question": normalize(question),
@@ -184,7 +192,9 @@ def build_command(args: argparse.Namespace) -> None:
     if args.output_dir.exists():
         raise RuntimeError("refusing to reuse T4L build directory")
     args.output_dir.mkdir(parents=True)
-    candidates, queries, rejections = build_candidates(args.csv, args.slake_image_root, args.expected_sha256)
+    candidates, queries, rejections = build_candidates(
+        args.csv, args.slake_image_root, args.expected_sha256, args.vqarad_image_root
+    )
     write_jsonl(args.output_dir / "T4L_CANDIDATES.jsonl", candidates)
     write_jsonl(args.output_dir / "T4L_BASE_QUERY_INVENTORY.jsonl", queries)
     write_jsonl(args.output_dir / "T4L_STRUCTURAL_REJECTIONS.jsonl", rejections)
@@ -281,6 +291,7 @@ def main() -> None:
     build = sub.add_parser("build")
     build.add_argument("--csv", type=Path, required=True)
     build.add_argument("--slake-image-root", type=Path, required=True)
+    build.add_argument("--vqarad-image-root", type=Path, required=True)
     build.add_argument("--output-dir", type=Path, required=True)
     build.add_argument("--expected-sha256", default=T4L_SHA256)
     build.add_argument("--public-commit", default="03c6fda3813301dab3be5831fdc94b493c10afc9")
