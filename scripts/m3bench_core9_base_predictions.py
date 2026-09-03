@@ -293,6 +293,8 @@ def finalize(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
+    if len(sys.argv) == 1 and os.environ.get("M3BENCH_PRIVATE_ARGV"):
+        sys.argv.extend(json.loads(os.environ["M3BENCH_PRIVATE_ARGV"]))
     parser = argparse.ArgumentParser()
     parser.add_argument("action", choices=("prepare", "replay", "infer", "finalize"))
     parser.add_argument("--inventory", type=Path, required=True)
