@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.m3bench_core9_base_predictions import replay_record_pass
+from scripts.m3bench_core9_base_predictions import inference_targets, replay_record_pass
 from scripts.m3bench_core9_public_query_inventory import assert_no_method_fields
 from scripts.m3bench_core9_task_specific_cohorts import build_t3, macro_per_edit
 
@@ -16,6 +16,12 @@ class TaskSpecificDataTests(unittest.TestCase):
     def test_reuse_requires_token_level_replay(self):
         self.assertTrue(replay_record_pass({"token_ids_equal": True, "decoded_equal": True, "normalized_equal": True}))
         self.assertFalse(replay_record_pass({"token_ids_equal": False, "decoded_equal": True, "normalized_equal": True}))
+
+    def test_replay_mismatch_forces_full_inventory(self):
+        rows = [{"query_id": "reused", "legacy_source_record_ids": ["r"], "legacy_derived_probe_ids": []}, {"query_id": "new", "legacy_source_record_ids": [], "legacy_derived_probe_ids": []}]
+        source = {"r": {"model_answer_raw": "x"}}
+        self.assertEqual([row["query_id"] for row in inference_targets(rows, source, {}, True)], ["reused", "new"])
+        self.assertEqual([row["query_id"] for row in inference_targets(rows, source, {}, False)], ["new"])
 
     def test_macro_is_per_edit_not_pooled(self):
         self.assertAlmostEqual(macro_per_edit({"a": [True], "b": [True, False, False]}), 2 / 3)

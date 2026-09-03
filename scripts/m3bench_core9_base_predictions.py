@@ -100,6 +100,10 @@ def reuse_for(row: dict, source: dict, derived: dict) -> tuple[str, dict] | None
     return matches[0]
 
 
+def inference_targets(inventory: list[dict], source: dict, derived: dict, full_inventory: bool) -> list[dict]:
+    return inventory if full_inventory else [row for row in inventory if reuse_for(row, source, derived) is None]
+
+
 def adapter(args: argparse.Namespace):
     sys.path.insert(0, str(args.adapter_root))
     from m3bench_repro.inference.llava_med import LlavaMedAdapter
@@ -183,16 +187,17 @@ def replay(args: argparse.Namespace) -> None:
 
 def infer(args: argparse.Namespace) -> None:
     replay_report = json.loads((args.output_dir / "BASE_REPLAY_REPORT.json").read_text(encoding="utf-8"))
-    if replay_report["status"] != "PASS__BASE_REPLAY_16_OF_16":
+    if replay_report["status"] != "PASS__BASE_REPLAY_16_OF_16" and not args.full_inventory:
         raise RuntimeError("base replay gate did not pass")
     inventory = read_jsonl(args.inventory)
     source, derived = indexes(args.source_predictions, args.derived_predictions)
-    missing = [row for row in inventory if reuse_for(row, source, derived) is None]
+    missing = inference_targets(inventory, source, derived, args.full_inventory)
     lock = {
         "inventory_sha256": sha256(args.inventory),
         "runtime_config_sha256": sha256(args.runtime_config),
         "code_sha256": sha256(Path(__file__)),
         "missing_query_count": len(missing),
+        "mode": "full_inventory_after_replay_mismatch" if args.full_inventory else "missing_only_after_replay_pass",
     }
     lock_path = args.output_dir / "BASE_INFERENCE_LOCK.json"
     if lock_path.exists() and json.loads(lock_path.read_text(encoding="utf-8")) != lock:
@@ -235,7 +240,7 @@ def finalize(args: argparse.Namespace) -> None:
     route_counts = Counter()
     for row in inventory:
         match = reuse_for(row, source, derived)
-        if match:
+        if match and not args.full_inventory:
             kind, prediction = match
             answer = prediction["model_answer_raw"]
             raw_ids = prediction.get("raw_token_ids")
@@ -251,11 +256,20 @@ def finalize(args: argparse.Namespace) -> None:
             prediction = new.get(row["query_id"])
             if prediction is None:
                 raise RuntimeError(f"missing base prediction for {row['query_id']}")
-            kind, answer, raw_ids = "new", prediction["model_answer_raw"], prediction["raw_token_ids"]
-            if semantic_required(row["gold_answer"]):
+            kind, answer, raw_ids = ("new_full" if args.full_inventory else "new"), prediction["model_answer_raw"], prediction["raw_token_ids"]
+            exact_legacy = None
+            if match and answer == match[1]["model_answer_raw"]:
+                exact_legacy = match
+            if exact_legacy and exact_legacy[0] == "derived":
+                is_correct, route = bool(exact_legacy[1]["is_correct"]), "exact_triple_derived_judge_reuse"
+            elif exact_legacy and row["legacy_source_record_ids"][0] in canonical:
+                source_id = row["legacy_source_record_ids"][0]
+                is_correct, route = bool(canonical[source_id]["is_correct"]), "exact_triple_source_judge_reuse"
+            elif semantic_required(row["gold_answer"]):
                 judge_packet.append({"opaque_query_id": row["query_id"], "question": row["question"], "gold_answer": row["gold_answer"], "model_answer": answer})
                 continue
-            is_correct, route = exact_fuzzy(answer, row["gold_answer"])[0], "frozen_exact_fuzzy"
+            else:
+                is_correct, route = exact_fuzzy(answer, row["gold_answer"])[0], "frozen_exact_fuzzy"
         route_counts[route] += 1
         predictions.append({
             "query_id": row["query_id"], "status": "success", "model_answer_raw": answer,
@@ -279,7 +293,8 @@ def finalize(args: argparse.Namespace) -> None:
         "query_count": len(inventory), "prediction_count": len(predictions), "verdict_count": len(verdicts),
         "reused_source_count": sum(row["source"] == "source" for row in predictions),
         "reused_derived_count": sum(row["source"] == "derived" for row in predictions),
-        "new_inference_count": sum(row["source"] == "new" for row in predictions),
+        "new_inference_count": sum(row["source"] in {"new", "new_full"} for row in predictions),
+        "full_inventory_rerun": args.full_inventory,
         "correct_count": sum(row["is_correct"] for row in verdicts),
         "incorrect_count": sum(not row["is_correct"] for row in verdicts),
         "route_counts": dict(sorted(route_counts.items())), "semantic_judge_pending": 0,
@@ -304,6 +319,7 @@ def main() -> None:
     parser.add_argument("--runtime-config", type=Path, required=True)
     parser.add_argument("--adapter-root", type=Path)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--full-inventory", action="store_true")
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     if args.action == "prepare": prepare(args)
