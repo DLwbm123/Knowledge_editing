@@ -66,6 +66,13 @@ def existing_manifest(task: str, rows: list[dict]) -> dict:
     }
 
 
+def freeze_status(summaries: dict[str, dict], passed: bool) -> str:
+    if passed:
+        return "M3BENCH_PUBLIC_RELEASE_ALIGNED_TASK_SPECIFIC_CORE9_DATA_FROZEN"
+    blocked = "_".join(task for task in TASKS if summaries[task]["eligible_edit_count"] == 0 or summaries[task]["eligible_probe_count"] == 0)
+    return f"M3BENCH_CORE9_DATA_BLOCKED__{blocked}__ZERO_ELIGIBLE_COHORT"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--run-root", type=Path, required=True)
@@ -75,7 +82,7 @@ def main() -> None:
     parser.add_argument("--branch", required=True)
     parser.add_argument("--commit", required=True)
     parser.add_argument("--parent-commit", required=True)
-    parser.add_argument("--gpu-uuid", required=True)
+    parser.add_argument("--gpu-uuid", action="append", required=True)
     args = parser.parse_args()
     if args.output_dir.exists():
         raise RuntimeError("refusing to reuse public report directory")
@@ -125,7 +132,7 @@ def main() -> None:
         "t4l_question_a_wrong_question_b_correct": t4l["status"] == "PASS",
     }
     passed = all(value is True for name, value in checks.items() if name != "method_outputs_used") and checks["method_outputs_used"] is False
-    status = "M3BENCH_PUBLIC_RELEASE_ALIGNED_TASK_SPECIFIC_CORE9_DATA_FROZEN" if passed else "M3BENCH_CORE9_DATA_BLOCKED__DATA_HARD_GATE"
+    status = freeze_status(summaries, passed)
 
     base = read_json(args.run_root / "base_predictions/BASE_PREDICTION_MANIFEST.json")
     replay = read_json(args.run_root / "base_predictions/BASE_REPLAY_REPORT.json")
@@ -141,24 +148,30 @@ def main() -> None:
         "checks": checks,
         "base": base,
         "base_replay_status": replay["status"],
-        "gpu3": {"uuid": args.gpu_uuid, "purpose": "full base inventory after token-level replay mismatch"},
+        "base_inference_gpus": [{"uuid": value, "purpose": "disjoint full-inventory shard after token-level replay mismatch"} for value in args.gpu_uuid],
         "formal_methods_started": False,
         "parent_raw_read": False,
         "parent_raw_modified": False,
         "t5_status": T5_STATUS,
     }
+    judge_summary = args.run_root / "base_predictions/BASE_SEMANTIC_JUDGE_SUMMARY.json"
+    parallel_summary = args.run_root / "base_predictions/parallel/PARALLEL_MERGE_REPORT.json"
+    if judge_summary.exists():
+        report["semantic_judge"] = read_json(judge_summary)
+    if parallel_summary.exists():
+        report["parallel_merge"] = read_json(parallel_summary)
     args.output_dir.mkdir(parents=True)
     write_new(args.output_dir / "CORE9_DATA_FREEZE_REPORT.json", json.dumps(report, indent=2, sort_keys=True) + "\n")
     write_new(args.output_dir / "DATA_MODEL_CORRECTION.md", "# Data model correction\n\n先前的 T4L hard-stop 来自错误的共享-cohort 假设，不是 T4L metadata 缺失。T0 使用 amended-189；T2L/T3/T4 使用各自公开 metadata 和冻结 base eligibility。该范围是 public-release-aligned，不是 paper-exact。\n")
     write_new(args.output_dir / "T4L_STRUCTURAL_AUDIT.md", f"# T4L structural audit\n\n- Public rows: 257\n- Structurally retained: {t4l_build['candidate_count']}\n- Rejected: {t4l_build['rejection_row_count']}\n- Reasons: `{json.dumps(t4l_build['rejection_reason_counts'], sort_keys=True)}`\n- Unique images: {t4l_build['unique_image_count']}\n- Unique base queries: {t4l_build['unique_base_query_count']}\n")
     inventory_manifest = read_json(args.run_root / "base_inventory/BASE_QUERY_INVENTORY_MANIFEST.json")
     write_new(args.output_dir / "BASE_QUERY_INVENTORY_REPORT.md", f"# Base query inventory\n\n- Queries: {inventory_manifest['query_count']}\n- Images: {inventory_manifest['unique_image_count']}\n- Source reuse candidates: {inventory_manifest['source_reuse_candidate_count']}\n- Derived reuse candidates: {inventory_manifest['derived_reuse_candidate_count']}\n- Initially missing: {inventory_manifest['new_inference_candidate_count']}\n- Method outputs used: false\n")
-    write_new(args.output_dir / "BASE_REPLAY_AND_INFERENCE_REPORT.md", f"# Base replay and inference\n\n- Replay: `{replay['status']}` ({replay['passed_count']}/{replay['sample_count']} token-level)\n- Decoded/normalized equality: 16/16\n- Policy response: full inventory rerun; no mixed outputs\n- GPU UUID: `{args.gpu_uuid}`\n- Frozen predictions: {base['prediction_count']}\n- New inference: {base['new_inference_count']}\n- Semantic Judge pending: {base['semantic_judge_pending']}\n")
+    write_new(args.output_dir / "BASE_REPLAY_AND_INFERENCE_REPORT.md", f"# Base replay and inference\n\n- Replay: `{replay['status']}` ({replay['passed_count']}/{replay['sample_count']} token-level)\n- Decoded/normalized equality: 16/16\n- Policy response: full inventory rerun; no mixed outputs\n- GPU UUIDs: `{', '.join(args.gpu_uuid)}`\n- Frozen predictions: {base['prediction_count']}\n- New inference: {base['new_inference_count']}\n- Fixed method-blind semantic Judge: {report.get('semantic_judge', {}).get('total', 0)}\n- Semantic Judge pending: {base['semantic_judge_pending']}\n")
     header = "| Task | Candidate edits | Eligible edits | Candidate probes | Eligible probes | Unique images | Mean probes/edit |\n|---|---:|---:|---:|---:|---:|---:|\n"
     lines = [f"| {task} | {row['candidate_edit_count']} | {row['eligible_edit_count']} | {row['candidate_probe_count']} | {row['eligible_probe_count']} | {row['unique_image_count']} | {row['mean_probes_per_eligible_edit']:.3f} |" for task, row in summaries.items()]
     write_new(args.output_dir / "TASK_SPECIFIC_COHORT_COUNTS.md", "# Task-specific cohort counts\n\n" + header + "\n".join(lines) + "\n\nPrimary aggregation: macro per eligible edit request. Pooled micro is secondary only.\n")
     write_new(args.output_dir / "CORE9_DATA_FREEZE_REPORT.md", f"# Core-9 data freeze\n\nStatus: `{status}`\n\nAll nine task denominators are positive: `{checks['all_core9_denominators_positive']}`. Parent raw was neither read nor modified. This is public-release-aligned, not paper-exact.\n")
-    write_new(args.output_dir / "FORMAL_RUN_STATUS.md", "# Formal run status\n\nmethods not started by design; data-only task complete\n")
+    write_new(args.output_dir / "FORMAL_RUN_STATUS.md", f"# Formal run status\n\nmethods not started by design; data-only task {'complete' if passed else 'blocked at the eligibility hard gate'}\n")
     write_new(args.output_dir / "T5_EXTENSION_STATUS.md", f"# T5 extension status\n\n`{T5_STATUS}`\n")
     lock = {"branch": args.branch, "commit": args.commit, "parent_commit": args.parent_commit, "t0_sha256": T0_SHA256, "inventory_sha256": sha256(inventory_path), "base_verdicts_sha256": sha256(verdict_path)}
     write_new(args.output_dir / "locks/DATA_FREEZE_LOCK.json", json.dumps(lock, indent=2, sort_keys=True) + "\n")

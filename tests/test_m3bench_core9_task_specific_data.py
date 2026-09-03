@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 from scripts.m3bench_core9_base_predictions import inference_targets, replay_record_pass, semantic_verdict_index
+from scripts.m3bench_core9_freeze_report import freeze_status
 from scripts.m3bench_core9_public_query_inventory import assert_no_method_fields
 from scripts.m3bench_core9_task_specific_cohorts import build_t3, macro_per_edit
 
@@ -34,6 +35,12 @@ class TaskSpecificDataTests(unittest.TestCase):
 
     def test_macro_is_per_edit_not_pooled(self):
         self.assertAlmostEqual(macro_per_edit({"a": [True], "b": [True, False, False]}), 2 / 3)
+
+    def test_freeze_status_names_all_zero_denominator_tasks(self):
+        summaries = {task: {"eligible_edit_count": 1, "eligible_probe_count": 1} for task in ("T0", "T1L", "T1G", "T2L", "T2G", "T3L", "T3G", "T4L", "T4G")}
+        summaries["T2L"]["eligible_probe_count"] = 0
+        summaries["T4L"]["eligible_edit_count"] = 0
+        self.assertEqual(freeze_status(summaries, False), "M3BENCH_CORE9_DATA_BLOCKED__T2L_T4L__ZERO_ELIGIBLE_COHORT")
 
     def test_t3_uses_paired_source_gold(self):
         anchor = {"query_id": "a", "dataset": "SLAKE", "image_id": "imgA", "question": "Is tumor present?", "gold_answer": "No"}
