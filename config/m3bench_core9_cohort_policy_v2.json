@@ -1,0 +1,21 @@
+{
+  "scope": "M3BENCH_PUBLIC_RELEASE_ALIGNED_TASK_SPECIFIC_CORE9",
+  "primary_metric_aggregation": "macro_per_eligible_edit",
+  "method_outputs_used_for_selection": false,
+  "tasks": {
+    "T0": "M3BENCH_AMENDED_EXCLUSION_ONLY_189",
+    "T2L": "task_specific_public_metadata_plus_frozen_base_verdicts",
+    "T3L": "task_specific_public_metadata_plus_frozen_base_verdicts",
+    "T3G": "task_specific_public_metadata_plus_frozen_base_verdicts",
+    "T4L": "question_a_edit_question_b_locality_plus_frozen_base_verdicts",
+    "T4G": "task_specific_public_metadata_plus_frozen_base_verdicts"
+  },
+  "t4l": {
+    "amended189_used_as_anchor": false,
+    "edit_role": "question_a",
+    "probe_role": "question_b",
+    "edit_base_correct": false,
+    "probe_base_correct": true
+  },
+  "t5_status": "M3BENCH_T5_SEPARATE_EXTENSION_BLOCKED__PADCHEST_GR_ASSETS_UNAVAILABLE"
+}
