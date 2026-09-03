@@ -1,0 +1,8 @@
+{
+  "base_verdicts_sha256": "820a07c047fbcff03fd829d6d63c103e750d5f508d3414aa59157dee3aa1a346",
+  "branch": "m3bench-task-specific-data-fix-20260903T011818Z",
+  "commit": "8010bfa981e4ea9920cd653581eba665dea85f86",
+  "inventory_sha256": "f9271952163a2b0b8935cd555de9a0b72fa38c60d3fa23f839101f48b2522f62",
+  "parent_commit": "365ef394f581d99130c50d0464cf981306e88dcb",
+  "t0_sha256": "ad5972dc600e7a8539d15e4573278ea7de2551a0aedc9702d4503280eacbf8ee"
+}
