@@ -1,0 +1,27 @@
+{
+  "schema_version": "m3bench-post-edit-judge-audit-packet-v1",
+  "status": "READY_FOR_RAW_INGEST__NOT_EXECUTED",
+  "independent_from_editor_runtime": true,
+  "raw_answers_present": false,
+  "verdicts_present": false,
+  "judge_started": false,
+  "item_fields_allowed": [
+    "opaque_event_id",
+    "question",
+    "gold_answer",
+    "raw_model_answer",
+    "task"
+  ],
+  "item_fields_forbidden": [
+    "method",
+    "anonymous_group",
+    "reviewer_a_verdict",
+    "formal_position_anomaly",
+    "other_method_answer",
+    "expected_result"
+  ],
+  "expected_single_events_per_method": 1108,
+  "expected_single_raw_outputs_per_method": 2500,
+  "expected_sequential_final_raw_outputs_per_method": 1616,
+  "judge_may_start_only_after_raw_closure": true
+}
