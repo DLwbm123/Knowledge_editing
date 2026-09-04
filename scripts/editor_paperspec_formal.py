@@ -20,13 +20,20 @@ from m3bench_repro.editors.llava_runtime import (
     LlavaMedEditorRuntime,
     canonical_sha256,
 )
-from m3bench_repro.editors.methods import LoraPaperSpecEditor, PaperSpecEditor, create_editor
+from m3bench_repro.editors.methods import (
+    LoraPaperSpecEditor,
+    LoraRuntimeConfig,
+    PaperSpecEditor,
+    create_editor,
+)
 from m3bench_repro.editors.routing import route_dict_equal
 
 
 METHODS = ("lora", "grace", "balancedit", "belora")
 DEFAULT_RECORDS_PATH = "inputs/frozen/FORMAL_EDITOR_RECORDS_200.jsonl"
 DEFAULT_SEQUENCE_LABEL = "M3BENCH_FORMAL_ORIGINAL_200"
+OFFICIAL_LLVAMED_COMMIT = "30697ca50b5c29a8e955c99330b259776aef27b9"
+OFFICIAL_LLVAMED_ORIGIN = "https://github.com/microsoft/LLaVA-Med.git"
 
 
 def utc_now() -> str:
@@ -175,6 +182,25 @@ def assert_authorized_device() -> None:
         )
 
 
+def assert_official_llavamed_source() -> Path:
+    source = Path(os.environ.get("M3BENCH_EXPECTED_LLAVA_SOURCE", "")).resolve()
+    if not source.is_dir():
+        raise RuntimeError("M3BENCH_EXPECTED_LLAVA_SOURCE must name the verified checkout")
+
+    def git(*arguments: str) -> str:
+        return subprocess.check_output(
+            ["git", "-C", str(source), *arguments], text=True, stderr=subprocess.STDOUT
+        ).strip()
+
+    if git("rev-parse", "HEAD") != OFFICIAL_LLVAMED_COMMIT:
+        raise RuntimeError("official LLaVA-Med source commit mismatch")
+    if git("status", "--porcelain"):
+        raise RuntimeError("official LLaVA-Med source checkout is dirty")
+    if git("remote", "get-url", "origin").removesuffix("/") != OFFICIAL_LLVAMED_ORIGIN:
+        raise RuntimeError("official LLaVA-Med source origin mismatch")
+    return source
+
+
 def resolve_run_path(run: Path, value: str) -> Path:
     path = Path(value)
     return path if path.is_absolute() else run / path
@@ -299,8 +325,24 @@ def create_formal_editor(
     sequential: bool,
 ) -> PaperSpecEditor:
     state_store = output / "state_store" if sequential and method == "balancedit" else None
-    editor = create_editor(method, runtime, balancedit_inactive_store_dir=state_store)
     expected = read_json(run / "locks/FORMAL_METHOD_CONFIG_BUNDLE.json")["method_configs"][method]
+    lora_config = None
+    if method == "lora" and expected.get("profile_name"):
+        lora_config = LoraRuntimeConfig(
+            profile_name=expected["profile_name"],
+            learning_rate=float(expected["learning_rate"]),
+            steps_per_edit=int(expected["epochs_per_edit"]),
+            stop_rule=expected.get("stop_rule", "fixed"),
+            min_steps=int(expected.get("min_steps", 1)),
+            check_interval=int(expected.get("check_interval", 1)),
+            target_nll_threshold=float(expected.get("target_nll_threshold", 0.5)),
+        )
+    editor = create_editor(
+        method,
+        runtime,
+        balancedit_inactive_store_dir=state_store,
+        lora_config=lora_config,
+    )
     expected_hash = expected.get("config_sha256")
     if expected_hash != canonical_sha(editor.config_lock()):
         raise RuntimeError(f"{method} runtime config differs from the frozen method bundle")
@@ -479,10 +521,12 @@ def command_single_events(args: argparse.Namespace) -> None:
         if not empty_before["pass"]:
             raise RuntimeError(f"nonempty editor state before event {position}")
         pre_nll = editor.score_target_nll(record)
+        base_target_generation = editor.generate(record)
         event_started = time.perf_counter()
         with runtime.peak_memory() as peak:
             edit = editor.apply_edit(record)
             post_nll = editor.score_target_nll(record)
+            post_target_generation = editor.generate(record)
             state_summary = editor.state_summary()
             state = save_state_atomic(
                 editor,
@@ -490,6 +534,9 @@ def command_single_events(args: argparse.Namespace) -> None:
                 event_dir / ("editor_state" if args.method == "lora" else "editor_state.pt"),
             )
             outputs = [generate_probe(editor, row, generation_lock_hash) for row in event["probes"]]
+        from scripts.m3bench_base_correctness_v3 import exact_correct, public_fuzzy_correct
+
+        target_answer = post_target_generation["generation"]["decoded_text"]
         base_after_edit = editor.base_integrity()
         editor.reset_editor_state()
         empty_after = editor_empty(editor, args.method)
@@ -509,6 +556,15 @@ def command_single_events(args: argparse.Namespace) -> None:
             "router_positive_source": event["edit_record"].get("router_positive_source"),
             "pre_target_nll": pre_nll,
             "post_target_nll": post_nll,
+            "base_target_generation": base_target_generation,
+            "post_edit_target_generation": post_target_generation,
+            "post_edit_target_exact": exact_correct(target_answer, record.target),
+            "post_edit_target_fuzzy": public_fuzzy_correct(target_answer, record.target),
+            "post_edit_target_semantic": None,
+            "target_raw_changed_from_base": (
+                base_target_generation["generation"]["raw_token_ids"]
+                != post_target_generation["generation"]["raw_token_ids"]
+            ),
             "edit": edit,
             "editor_state": state,
             "state_summary": state_summary,
@@ -519,6 +575,7 @@ def command_single_events(args: argparse.Namespace) -> None:
             "generation_lock_hash": generation_lock_hash,
             "raw_outputs": outputs,
             "raw_output_count": len(outputs),
+            "target_diagnostic_counted_as_official_probe": False,
             "runtime_seconds": time.perf_counter() - event_started,
             "peak_gpu_memory": peak,
             "exit_status": "success",
@@ -1128,6 +1185,7 @@ def main() -> None:
     run = Path(args.run_root)
     if not (run / "M3BENCH_FORMAL_EDITOR_PREFLIGHT_PASS").exists():
         raise RuntimeError("formal preflight PASS marker is absent")
+    assert_official_llavamed_source()
     args.func(args)
 
 

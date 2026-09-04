@@ -616,6 +616,21 @@ class LlavaMedEditorRuntime:
             raise FloatingPointError(f"non-finite edit loss: {loss}")
         return loss
 
+    def score_target(self, batch: PreparedBatch) -> dict[str, float | int]:
+        output = self.model(**batch.forward_kwargs())
+        loss = output.loss
+        if loss is None or not torch.isfinite(loss):
+            raise FloatingPointError(f"non-finite target loss: {loss}")
+        positions = torch.where(batch.labels[0] != IGNORE_INDEX)[0]
+        first = int(positions[0].item())
+        if first < 1:
+            raise RuntimeError("first target token has no causal predecessor")
+        target_id = int(batch.labels[0, first].item())
+        logits = output.logits[0, first - 1].float()
+        target_logit = logits[target_id]
+        rank = int((logits > target_logit).sum().item()) + 1
+        return {"nll": float(loss.cpu().item()), "first_target_token_rank": rank}
+
     def extract_layer_input_key(
         self,
         batch: PreparedBatch,

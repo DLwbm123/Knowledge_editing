@@ -10,6 +10,7 @@ from unittest import mock
 from m3bench_repro.inference.llava_med import LlavaMedAdapter
 from scripts.editor_paperspec_formal import (
     assert_authorized_device,
+    assert_official_llavamed_source,
     load_single_events,
     normalized_generation_contract,
     normalized_inventory_contract,
@@ -192,6 +193,32 @@ class FormalEditorCpuGateTests(unittest.TestCase):
     def test_invalid_loader_mode_is_rejected_without_loading(self):
         with self.assertRaises(ValueError):
             LlavaMedAdapter("model", "vision", load_mode="unknown")
+
+    def test_official_source_guard_runs_without_cuda(self):
+        with tempfile.TemporaryDirectory() as directory:
+            env = {"M3BENCH_EXPECTED_LLAVA_SOURCE": directory}
+            replies = [
+                "30697ca50b5c29a8e955c99330b259776aef27b9\n",
+                "\n",
+                "https://github.com/microsoft/LLaVA-Med.git\n",
+            ]
+            with mock.patch.dict(os.environ, env, clear=False), \
+                 mock.patch("scripts.editor_paperspec_formal.subprocess.check_output", side_effect=replies), \
+                 mock.patch("scripts.editor_paperspec_formal.torch.cuda.is_available") as cuda:
+                self.assertEqual(assert_official_llavamed_source(), Path(directory).resolve())
+                cuda.assert_not_called()
+
+    def test_official_source_guard_rejects_dirty_checkout(self):
+        with tempfile.TemporaryDirectory() as directory:
+            env = {"M3BENCH_EXPECTED_LLAVA_SOURCE": directory}
+            replies = [
+                "30697ca50b5c29a8e955c99330b259776aef27b9\n",
+                " M modified.py\n",
+            ]
+            with mock.patch.dict(os.environ, env, clear=False), \
+                 mock.patch("scripts.editor_paperspec_formal.subprocess.check_output", side_effect=replies):
+                with self.assertRaisesRegex(RuntimeError, "dirty"):
+                    assert_official_llavamed_source()
 
 
 if __name__ == "__main__":

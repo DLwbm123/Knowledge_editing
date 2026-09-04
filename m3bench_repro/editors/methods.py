@@ -7,7 +7,7 @@ import json
 import os
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Iterator
 
@@ -33,6 +33,29 @@ from .routing import (
 
 CLASSIFICATION = "M3BENCH_PAPER_SPEC_INDEPENDENT_REIMPLEMENTATION_V2_EFFECT_REPAIRED"
 SEED = 20260828
+
+
+@dataclass(frozen=True)
+class LoraRuntimeConfig:
+    profile_name: str = "LoRA-paper-spec-5"
+    learning_rate: float = 5e-5
+    steps_per_edit: int = 5
+    stop_rule: str = "fixed"
+    min_steps: int = 1
+    check_interval: int = 1
+    target_nll_threshold: float = 0.5
+
+    def __post_init__(self) -> None:
+        if self.learning_rate <= 0 or self.steps_per_edit < 1:
+            raise ValueError("LoRA learning rate and steps must be positive")
+        if self.stop_rule not in {"fixed", "first_success"}:
+            raise ValueError(f"unsupported LoRA stop rule: {self.stop_rule}")
+        if self.min_steps < 1 or self.check_interval < 1 or self.min_steps > self.steps_per_edit:
+            raise ValueError("invalid LoRA adaptive-stop interval")
+
+    @property
+    def paper_spec_default(self) -> bool:
+        return self == LoraRuntimeConfig()
 
 
 def record_seed(record_id: str, namespace: str) -> int:
@@ -104,10 +127,11 @@ class PaperSpecEditor(ABC):
 class LoraPaperSpecEditor(PaperSpecEditor):
     method = "lora"
 
-    def __init__(self, runtime: LlavaMedEditorRuntime):
+    def __init__(self, runtime: LlavaMedEditorRuntime, config: LoraRuntimeConfig | None = None):
         super().__init__(runtime)
         from peft import LoraConfig, get_peft_model
 
+        self.runtime_config = config or LoraRuntimeConfig()
         targets = list(runtime.target_lock["lora"]["targets"])
         config = LoraConfig(
             r=16,
@@ -176,11 +200,12 @@ class LoraPaperSpecEditor(PaperSpecEditor):
         parameters = self.trainable()
         if not parameters:
             raise RuntimeError("LoRA has no trainable parameters")
-        optimizer = torch.optim.AdamW(parameters, lr=5e-5)
+        optimizer = torch.optim.AdamW(parameters, lr=self.runtime_config.learning_rate)
         losses = []
         gradients_finite = []
+        stop_checks = []
         self.peft_model.eval()
-        for _ in range(5):
+        for step in range(1, self.runtime_config.steps_per_edit + 1):
             optimizer.zero_grad(set_to_none=True)
             loss = self.runtime.compute_loss(batch)
             loss.backward()
@@ -188,6 +213,23 @@ class LoraPaperSpecEditor(PaperSpecEditor):
             torch.nn.utils.clip_grad_norm_(parameters, 1.0)
             optimizer.step()
             losses.append(float(loss.detach().cpu().item()))
+            if (
+                self.runtime_config.stop_rule == "first_success"
+                and step >= self.runtime_config.min_steps
+                and step % self.runtime_config.check_interval == 0
+            ):
+                from scripts.m3bench_base_correctness_v3 import exact_correct, public_fuzzy_correct
+
+                score = self.score_target_nll(record)
+                answer = self.generate(record)["generation"]["decoded_text"]
+                passed = (
+                    score["nll"] <= self.runtime_config.target_nll_threshold
+                    and score["first_target_token_rank"] == 1
+                    and (exact_correct(answer, record.target) or public_fuzzy_correct(answer, record.target))
+                )
+                stop_checks.append({"step": step, "passed": passed, **score})
+                if passed:
+                    break
         self.edit_history.append(record.record_id)
         return {
             "record_id": record.record_id,
@@ -195,7 +237,9 @@ class LoraPaperSpecEditor(PaperSpecEditor):
             "losses": losses,
             "finite_losses": all(torch.isfinite(torch.tensor(losses)).tolist()),
             "finite_gradients": all(gradients_finite),
-            "epochs": 5,
+            "epochs": len(losses),
+            "stop_rule": self.runtime_config.stop_rule,
+            "stop_checks": stop_checks,
             "trainable_parameter_count": sum(p.numel() for p in parameters),
             "trainable_parameter_bytes": parameter_bytes(parameters),
             "target_mask": batch.mask_report(),
@@ -204,8 +248,8 @@ class LoraPaperSpecEditor(PaperSpecEditor):
     def score_target_nll(self, record: EditorRecord) -> dict[str, Any]:
         batch = self.runtime.build_edit_batch(record)
         with torch.no_grad():
-            loss = self.runtime.compute_loss(batch)
-        return {"nll": float(loss.cpu().item()), "route": None, "target_mask": batch.mask_report()}
+            score = self.runtime.score_target(batch)
+        return {**score, "route": None, "target_mask": batch.mask_report()}
 
     def generate(self, record: EditorRecord, *, use_cache: bool = True) -> dict[str, Any]:
         self._set_enabled(True)
@@ -271,7 +315,7 @@ class LoraPaperSpecEditor(PaperSpecEditor):
         }
 
     def config_lock(self) -> dict[str, Any]:
-        return {
+        lock = {
             "schema_version": "m3bench-editor-method-config-v2",
             "method": "LoRA",
             "classification": CLASSIFICATION,
@@ -281,14 +325,25 @@ class LoraPaperSpecEditor(PaperSpecEditor):
             "lora_alpha": 16,
             "dropout": 0.0,
             "optimizer": "AdamW",
-            "learning_rate": 5e-5,
+            "learning_rate": self.runtime_config.learning_rate,
             "batch_size": 1,
             "gradient_clip": 1.0,
-            "epochs_per_edit": 5,
+            "epochs_per_edit": self.runtime_config.steps_per_edit,
             "projector": "excluded",
             "vision_encoder": "excluded",
             "source": "PEFT 0.19.1 @ ba6a19060d6ab54a87538a6e77e3e4d5a907375b",
         }
+        if not self.runtime_config.paper_spec_default:
+            lock.update({
+                "profile_name": self.runtime_config.profile_name,
+                "paper_spec_deviation": True,
+                "deviation_scope": "training intensity only",
+                "stop_rule": self.runtime_config.stop_rule,
+                "min_steps": self.runtime_config.min_steps,
+                "check_interval": self.runtime_config.check_interval,
+                "target_nll_threshold": self.runtime_config.target_nll_threshold,
+            })
+        return lock
 
 
 class GracePaperSpecEditor(PaperSpecEditor):
@@ -392,9 +447,9 @@ class GracePaperSpecEditor(PaperSpecEditor):
         batch = self.runtime.build_edit_batch(record)
         with self._activated(decision.logical_edit_id, token_index=batch.key_token_index):
             with torch.no_grad():
-                loss = self.runtime.compute_loss(batch)
+                score = self.runtime.score_target(batch)
         return {
-            "nll": float(loss.cpu().item()),
+            **score,
             "route": decision_as_json(decision),
             "target_mask": batch.mask_report(),
         }
@@ -590,8 +645,8 @@ class BalanceEditPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
         batch = self.runtime.build_edit_batch(record)
         with self._activated(decision.logical_edit_id):
             with torch.no_grad():
-                loss = self.runtime.compute_loss(batch)
-        return {"nll": float(loss.cpu().item()), "route": decision_as_json(decision), "target_mask": batch.mask_report()}
+                score = self.runtime.score_target(batch)
+        return {**score, "route": decision_as_json(decision), "target_mask": batch.mask_report()}
 
     def generate(self, record: EditorRecord, *, use_cache: bool = True) -> dict[str, Any]:
         with self.route_generation(record) as decision:
@@ -784,8 +839,8 @@ class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
         batch = self.runtime.build_edit_batch(record)
         with self._activated(decision.logical_edit_id):
             with torch.no_grad():
-                loss = self.runtime.compute_loss(batch)
-        return {"nll": float(loss.cpu().item()), "route": decision_as_json(decision), "target_mask": batch.mask_report()}
+                score = self.runtime.score_target(batch)
+        return {**score, "route": decision_as_json(decision), "target_mask": batch.mask_report()}
 
     def generate(self, record: EditorRecord, *, use_cache: bool = True) -> dict[str, Any]:
         with self.route_generation(record) as decision:
@@ -887,10 +942,11 @@ def create_editor(
     runtime: LlavaMedEditorRuntime,
     *,
     balancedit_inactive_store_dir: Path | None = None,
+    lora_config: LoraRuntimeConfig | None = None,
 ) -> PaperSpecEditor:
     normalized = method.lower()
     if normalized == "lora":
-        return LoraPaperSpecEditor(runtime)
+        return LoraPaperSpecEditor(runtime, config=lora_config)
     if normalized == "grace":
         return GracePaperSpecEditor(runtime)
     if normalized in {"balancedit", "be"}:

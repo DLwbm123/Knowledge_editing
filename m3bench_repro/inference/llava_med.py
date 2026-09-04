@@ -137,8 +137,17 @@ class LlavaMedAdapter(VLMAdapter):
     def load(self) -> None:
         # The cached vision tower is deliberately passed as an explicit local path:
         # no model component is implicitly fetched from the network during a run.
+        import llava
         from llava.model import LlavaMistralForCausalLM
         from llava.utils import disable_torch_init
+
+        expected_source = os.environ.get("M3BENCH_EXPECTED_LLAVA_SOURCE")
+        if self.load_mode == "official_native":
+            if not expected_source:
+                raise RuntimeError("official-native runtime requires M3BENCH_EXPECTED_LLAVA_SOURCE")
+            imported = Path(llava.__file__).resolve()
+            if not imported.is_relative_to(Path(expected_source).resolve()):
+                raise RuntimeError("imported llava package is outside the verified official checkout")
 
         if not self.model_path.is_dir() or not self.vision_tower_path.is_dir():
             raise FileNotFoundError("LLaVA-Med checkpoint or local vision-tower cache is absent")
