@@ -107,15 +107,19 @@ def run_command(args: argparse.Namespace) -> None:
     model = AutoModelForCausalLM.from_pretrained(
         args.model_path, local_files_only=True, device_map={"": "cuda:0"}, torch_dtype="auto", low_cpu_mem_usage=True,
     ).eval()
-    outputs = []
-    for start in range(0, len(rows), args.batch_size):
+    partial = args.output.with_suffix(args.output.suffix + ".partial")
+    outputs = read_jsonl(partial) if partial.exists() else []
+    if [(row["opaque_query_id"], row["adjudication_pass"]) for row in outputs] != keys[:len(outputs)]:
+        raise RuntimeError("Judge partial output is not an exact packet prefix")
+    for start in range(len(outputs), len(rows), args.batch_size):
         batch = rows[start:start + args.batch_size]
         prompts = [render(tokenizer, row) for row in batch]
         encoded = tokenizer(prompts, return_tensors="pt", padding=True, truncation=True, max_length=args.max_input_tokens).to("cuda:0")
         with torch.inference_mode():
             generated = model.generate(
                 **encoded, do_sample=False, temperature=0.0, num_beams=1,
-                max_new_tokens=24, use_cache=True, pad_token_id=tokenizer.pad_token_id,
+                top_p=None, top_k=None, max_new_tokens=24, use_cache=True,
+                pad_token_id=tokenizer.pad_token_id,
             )
         continuations = generated[:, encoded.input_ids.shape[1]:]
         for row, text in zip(batch, tokenizer.batch_decode(continuations, skip_special_tokens=True)):
@@ -129,11 +133,14 @@ def run_command(args: argparse.Namespace) -> None:
                 "judge_prompt_sha256": lock["prompt_sha256"],
                 "judge_config_sha256": lock["config_sha256"],
             })
+        partial.write_text("".join(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n" for row in outputs), encoding="utf-8")
         if args.progress:
             args.progress.write_text(json.dumps({"completed": len(outputs), "total": len(rows)}) + "\n", encoding="utf-8")
     if len(outputs) != len(rows):
         raise RuntimeError("Judge coverage mismatch")
-    atomic_new(args.output, "".join(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n" for row in outputs))
+    if args.output.exists():
+        raise RuntimeError(f"refusing to overwrite {args.output}")
+    os.replace(partial, args.output)
 
 
 def main() -> None:
