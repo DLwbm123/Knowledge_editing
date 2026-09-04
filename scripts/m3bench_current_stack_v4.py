@@ -351,6 +351,191 @@ def finalize_verdicts(args: argparse.Namespace) -> None:
     print(json.dumps({"status": "BASE_VERDICTS_V4_FROZEN", "correct": sum(row["is_correct"] for row in rows), "rejudged": len(changed)}, sort_keys=True))
 
 
+def freeze_cohorts(args: argparse.Namespace) -> None:
+    from scripts.m3bench_data_runtime_finalize_v3 import TASKS, anchor_task, t0_task, t4l_task
+
+    inventory_rows = read_jsonl(args.inventory)
+    inventory = unique(inventory_rows, "query_id")
+    verdict_rows = read_jsonl(args.verdicts)
+    verdicts = {row["query_id"]: row["is_correct"] for row in verdict_rows}
+    if len(verdicts) != len(verdict_rows) or set(verdicts) != set(inventory):
+        raise RuntimeError("V4 verdict coverage mismatch")
+    if args.output_root.exists():
+        raise RuntimeError("refusing to reuse V4 cohort root")
+    temporary = args.output_root.with_name(args.output_root.name + ".tmp")
+    temporary.mkdir(parents=True)
+    try:
+        t0, t0_manifest, active = t0_task(read_jsonl(args.static_root / "STATIC_T0_CANDIDATES.jsonl"), verdicts, inventory)
+        rows_by_task, summaries = {"T0": t0}, {"T0": t0_manifest}
+        for task, name in (("T1L", "STATIC_T1_RELATIONS.jsonl"), ("T1G", "STATIC_T1_RELATIONS.jsonl"), ("T2G", "STATIC_T2G_RELATIONS.jsonl")):
+            _, rows_by_task[task], summaries[task] = anchor_task(task, read_jsonl(args.static_root / name), active, verdicts, inventory)
+        _, rows_by_task["T4L"], summaries["T4L"] = t4l_task(read_jsonl(args.static_root / "STATIC_T4L_RELATIONS.jsonl"), verdicts, inventory)
+        for task in ("T2L", "T3L", "T3G", "T4G"):
+            rows_by_task[task] = read_jsonl(args.task_specific_root / f"{task}_FORMAL_RECORDS.jsonl")
+            summaries[task] = read_json(args.task_specific_root / f"{task}_MANIFEST.json")
+        summaries = {task: summaries[task] for task in TASKS}
+        handoff = temporary / "handoff_v4"
+        for task, rows in rows_by_task.items():
+            write_new(handoff / ("T0_FINAL_SEQUENCE.jsonl" if task == "T0" else f"{task}_FORMAL_RECORDS.jsonl"), rows, jsonl=True)
+        runtime = read_json(args.previous_runtime_lock)
+        runtime.update({
+            "selected_runtime": "runtime_b_official_native",
+            "canonical_lane": "current_stack_v4",
+            "environment_lock_sha256": sha256(args.environment_lock),
+            "historical_stack_reconstruction_permitted": False,
+        })
+        write_new(handoff / "CANONICAL_LLVAMED_RUNTIME_LOCK.json", runtime)
+        verdict_manifest = read_json(args.verdict_manifest)
+        write_new(handoff / "BASE_PREDICTIONS_SELECTED_MANIFEST.json", {
+            "selected_raw": "current_stack_v4_full_reinference", "prediction_count": EXPECTED_QUERY_COUNT,
+            "prediction_sha256": verdict_manifest["prediction_sha256"], "old_raw_modified": False,
+            "editing_methods_rerun": False,
+        })
+        write_new(handoff / "BASE_VERDICT_V4_MANIFEST.json", verdict_manifest)
+        write_new(handoff / "FORMAL_TASK_COUNTS.json", summaries)
+        write_new(handoff / "FORMAL_CATALOG_MANIFEST.json", {
+            "status": "M3BENCH_CURRENT_STACK_V4_T0_T4_DATA_FROZEN",
+            "scope": "public-release-aligned T0-T4", "paper_exact_claim_permitted": False,
+            "tasks": summaries, "method_outputs_used": False, "editing_methods_started": False,
+        })
+        names = [
+            "CANONICAL_LLVAMED_RUNTIME_LOCK.json", "BASE_PREDICTIONS_SELECTED_MANIFEST.json",
+            "BASE_VERDICT_V4_MANIFEST.json", "FORMAL_TASK_COUNTS.json", "FORMAL_CATALOG_MANIFEST.json",
+            "T0_FINAL_SEQUENCE.jsonl", *[f"{task}_FORMAL_RECORDS.jsonl" for task in TASKS if task != "T0"],
+        ]
+        write_new(handoff / "SHA256SUMS.txt", "".join(f"{sha256(handoff / name)}  {name}\n" for name in names), text=True)
+        write_new(temporary / "COHORT_V4_REPORT.json", {
+            "status": "M3BENCH_CURRENT_STACK_V4_T0_T4_COHORTS_FROZEN",
+            "final_t0_n": summaries["T0"]["eligible_edit_count"], "tasks": summaries,
+            "method_outputs_used": False,
+        })
+        os.replace(temporary, args.output_root)
+    except Exception:
+        shutil.rmtree(temporary, ignore_errors=True)
+        raise
+    print(json.dumps({"status": "COHORTS_V4_FROZEN", "final_t0_n": summaries["T0"]["eligible_edit_count"]}, sort_keys=True))
+
+
+def calibration_selection_v2(events: list[dict]) -> tuple[list[dict], list[dict], list[dict]]:
+    t0 = {row["edit_record"]["record_id"]: row for row in events if row["task"] == "T0"}
+    t1l_ids = sorted({row["edit_record"]["record_id"] for row in events if row["task"] == "T1L"}, key=lambda value: hashlib.sha256(value.encode()).hexdigest())
+    quota = min(7, len(t1l_ids) // 2)
+    dev_ids, qual_ids = set(t1l_ids[:quota]), set(t1l_ids[quota:2 * quota])
+    remaining = sorted(set(t0) - dev_ids - qual_ids, key=lambda value: hashlib.sha256(value.encode()).hexdigest())
+    dev_ids.update(remaining[:16 - len(dev_ids)])
+    remaining = [value for value in remaining if value not in dev_ids]
+    qual_ids.update(remaining[:16 - len(qual_ids)])
+    remaining = [value for value in remaining if value not in qual_ids]
+    if len(dev_ids) != 16 or len(qual_ids) != 16 or len(remaining) < 16:
+        raise RuntimeError("insufficient disjoint T0 events for V2 LoRA selections")
+    related = {}
+    for row in events:
+        if row["task"] in {"T1L", "T1G", "T2G"}:
+            related.setdefault(row["edit_record"]["record_id"], []).extend(row["probes"])
+
+    def build(ids: set[str]) -> list[dict]:
+        return [{
+            "event_id": t0[value]["event_id"], "event_position": t0[value]["event_position"],
+            "edit_record": t0[value]["edit_record"], "probes": related.get(value, []),
+            "probe_tasks": dict(sorted(Counter(row["task"] for row in related.get(value, [])).items())),
+        } for value in sorted(ids, key=lambda value: int(t0[value]["event_position"]))]
+
+    sequence = [t0[value] for value in sorted(remaining[:16], key=lambda value: int(t0[value]["event_position"]))]
+    return build(dev_ids), build(qual_ids), sequence
+
+
+def freeze_v2_manifests(args: argparse.Namespace) -> None:
+    from scripts.m3bench_gpu_qualification_lora_first import no_edit_selection, qualification_selection
+
+    if args.output_root.exists():
+        raise RuntimeError("refusing to reuse V2 manifest root")
+    events = read_jsonl(args.cpu_gate / "inputs/frozen/FORMAL_SINGLE_EVENT_CATALOG.jsonl")
+    inventory = unique(read_jsonl(args.inventory), "query_id")
+    predictions = unique(read_jsonl(args.predictions), "query_id")
+    verdicts = unique(read_jsonl(args.verdicts), "query_id")
+    temporary = args.output_root.with_name(args.output_root.name + ".tmp")
+    temporary.mkdir(parents=True)
+    try:
+        selected, report = no_edit_selection(events)
+        g1r = []
+        for item in selected:
+            query_id = item["query_id"]
+            source, prediction = inventory[query_id], predictions[query_id]
+            g1r.append({
+                **item, "question": source["question"], "image_path": source["image_path"],
+                "image_sha256": source["image_sha256"], "frozen_v4_prompt_token_ids": prediction["prompt_token_ids"],
+                "frozen_v4_raw_generated_token_ids": prediction["raw_generated_token_ids"],
+                "frozen_v4_decoded_text": prediction["model_answer_raw"],
+                "frozen_v4_normalized": prediction["normalized_answer"],
+            })
+        g1r_path = temporary / "private/G1R_V2_INPUTS.jsonl"
+        write_new(g1r_path, g1r, jsonl=True)
+        write_new(temporary / "G1R_V2_MANIFEST.json", {
+            "schema_version": "m3bench-g1r-v2-manifest-v1", "status": "FROZEN_BEFORE_G1R_OUTPUT",
+            **report, "private_inputs_sha256": sha256(g1r_path), "method_outputs_used": False,
+        })
+        qual8, fallback = qualification_selection(events)
+        dev, qualification, sequence = calibration_selection_v2(events)
+        for name, rows in (("QUAL8", qual8), ("LORA_DEV16", dev), ("LORA_QUAL16", qualification), ("LORA_SEQ16", sequence)):
+            private = temporary / f"private/{name}_V2_INPUTS.jsonl"
+            write_new(private, rows, jsonl=True)
+            payload = {
+                "schema_version": f"m3bench-{name.lower()}-manifest-v2",
+                "status": "FROZEN_BEFORE_METHOD_OUTPUT", "event_count": len(rows),
+                "event_ids": [row["event_id"] for row in rows], "private_inputs_sha256": sha256(private),
+                "method_outputs_used_for_selection": False,
+            }
+            if name == "QUAL8":
+                payload["identity_fallback_inventory"] = fallback
+            write_new(temporary / f"{name}_V2_MANIFEST.json", payload)
+        write_new(temporary / "V2_MANIFEST_FREEZE_REPORT.json", {
+            "status": "V2_MANIFESTS_FROZEN_BEFORE_METHOD_OUTPUT", "g1r_count": len(g1r),
+            "qual8_count": len(qual8), "dev16_count": len(dev), "qual16_count": len(qualification),
+            "seq16_count": len(sequence), "v1_status": "SUPERSEDED", "method_outputs_started": False,
+        })
+        os.replace(temporary, args.output_root)
+    except Exception:
+        shutil.rmtree(temporary, ignore_errors=True)
+        raise
+    print(json.dumps({"status": "V2_MANIFESTS_FROZEN", "g1r": len(g1r)}, sort_keys=True))
+
+
+def compare_g1r(args: argparse.Namespace) -> None:
+    expected = read_jsonl(args.inputs)
+    official, formal = read_jsonl(args.official), read_jsonl(args.formal)
+    if len(expected) != len(official) or len(expected) != len(formal):
+        raise RuntimeError("M3BENCH_V4_BLOCKED__FINAL_G1R_MISMATCH")
+    check_names = (
+        "prompt_token_ids", "raw_generated_token_ids", "decoded", "normalized", "image_sha256",
+    )
+    counts = Counter()
+    mismatches = []
+    for frozen, left, right in zip(expected, official, formal, strict=True):
+        checks = {
+            "query_id": frozen["query_id"] == left["query_id"] == right["query_id"],
+            "prompt_token_ids": frozen["frozen_v4_prompt_token_ids"] == left["prompt_token_ids"] == right["prompt_token_ids"],
+            "raw_generated_token_ids": frozen["frozen_v4_raw_generated_token_ids"] == left["raw_generated_token_ids"] == right["raw_generated_token_ids"],
+            "decoded": frozen["frozen_v4_decoded_text"] == left["model_answer_raw"] == right["model_answer_raw"],
+            "normalized": frozen["frozen_v4_normalized"] == left["normalized_answer"] == right["normalized_answer"],
+            "image_sha256": frozen["image_sha256"] == left["image_sha256"] == right["image_sha256"],
+            "empty_error_zero": not left["empty"] and not right["empty"] and left["error"] is None and right["error"] is None,
+        }
+        counts.update(name for name, passed in checks.items() if passed)
+        if not all(checks.values()):
+            mismatches.append({"query_id": frozen["query_id"], "failed_checks": [name for name, passed in checks.items() if not passed]})
+    total = len(expected)
+    report = {
+        "schema_version": "m3bench-g1r-v2-report-v1",
+        "status": "G1R_PASS__CURRENT_STACK_V4_CANONICAL" if not mismatches else "M3BENCH_V4_BLOCKED__FINAL_G1R_MISMATCH",
+        "query_count": total, "check_pass_counts": dict(counts), "mismatches": mismatches,
+        "all_required_checks_100_percent": all(counts[name] == total for name in check_names) and not mismatches,
+    }
+    write_new(args.output, report)
+    print(json.dumps({"status": report["status"], "query_count": total, "mismatches": len(mismatches)}, sort_keys=True))
+    if mismatches:
+        raise SystemExit(3)
+
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser()
     sub = result.add_subparsers(dest="action", required=True)
@@ -390,6 +575,29 @@ def parser() -> argparse.ArgumentParser:
     command.add_argument("--judge-output", type=Path, required=True)
     command.add_argument("--output-root", type=Path, required=True)
     command.set_defaults(func=finalize_verdicts)
+    command = sub.add_parser("freeze-cohorts")
+    command.add_argument("--inventory", type=Path, required=True)
+    command.add_argument("--verdicts", type=Path, required=True)
+    command.add_argument("--static-root", type=Path, required=True)
+    command.add_argument("--task-specific-root", type=Path, required=True)
+    command.add_argument("--previous-runtime-lock", type=Path, required=True)
+    command.add_argument("--environment-lock", type=Path, required=True)
+    command.add_argument("--verdict-manifest", type=Path, required=True)
+    command.add_argument("--output-root", type=Path, required=True)
+    command.set_defaults(func=freeze_cohorts)
+    command = sub.add_parser("freeze-v2-manifests")
+    command.add_argument("--cpu-gate", type=Path, required=True)
+    command.add_argument("--inventory", type=Path, required=True)
+    command.add_argument("--predictions", type=Path, required=True)
+    command.add_argument("--verdicts", type=Path, required=True)
+    command.add_argument("--output-root", type=Path, required=True)
+    command.set_defaults(func=freeze_v2_manifests)
+    command = sub.add_parser("compare-g1r")
+    command.add_argument("--inputs", type=Path, required=True)
+    command.add_argument("--official", type=Path, required=True)
+    command.add_argument("--formal", type=Path, required=True)
+    command.add_argument("--output", type=Path, required=True)
+    command.set_defaults(func=compare_g1r)
     return result
 
 

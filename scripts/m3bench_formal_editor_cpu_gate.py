@@ -329,7 +329,7 @@ def build(args: argparse.Namespace) -> dict:
     temporary.mkdir(parents=True)
     try:
         inputs = temporary / "inputs/frozen"
-        write_new(inputs / "FORMAL_EDITOR_RECORDS_179.jsonl", t0_records, jsonl=True)
+        write_new(inputs / f"FORMAL_EDITOR_RECORDS_{len(t0_records)}.jsonl", t0_records, jsonl=True)
         write_new(inputs / "FORMAL_PROBE_CATALOG.jsonl", sequential, jsonl=True)
         write_new(inputs / "FORMAL_SINGLE_EVENT_CATALOG.jsonl", events, jsonl=True)
         copy_new(args.effect_repair_root / "runtime/LLAVA_MED_MODULE_INVENTORY.json", inputs / "LLAVA_MED_MODULE_INVENTORY.json")
