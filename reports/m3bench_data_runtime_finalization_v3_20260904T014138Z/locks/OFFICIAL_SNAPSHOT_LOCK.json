@@ -7,6 +7,7 @@
   "local_checkpoint_matches_official_snapshot": true,
   "model_repo": "microsoft/llava-med-v1.5-mistral-7b",
   "model_snapshot_sha": "91bb16c122001ddc9cf1fd36ce1dae09448943a2",
+  "resolved_via": "Hugging Face immutable API metadata and official LFS/file hashes",
   "vision_repo": "openai/clip-vit-large-patch14-336",
   "vision_snapshot_sha": "ce19dc912ca5cd21c8a653c79e251e808ccabcd1"
 }
