@@ -10,6 +10,8 @@ import os
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from scripts.m3bench_base_correctness_v3 import normalize
 from scripts.m3bench_runtime_canary_v3 import load_runtime
 
