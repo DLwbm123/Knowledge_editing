@@ -12,6 +12,7 @@ from scripts.run_semantic_judge_v3 import PACKET_FIELDS, parse_boolean, parse_vo
 from scripts.m3bench_checkpoint_runtime_v3 import LLAVA_MED_COMMIT, MODEL_FILES, MODEL_SHA, VISION_FILES, VISION_SHA
 from scripts.m3bench_runtime_canary_v3 import swap_map
 from scripts.m3bench_runtime_compare_v3 import opaque_id
+from scripts.m3bench_base_inference_v3 import merged_rows, shard_rows
 
 
 class DataRuntimeFinalizationV3Tests(unittest.TestCase):
@@ -61,6 +62,11 @@ class DataRuntimeFinalizationV3Tests(unittest.TestCase):
         first, second = opaque_id("a", "private-query"), opaque_id("b", "private-query")
         self.assertNotEqual(first, second)
         self.assertNotIn("private-query", first + second)
+
+    def test_canonical_base_shards_are_disjoint_and_ordered(self):
+        inventory = [{"query_id": str(index)} for index in range(7)]
+        shards = [shard_rows(inventory, index, 2) for index in range(2)]
+        self.assertEqual(merged_rows(inventory, shards), inventory)
 
     def test_runtime_swap_selection_is_score_independent(self):
         rows = [{"query_id": value, "image_path": value + ".png"} for value in ("a", "b", "c")]
