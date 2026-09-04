@@ -8,7 +8,7 @@ from scripts.m3bench_base_correctness_v3 import (
 from scripts.m3bench_core9_public_query_inventory import assert_no_method_fields
 from scripts.m3bench_core9_task_specific_cohorts import macro_per_edit
 from scripts.m3bench_static_catalog_v3 import T5_STATUS, select_runtime, t0_filter, t3_partition, t4l_eligible
-from scripts.run_semantic_judge_v3 import PACKET_FIELDS, parse_boolean, parse_vote
+from scripts.run_semantic_judge_v3 import PACKET_FIELDS, allowed_boolean_tokens, parse_boolean, parse_vote
 from scripts.m3bench_checkpoint_runtime_v3 import LLAVA_MED_COMMIT, MODEL_FILES, MODEL_SHA, VISION_FILES, VISION_SHA
 from scripts.m3bench_runtime_canary_v3 import swap_map
 from scripts.m3bench_runtime_compare_v3 import opaque_id
@@ -29,6 +29,12 @@ class DataRuntimeFinalizationV3Tests(unittest.TestCase):
     def test_negation_not_accepted_by_substring(self):
         self.assertTrue(public_fuzzy_correct("No mass is present", "mass"))
         self.assertFalse(exact_correct("No mass is present", "mass"))
+
+    def test_constrained_judge_only_allows_frozen_json_choices(self):
+        choices = [[1, 2, 3], [1, 2, 4]]
+        self.assertEqual(allowed_boolean_tokens([], choices, 9), [1])
+        self.assertEqual(allowed_boolean_tokens([1, 2], choices, 9), [3, 4])
+        self.assertEqual(allowed_boolean_tokens([1, 2, 3], choices, 9), [9])
 
     def test_gate_critical_majority_adjudication(self):
         self.assertTrue(majority([True, True], True))

@@ -52,7 +52,7 @@ def parse_vote(text: str) -> tuple[bool | None, bool]:
         return None, False
 
 
-def lock_payload(model_path: Path) -> dict:
+def lock_payload(model_path: Path, constrained_boolean: bool = False) -> dict:
     snapshot_sha = model_path.name
     if not re.fullmatch(r"[0-9a-f]{40}", snapshot_sha):
         raise RuntimeError("Judge model path must resolve to an immutable 40-character snapshot")
@@ -60,6 +60,8 @@ def lock_payload(model_path: Path) -> dict:
         "do_sample": False, "temperature": 0, "num_beams": 1,
         "max_new_tokens": 24, "use_cache": True, "enable_thinking": False,
     }
+    if constrained_boolean:
+        generation["schema_constrained_decoding"] = True
     return {
         "judge_model": "Qwen/Qwen3-32B-AWQ",
         "judge_snapshot_sha": snapshot_sha,
@@ -75,7 +77,7 @@ def lock_payload(model_path: Path) -> dict:
 
 
 def lock_command(args: argparse.Namespace) -> None:
-    payload = lock_payload(args.model_path.resolve())
+    payload = lock_payload(args.model_path.resolve(), args.constrained_boolean)
     payload["config_sha256"] = digest(json.dumps(payload, sort_keys=True, separators=(",", ":")))
     atomic_new(args.output, json.dumps(payload, indent=2, sort_keys=True) + "\n")
     print(json.dumps({key: payload[key] for key in ("judge_model", "judge_snapshot_sha", "prompt_sha256", "config_sha256")}, sort_keys=True))
@@ -92,12 +94,23 @@ def render(tokenizer, row: dict) -> str:
     return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True, enable_thinking=False)
 
 
+def allowed_boolean_tokens(prefix: list[int], choices: list[list[int]], eos_token_id: int) -> list[int]:
+    matching = [choice for choice in choices if choice[:len(prefix)] == prefix]
+    following = {choice[len(prefix)] for choice in matching if len(prefix) < len(choice)}
+    if following:
+        return sorted(following)
+    if any(len(choice) == len(prefix) for choice in matching):
+        return [eos_token_id]
+    raise RuntimeError("constrained Judge left the allowed JSON language")
+
+
 def run_command(args: argparse.Namespace) -> None:
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
     lock = json.loads(args.lock.read_text(encoding="utf-8"))
-    expected = lock_payload(args.model_path.resolve())
+    constrained = bool(lock.get("generation", {}).get("schema_constrained_decoding"))
+    expected = lock_payload(args.model_path.resolve(), constrained)
     for key in ("judge_model", "judge_snapshot_sha", "prompt", "temperature", "schema", "generation"):
         if lock.get(key) != expected[key]:
             raise RuntimeError(f"Judge lock mismatch: {key}")
@@ -122,11 +135,22 @@ def run_command(args: argparse.Namespace) -> None:
         batch = rows[start:start + args.batch_size]
         prompts = [render(tokenizer, row) for row in batch]
         encoded = tokenizer(prompts, return_tensors="pt", padding=True, truncation=True, max_length=args.max_input_tokens).to("cuda:0")
+        generation_args = {}
+        if constrained:
+            choices = [
+                tokenizer(text, add_special_tokens=False).input_ids
+                for text in ('{"is_correct": true}', '{"is_correct": false}')
+            ]
+            prompt_tokens = encoded.input_ids.shape[1]
+            generation_args["prefix_allowed_tokens_fn"] = lambda _, ids: allowed_boolean_tokens(
+                ids[prompt_tokens:].tolist(), choices, tokenizer.eos_token_id
+            )
         with torch.inference_mode():
             generated = model.generate(
                 **encoded, do_sample=False, temperature=0.0, num_beams=1,
                 top_p=None, top_k=None, max_new_tokens=24, use_cache=True,
                 pad_token_id=tokenizer.pad_token_id,
+                **generation_args,
             )
         continuations = generated[:, encoded.input_ids.shape[1]:]
         for row, text in zip(batch, tokenizer.batch_decode(continuations, skip_special_tokens=True)):
@@ -158,6 +182,7 @@ def main() -> None:
     lock = sub.add_parser("lock")
     lock.add_argument("--model-path", type=Path, required=True)
     lock.add_argument("--output", type=Path, required=True)
+    lock.add_argument("--constrained-boolean", action="store_true")
     lock.set_defaults(func=lock_command)
     run = sub.add_parser("run")
     run.add_argument("--model-path", type=Path, required=True)
