@@ -8,7 +8,7 @@ from scripts.m3bench_base_correctness_v3 import (
 from scripts.m3bench_core9_public_query_inventory import assert_no_method_fields
 from scripts.m3bench_core9_task_specific_cohorts import macro_per_edit
 from scripts.m3bench_static_catalog_v3 import T5_STATUS, select_runtime, t0_filter, t3_partition, t4l_eligible
-from scripts.run_semantic_judge_v3 import PACKET_FIELDS, parse_boolean
+from scripts.run_semantic_judge_v3 import PACKET_FIELDS, parse_boolean, parse_vote
 from scripts.m3bench_checkpoint_runtime_v3 import LLAVA_MED_COMMIT, MODEL_FILES, MODEL_SHA, VISION_FILES, VISION_SHA
 
 
@@ -85,6 +85,9 @@ class DataRuntimeFinalizationV3Tests(unittest.TestCase):
         self.assertFalse(parse_boolean('{"is_correct": false}'))
         with self.assertRaises(ValueError):
             parse_boolean('CORRECT')
+
+    def test_malformed_judge_output_is_preserved_without_a_vote(self):
+        self.assertEqual(parse_vote('CORRECT'), (None, False))
 
     def test_semantic_judge_packet_is_method_blind(self):
         self.assertEqual(PACKET_FIELDS, {"opaque_query_id", "question", "gold_answer", "raw_base_answer", "adjudication_pass"})

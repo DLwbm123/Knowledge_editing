@@ -45,6 +45,13 @@ def parse_boolean(text: str) -> bool:
     return match.group(1).casefold() == "true"
 
 
+def parse_vote(text: str) -> tuple[bool | None, bool]:
+    try:
+        return parse_boolean(text), True
+    except ValueError:
+        return None, False
+
+
 def lock_payload(model_path: Path) -> dict:
     snapshot_sha = model_path.name
     if not re.fullmatch(r"[0-9a-f]{40}", snapshot_sha):
@@ -123,10 +130,12 @@ def run_command(args: argparse.Namespace) -> None:
             )
         continuations = generated[:, encoded.input_ids.shape[1]:]
         for row, text in zip(batch, tokenizer.batch_decode(continuations, skip_special_tokens=True)):
+            verdict, parse_valid = parse_vote(text)
             outputs.append({
                 "opaque_query_id": row["opaque_query_id"],
                 "adjudication_pass": row["adjudication_pass"],
-                "is_correct": parse_boolean(text),
+                "is_correct": verdict,
+                "parse_valid": parse_valid,
                 "judge_output": text.strip(),
                 "judge_model": lock["judge_model"],
                 "judge_snapshot_sha": lock["judge_snapshot_sha"],
