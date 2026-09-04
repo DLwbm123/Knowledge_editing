@@ -10,6 +10,7 @@ from scripts.m3bench_core9_task_specific_cohorts import macro_per_edit
 from scripts.m3bench_static_catalog_v3 import T5_STATUS, select_runtime, t0_filter, t3_partition, t4l_eligible
 from scripts.run_semantic_judge_v3 import PACKET_FIELDS, parse_boolean, parse_vote
 from scripts.m3bench_checkpoint_runtime_v3 import LLAVA_MED_COMMIT, MODEL_FILES, MODEL_SHA, VISION_FILES, VISION_SHA
+from scripts.m3bench_runtime_canary_v3 import swap_map
 
 
 class DataRuntimeFinalizationV3Tests(unittest.TestCase):
@@ -49,6 +50,13 @@ class DataRuntimeFinalizationV3Tests(unittest.TestCase):
     def test_runtime_output_parity(self):
         audit = {"checkpoint_identity_verified": True, "native_runtime_stable": True, "official_prompt_image_generation": True, "no_runtime_errors": True, "normalized_parity": .995, "semantic_parity": .995, "source_accuracy": 0.0}
         self.assertEqual(select_runtime(audit), "runtime_a_official_parity")
+
+    def test_runtime_swap_selection_is_score_independent(self):
+        rows = [{"query_id": value, "image_path": value + ".png"} for value in ("a", "b", "c")]
+        mapping = swap_map(rows, 2)
+        self.assertEqual(len(mapping), 2)
+        self.assertEqual(set(mapping), {"b", "c"})
+        self.assertEqual(set(mapping.values()), {"b.png", "c.png"})
 
     def test_static_catalog_independent_of_base_verdict(self):
         self.assertNotIn("verdict", {"query_id": "q", "method_outputs_used": False})
