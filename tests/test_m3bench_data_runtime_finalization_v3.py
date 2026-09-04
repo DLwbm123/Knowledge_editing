@@ -9,6 +9,7 @@ from scripts.m3bench_core9_public_query_inventory import assert_no_method_fields
 from scripts.m3bench_core9_task_specific_cohorts import macro_per_edit
 from scripts.m3bench_static_catalog_v3 import T5_STATUS, select_runtime, t0_filter, t3_partition, t4l_eligible
 from scripts.run_semantic_judge_v3 import PACKET_FIELDS, parse_boolean
+from scripts.m3bench_checkpoint_runtime_v3 import LLAVA_MED_COMMIT, MODEL_FILES, MODEL_SHA, VISION_FILES, VISION_SHA
 
 
 class DataRuntimeFinalizationV3Tests(unittest.TestCase):
@@ -37,7 +38,9 @@ class DataRuntimeFinalizationV3Tests(unittest.TestCase):
 
     def test_checkpoint_manifest_complete(self):
         required = {"config.json", "generation_config.json", "model.safetensors.index.json", "tokenizer.model", "tokenizer_config.json", "special_tokens_map.json"}
-        self.assertTrue(required <= required)
+        self.assertTrue(required <= MODEL_FILES.keys())
+        self.assertIn("pytorch_model.bin", VISION_FILES)
+        self.assertEqual(len(MODEL_SHA), 40); self.assertEqual(len(VISION_SHA), 40); self.assertEqual(len(LLAVA_MED_COMMIT), 40)
 
     def test_runtime_canary_selection_is_not_score_cherry_picking(self):
         audit = {"checkpoint_identity_verified": True, "native_runtime_stable": True, "official_prompt_image_generation": True, "no_runtime_errors": True, "normalized_parity": .994, "semantic_parity": 1.0, "source_accuracy": 1.0}
