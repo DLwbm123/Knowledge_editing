@@ -52,6 +52,34 @@ class CurrentStackV4Tests(unittest.TestCase):
             self.assertFalse(verdicts[1]["v3_verdict_reused_by_raw_exact_match"])
             self.assertTrue(verdicts[1]["is_correct"])
 
+    def test_qual8_summary_keeps_integration_effect_and_semantic_separate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            outputs, mapping, verdicts = [], [], []
+            for method in ("lora", "grace", "balancedit", "belora"):
+                method_root = root / method
+                method_root.mkdir()
+                (method_root / "QUAL8_RAW_MANIFEST.json").write_text(json.dumps({"method": method}), encoding="utf-8")
+                outputs.append(method_root)
+                for index in range(8):
+                    event = method_root / f"event_{index:02d}"
+                    event.mkdir()
+                    (event / "raw_event.json").write_text(json.dumps({
+                        "status": "PASS", "event_id": f"{method}-{index}",
+                        "pre_target_nll": {"nll": 1.0}, "post_target_nll": {"nll": 0.1},
+                        "target_raw_changed_from_base": True,
+                        "integration_checks": {"self_route_hit": True, "target_generation_nonempty": True},
+                    }), encoding="utf-8")
+                    opaque = f"{method}-{index}"
+                    mapping.append({"opaque_query_id": opaque, "method": method, "event_id": opaque})
+                    verdicts.append({"opaque_query_id": opaque, "is_correct": True})
+            write_jsonl(root / "mapping", mapping); write_jsonl(root / "verdicts", verdicts)
+            v4.qual8_finalize(argparse.Namespace(
+                method_outputs=outputs, judge_output=root / "verdicts", mapping=root / "mapping", output=root / "report",
+            ))
+            report = v4.read_json(root / "report")
+            self.assertTrue(all(value["integration_pass"] and value["effect_active"] and value["semantic_qualified"] for value in report["methods"].values()))
+
 
 if __name__ == "__main__":
     unittest.main()

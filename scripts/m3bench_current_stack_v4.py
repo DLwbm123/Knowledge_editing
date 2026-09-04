@@ -12,6 +12,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import time
 from collections import Counter
 from pathlib import Path
 
@@ -536,6 +537,153 @@ def compare_g1r(args: argparse.Namespace) -> None:
         raise SystemExit(3)
 
 
+def qual8_run(args: argparse.Namespace) -> None:
+    import torch
+    from scripts.editor_paperspec_formal import (
+        EditorRecord, assert_authorized_device, assert_official_llavamed_source,
+        create_formal_editor, editor_empty, full_base_hash, generate_probe,
+        load_runtime, route_equal, save_state_atomic,
+    )
+    from scripts.m3bench_base_correctness_v3 import exact_correct, public_fuzzy_correct
+
+    assert_official_llavamed_source(); assert_authorized_device()
+    events = read_jsonl(args.inputs)
+    if len(events) != 8 or len({row["event_id"] for row in events}) != 8:
+        raise RuntimeError("QUAL8 V2 input lock failed")
+    args.output.mkdir(parents=True, exist_ok=True)
+    runtime = load_runtime(args.cpu_gate, "cuda:0")
+    editor = create_formal_editor(args.method, runtime, args.output, run=args.cpu_gate, sequential=False)
+    base_before = full_base_hash(runtime)
+    completed = []
+    for ordinal, event in enumerate(events, 1):
+        final = args.output / f"event_{ordinal:02d}"
+        if final.is_dir() and (final / "raw_event.json").is_file():
+            completed.append(read_json(final / "raw_event.json")); continue
+        temporary = args.output / f"event_{ordinal:02d}.tmp"
+        if temporary.exists():
+            orphan = args.output / "orphans" / f"event_{ordinal:02d}.{int(time.time())}"
+            orphan.parent.mkdir(exist_ok=True); os.replace(temporary, orphan)
+        temporary.mkdir()
+        if not editor_empty(editor, args.method)["pass"]:
+            raise RuntimeError("QUAL8 editor state is not empty before event")
+        record = EditorRecord.from_dict(event["edit_record"])
+        pre_nll = editor.score_target_nll(record)
+        base_generation = editor.generate(record)
+        edit = editor.apply_edit(record)
+        post_nll = editor.score_target_nll(record)
+        post_generation = editor.generate(record)
+        state_summary = editor.state_summary()
+        state_path = temporary / ("editor_state" if args.method == "lora" else "editor_state.pt")
+        state = save_state_atomic(editor, args.method, state_path)
+        probes = [generate_probe(editor, row, sha256(args.cpu_gate / "locks/FORMAL_MODEL_AND_GENERATION_LOCK.json")) for row in event["probes"]]
+        base_after_edit = editor.base_integrity()
+        editor.reset_editor_state()
+        empty_after_reset = editor_empty(editor, args.method)
+        editor.load_editor_state(state_path)
+        reload_nll = editor.score_target_nll(record)
+        reload_generation = editor.generate(record)
+        reload_summary = editor.state_summary()
+        editor.reset_editor_state()
+        empty_after_reload = editor_empty(editor, args.method)
+        route = post_generation["route"]
+        routed = route is None or (
+            route.get("activated") is True
+            and route.get("logical_edit_id") == record.record_id
+            and route.get("nearest_logical_edit_id") == record.record_id
+        )
+        integration_checks = {
+            "target_mask_nonempty": edit["target_mask"]["target_token_count"] > 0,
+            "finite_loss": bool(edit.get("finite_losses")),
+            "finite_gradients": bool(edit.get("finite_gradients")),
+            "base_weights_unchanged_after_edit": base_after_edit["unchanged"],
+            "editor_state_nonempty": bool(state_summary.get("edit_history")),
+            "target_generation_nonempty": bool(post_generation["generation"]["decoded_text"].strip()),
+            "all_probe_generations_nonempty": all(row["raw_text"].strip() for row in probes),
+            "save_reload_target_raw_exact": post_generation["generation"]["raw_token_ids"] == reload_generation["generation"]["raw_token_ids"],
+            "save_reload_route_exact": route_equal(args.method, route, reload_generation["route"]),
+            "save_reload_target_nll_exact": post_nll["nll"] == reload_nll["nll"],
+            "save_reload_state_nonempty": bool(reload_summary.get("edit_history")),
+            "reset_exact": empty_after_reset["pass"] and empty_after_reload["pass"],
+            "self_route_hit": routed,
+            "target_leakage": False,
+        }
+        answer = post_generation["generation"]["decoded_text"]
+        report = {
+            "schema_version": "m3bench-qual8-v2-event-v1", "status": "PASS" if all(integration_checks.values()) else "FAIL",
+            "method": args.method, "ordinal": ordinal, "event_id": event["event_id"], "task": event["task"],
+            "router_positive_source": event["edit_record"].get("router_positive_source"),
+            "pre_target_nll": pre_nll, "post_target_nll": post_nll,
+            "base_target_generation": base_generation, "post_edit_target_generation": post_generation,
+            "post_edit_target_exact": exact_correct(answer, record.target),
+            "post_edit_target_fuzzy": public_fuzzy_correct(answer, record.target),
+            "target_raw_changed_from_base": base_generation["generation"]["raw_token_ids"] != post_generation["generation"]["raw_token_ids"],
+            "edit": edit, "editor_state": state, "state_summary": state_summary,
+            "raw_outputs": probes, "integration_checks": integration_checks,
+            "semantic_metrics_computed": False,
+        }
+        write_new(temporary / "raw_event.json", report)
+        os.replace(temporary, final); completed.append(report)
+        torch.cuda.empty_cache()
+        progress = args.output / "QUAL8_PROGRESS.json"
+        progress.write_text(json.dumps({"completed": ordinal, "total": len(events)}) + "\n", encoding="utf-8")
+    base_after = full_base_hash(runtime)
+    if base_before != base_after or not editor_empty(editor, args.method)["pass"]:
+        raise RuntimeError("QUAL8 base/reset closure failed")
+    manifest_path = args.output / "QUAL8_RAW_MANIFEST.json"
+    if not manifest_path.exists():
+        write_new(manifest_path, {
+            "status": "PASS" if all(row["status"] == "PASS" for row in completed) else "FAIL",
+            "method": args.method, "event_count": len(completed),
+            "base_full_sha256_before": base_before, "base_full_sha256_after": base_after,
+            "event_ids": [row["event_id"] for row in completed], "semantic_metrics_computed": False,
+        })
+    print(json.dumps({"status": read_json(manifest_path)["status"], "method": args.method, "events": len(completed)}, sort_keys=True))
+
+
+def qual8_packet(args: argparse.Namespace) -> None:
+    packet, mapping = [], []
+    for root in args.method_outputs:
+        method = read_json(root / "QUAL8_RAW_MANIFEST.json")["method"]
+        for event_dir in sorted(root.glob("event_*")):
+            if not event_dir.is_dir() or event_dir.name.endswith(".tmp"):
+                continue
+            row = read_json(event_dir / "raw_event.json")
+            opaque = hashlib.sha256(f"qual8-v2|{method}|{row['event_id']}".encode()).hexdigest()[:32]
+            target = row["post_edit_target_generation"]["generation"]["decoded_text"]
+            edit_record = next(item for item in read_jsonl(args.inputs) if item["event_id"] == row["event_id"])["edit_record"]
+            packet.append({"opaque_query_id": opaque, "question": edit_record["question"], "gold_answer": edit_record["gold_answer"], "raw_base_answer": target, "adjudication_pass": 1})
+            mapping.append({"opaque_query_id": opaque, "method": method, "event_id": row["event_id"]})
+    if len(packet) != 32 or len({row["opaque_query_id"] for row in packet}) != 32:
+        raise RuntimeError("QUAL8 Judge packet coverage failure")
+    write_new(args.packet, packet, jsonl=True); write_new(args.mapping, mapping, jsonl=True)
+    print(json.dumps({"status": "QUAL8_JUDGE_PACKET_FROZEN", "count": len(packet)}))
+
+
+def qual8_finalize(args: argparse.Namespace) -> None:
+    verdicts = unique(read_jsonl(args.judge_output), "opaque_query_id")
+    mapping = unique(read_jsonl(args.mapping), "opaque_query_id")
+    if set(verdicts) != set(mapping) or len(verdicts) != 32 or any(type(row.get("is_correct")) is not bool for row in verdicts.values()):
+        raise RuntimeError("QUAL8 semantic Judge coverage failure")
+    by_method = {}
+    for root in args.method_outputs:
+        method = read_json(root / "QUAL8_RAW_MANIFEST.json")["method"]
+        rows = [read_json(path / "raw_event.json") for path in sorted(root.glob("event_*")) if path.is_dir() and not path.name.endswith(".tmp")]
+        semantic = [verdicts[key]["is_correct"] for key, item in mapping.items() if item["method"] == method]
+        decreases = [row["post_target_nll"]["nll"] < row["pre_target_nll"]["nll"] for row in rows]
+        deltas = [row["pre_target_nll"]["nll"] - row["post_target_nll"]["nll"] for row in rows]
+        integration = all(row["status"] == "PASS" for row in rows)
+        effect = sum(decreases) >= 6 and sorted(deltas)[len(deltas) // 2] > 0 and sum(row["target_raw_changed_from_base"] for row in rows) >= 4
+        route = method == "lora" or all(row["integration_checks"]["self_route_hit"] for row in rows)
+        by_method[method] = {
+            "integration_pass": integration, "effect_active": effect, "semantic_qualified": sum(semantic) >= 6,
+            "semantic_target_success": sum(semantic), "target_nll_decrease_count": sum(decreases),
+            "target_raw_change_count": sum(row["target_raw_changed_from_base"] for row in rows),
+            "route_contract_pass": route, "empty_count": sum(not row["integration_checks"]["target_generation_nonempty"] for row in rows),
+        }
+    write_new(args.output, {"status": "M3BENCH_GPU_INTEGRATION_QUALIFICATION_COMPLETE", "methods": by_method})
+    print(json.dumps({"status": "M3BENCH_GPU_INTEGRATION_QUALIFICATION_COMPLETE", "methods": by_method}, sort_keys=True))
+
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser()
     sub = result.add_subparsers(dest="action", required=True)
@@ -598,6 +746,24 @@ def parser() -> argparse.ArgumentParser:
     command.add_argument("--formal", type=Path, required=True)
     command.add_argument("--output", type=Path, required=True)
     command.set_defaults(func=compare_g1r)
+    command = sub.add_parser("qual8-run")
+    command.add_argument("--cpu-gate", type=Path, required=True)
+    command.add_argument("--inputs", type=Path, required=True)
+    command.add_argument("--method", choices=("lora", "grace", "balancedit", "belora"), required=True)
+    command.add_argument("--output", type=Path, required=True)
+    command.set_defaults(func=qual8_run)
+    command = sub.add_parser("qual8-packet")
+    command.add_argument("--inputs", type=Path, required=True)
+    command.add_argument("--method-outputs", type=Path, nargs=4, required=True)
+    command.add_argument("--packet", type=Path, required=True)
+    command.add_argument("--mapping", type=Path, required=True)
+    command.set_defaults(func=qual8_packet)
+    command = sub.add_parser("qual8-finalize")
+    command.add_argument("--method-outputs", type=Path, nargs=4, required=True)
+    command.add_argument("--judge-output", type=Path, required=True)
+    command.add_argument("--mapping", type=Path, required=True)
+    command.add_argument("--output", type=Path, required=True)
+    command.set_defaults(func=qual8_finalize)
     return result
 
 

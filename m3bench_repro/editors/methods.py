@@ -28,6 +28,7 @@ from .routing import (
     MemoryRouter,
     balanced_radius,
     decision_as_json,
+    euclidean_distances,
 )
 
 
@@ -602,6 +603,8 @@ class BalanceEditPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
         radius = balanced_radius(
             key, positive, negative, alpha=0.2, distance="euclidean"
         )
+        positive_distance = float(euclidean_distances(key, positive)[0].cpu().item())
+        negative_distance = float(euclidean_distances(key, negative)[0].cpu().item())
         batch = self.runtime.build_edit_batch(record)
         self.router.add(record.record_id, key, radius, batch.target_token_ids)
         edited = self.wrapper.add_edit(record.record_id)
@@ -630,6 +633,8 @@ class BalanceEditPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
             "finite_gradients": all(gradient_checks),
             "steps": 50,
             "radius": float(radius.cpu().item()),
+            "positive_distance": positive_distance,
+            "negative_distance": negative_distance,
             "distance": "euclidean",
             "black_image_path": str(black_path),
             "black_image_sha256": hashlib.sha256(black_path.read_bytes()).hexdigest(),
@@ -786,6 +791,8 @@ class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
             record, self.runtime.run_root / "inputs/black_images"
         )
         radius = balanced_radius(key, positive, negative, alpha=0.2, distance="euclidean")
+        positive_distance = float(euclidean_distances(key, positive)[0].cpu().item())
+        negative_distance = float(euclidean_distances(key, negative)[0].cpu().item())
         batch = self.runtime.build_edit_batch(record)
         self.router.add(record.record_id, key, radius, batch.target_token_ids)
         adapter_name = safe_slot(record.record_id)
@@ -821,6 +828,8 @@ class BeloraPaperSpecEditor(_BalanceRoutingMixin, PaperSpecEditor):
             "finite_gradients": all(gradient_checks),
             "epochs": self.steps_per_edit,
             "radius": float(radius.cpu().item()),
+            "positive_distance": positive_distance,
+            "negative_distance": negative_distance,
             "distance": "euclidean",
             "black_image_path": str(black_path),
             "black_image_sha256": hashlib.sha256(black_path.read_bytes()).hexdigest(),
