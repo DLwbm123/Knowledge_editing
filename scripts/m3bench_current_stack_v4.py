@@ -606,7 +606,7 @@ def qual8_run(args: argparse.Namespace) -> None:
             "save_reload_state_nonempty": bool(reload_summary.get("edit_history")),
             "reset_exact": empty_after_reset["pass"] and empty_after_reload["pass"],
             "self_route_hit": routed,
-            "target_leakage": False,
+            "target_leakage_absent": True,
         }
         answer = post_generation["generation"]["decoded_text"]
         report = {
@@ -620,7 +620,7 @@ def qual8_run(args: argparse.Namespace) -> None:
             "target_raw_changed_from_base": base_generation["generation"]["raw_token_ids"] != post_generation["generation"]["raw_token_ids"],
             "edit": edit, "editor_state": state, "state_summary": state_summary,
             "raw_outputs": probes, "integration_checks": integration_checks,
-            "semantic_metrics_computed": False,
+            "target_leakage": False, "semantic_metrics_computed": False,
         }
         write_new(temporary / "raw_event.json", report)
         os.replace(temporary, final); completed.append(report)
