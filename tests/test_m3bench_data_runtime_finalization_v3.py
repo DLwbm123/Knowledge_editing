@@ -8,6 +8,7 @@ from scripts.m3bench_base_correctness_v3 import (
 from scripts.m3bench_core9_public_query_inventory import assert_no_method_fields
 from scripts.m3bench_core9_task_specific_cohorts import macro_per_edit
 from scripts.m3bench_static_catalog_v3 import T5_STATUS, select_runtime, t0_filter, t3_partition, t4l_eligible
+from scripts.run_semantic_judge_v3 import PACKET_FIELDS, parse_boolean
 
 
 class DataRuntimeFinalizationV3Tests(unittest.TestCase):
@@ -75,6 +76,15 @@ class DataRuntimeFinalizationV3Tests(unittest.TestCase):
 
     def test_t5_does_not_block_t0_t4(self):
         self.assertIn("T5_SEPARATE_EXTENSION_BLOCKED", T5_STATUS)
+
+    def test_semantic_judge_strict_boolean_schema(self):
+        self.assertTrue(parse_boolean('{"is_correct": true}'))
+        self.assertFalse(parse_boolean('{"is_correct": false}'))
+        with self.assertRaises(ValueError):
+            parse_boolean('CORRECT')
+
+    def test_semantic_judge_packet_is_method_blind(self):
+        self.assertEqual(PACKET_FIELDS, {"opaque_query_id", "question", "gold_answer", "raw_base_answer", "adjudication_pass"})
 
 
 if __name__ == "__main__":
