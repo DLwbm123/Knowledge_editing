@@ -131,9 +131,46 @@ def make_packet(inventory: list[dict], predictions: dict[str, dict], gate_ids: s
     return packet
 
 
+def valid_vote(row: dict) -> bool:
+    return type(row.get("is_correct")) is bool
+
+
+def replacement_ids(first: dict[str, dict], second: dict[str, dict]) -> list[str]:
+    if not set(second) <= set(first):
+        raise RuntimeError("second-pass query is absent from first pass")
+    ids = {query_id for query_id, row in first.items() if not valid_vote(row)}
+    ids.update(
+        query_id for query_id, row in second.items()
+        if not valid_vote(row) or not valid_vote(first[query_id])
+        or first[query_id]["is_correct"] != row["is_correct"]
+    )
+    return sorted(ids)
+
+
 def third_pass_packet(first: dict[str, dict], second: dict[str, dict], packet: dict[str, dict]) -> list[dict]:
-    ids = sorted(query_id for query_id in second if first[query_id]["is_correct"] != second[query_id]["is_correct"])
+    ids = replacement_ids(first, second)
     return [{**packet[query_id], "adjudication_pass": 3} for query_id in ids]
+
+
+def vote_index(path: Path) -> dict[str, dict]:
+    rows = read_jsonl(path)
+    result = {str(row["opaque_query_id"]): row for row in rows}
+    if len(result) != len(rows):
+        raise RuntimeError(f"duplicate Judge query in {path}")
+    return result
+
+
+def merge_valid_votes(paths: list[Path]) -> list[dict]:
+    output, keys = [], set()
+    for path in paths:
+        for row in read_jsonl(path):
+            if not valid_vote(row):
+                continue
+            key = (str(row["opaque_query_id"]), int(row["adjudication_pass"]))
+            if key in keys:
+                raise RuntimeError("duplicate valid Judge vote")
+            keys.add(key); output.append(row)
+    return sorted(output, key=lambda row: (str(row["opaque_query_id"]), int(row["adjudication_pass"])))
 
 
 def validate_judge_lock(lock: dict) -> tuple[str, str, str]:
@@ -230,6 +267,11 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
     packet = sub.add_parser("packet")
     final = sub.add_parser("finalize")
+    third = sub.add_parser("third")
+    third.add_argument("--pass1", type=Path, required=True); third.add_argument("--pass2", type=Path, required=True)
+    third.add_argument("--packet1", type=Path, required=True); third.add_argument("--output", type=Path, required=True)
+    merge = sub.add_parser("merge")
+    merge.add_argument("--inputs", type=Path, nargs="+", required=True); merge.add_argument("--output", type=Path, required=True)
     for child in (packet, final):
         child.add_argument("--inventory", type=Path, required=True)
         child.add_argument("--predictions", type=Path, required=True)
@@ -242,6 +284,13 @@ def main() -> None:
     final.add_argument("--checkpoint-sha", required=True)
     final.add_argument("--runtime-config-sha", required=True)
     args = parser.parse_args()
+    if args.command == "third":
+        packet1 = vote_index(args.packet1)
+        write_jsonl(args.output, third_pass_packet(vote_index(args.pass1), vote_index(args.pass2), packet1))
+        return
+    if args.command == "merge":
+        write_jsonl(args.output, merge_valid_votes(args.inputs))
+        return
     if args.require_old_raw:
         verify_old_raw(args.predictions)
     inventory = read_jsonl(args.inventory)

@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 from scripts.m3bench_base_correctness_v3 import (
-    EXPECTED_OLD_RAW_SHA256, exact_correct, legacy_correct, majority, public_fuzzy_correct,
+    EXPECTED_OLD_RAW_SHA256, exact_correct, legacy_correct, majority, public_fuzzy_correct, replacement_ids,
 )
 from scripts.m3bench_core9_public_query_inventory import assert_no_method_fields
 from scripts.m3bench_core9_task_specific_cohorts import macro_per_edit
@@ -33,6 +33,11 @@ class DataRuntimeFinalizationV3Tests(unittest.TestCase):
         with self.assertRaises(ValueError):
             majority([True, False], True)
         self.assertFalse(majority([True, False, False], True))
+
+    def test_third_pass_covers_disagreement_and_invalid_output(self):
+        first = {"a": {"is_correct": True}, "b": {"is_correct": None}, "c": {"is_correct": False}}
+        second = {"a": {"is_correct": False}, "c": {"is_correct": False}}
+        self.assertEqual(replacement_ids(first, second), ["a", "b"])
 
     def test_old_raw_hash_is_immutable(self):
         self.assertEqual(EXPECTED_OLD_RAW_SHA256, "25006913f849d7fedfe0fc100a789badad2ef093c09e9614fa511d4ed73251dc")
