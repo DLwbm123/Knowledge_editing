@@ -1,0 +1,47 @@
+{
+  "methods": {
+    "balancedit": {
+      "effect_active": true,
+      "empty_count": 0,
+      "integration_pass": true,
+      "route_contract_pass": true,
+      "semantic_qualified": true,
+      "semantic_target_success": 8,
+      "target_nll_decrease_count": 8,
+      "target_raw_change_count": 8
+    },
+    "belora": {
+      "effect_active": true,
+      "empty_count": 0,
+      "integration_pass": true,
+      "route_contract_pass": true,
+      "semantic_qualified": true,
+      "semantic_target_success": 7,
+      "target_nll_decrease_count": 8,
+      "target_raw_change_count": 8
+    },
+    "grace": {
+      "effect_active": true,
+      "empty_count": 0,
+      "integration_pass": true,
+      "route_contract_pass": true,
+      "semantic_qualified": false,
+      "semantic_target_success": 2,
+      "target_nll_decrease_count": 8,
+      "target_raw_change_count": 8
+    },
+    "lora": {
+      "effect_active": true,
+      "empty_count": 0,
+      "integration_pass": true,
+      "route_contract_pass": true,
+      "semantic_qualified": false,
+      "semantic_target_success": 3,
+      "target_nll_decrease_count": 8,
+      "target_raw_change_count": 7
+    }
+  },
+  "semantic_judge_coverage": 32,
+  "semantic_judge_parse_invalid": 0,
+  "status": "M3BENCH_GPU_INTEGRATION_QUALIFICATION_COMPLETE"
+}
