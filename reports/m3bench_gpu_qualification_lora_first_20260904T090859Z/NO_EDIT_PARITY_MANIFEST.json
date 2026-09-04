@@ -1,0 +1,18 @@
+{
+  "deduplicated_query_count": 414,
+  "private_inputs_sha256": "f62a00be757d65ca12d160f3a9f18316eb9f8a0169b20229c926b54b3403aaff",
+  "schema_version": "m3bench-no-edit-parity-public-manifest-v1",
+  "selection": {
+    "T0": {"occurrences": 179, "requested": "all"},
+    "T1G": {"occurrences": 64, "requested": 64},
+    "T1L": {"occurrences": 59, "requested": "all"},
+    "T2G": {"occurrences": 64, "requested": 64},
+    "T2L": {"occurrences": 64, "requested": 64},
+    "T3G": {"occurrences": 10, "requested": "all"},
+    "T3L": {"occurrences": 1, "requested": "all"},
+    "T4G": {"occurrences": 64, "requested": 64},
+    "T4L": {"occurrences": 76, "requested": "all"}
+  },
+  "status": "FROZEN_BEFORE_GPU_OUTPUT",
+  "token_id_evidence_policy": "fresh exact-official runtime is the token-ID oracle; frozen canonical raw anchors decoded and normalized text"
+}

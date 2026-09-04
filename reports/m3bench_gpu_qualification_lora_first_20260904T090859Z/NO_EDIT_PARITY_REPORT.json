@@ -1,0 +1,24 @@
+{
+  "canary_query_count": 414,
+  "empty_or_error_count": 0,
+  "formal_vs_fresh_official": {
+    "decoded_text_exact": 414,
+    "image_sha_exact": 414,
+    "normalized_text_exact": 414,
+    "prompt_token_ids_exact": 414,
+    "raw_token_ids_exact": 414,
+    "total": 414
+  },
+  "frozen_canonical_vs_fresh": {
+    "decoded_text_exact": 402,
+    "mismatch_count": 12,
+    "normalized_text_exact": 402,
+    "semantic_verdict_preserved_by_exact_output": 402,
+    "total": 414
+  },
+  "frozen_prompt_token_ids_available": false,
+  "frozen_raw_token_ids_available": false,
+  "private_machine_report_sha256": "b4d03512e886205d887cf6b1480e70b9e9c96afbad537b00c5c75a519fe2b656",
+  "schema_version": "m3bench-no-edit-parity-public-report-v1",
+  "status": "M3BENCH_GPU_GATE_BLOCKED__NO_EDIT_PARITY_MISMATCH__RUNTIME"
+}
