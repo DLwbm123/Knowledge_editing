@@ -11,6 +11,7 @@ from scripts.m3bench_static_catalog_v3 import T5_STATUS, select_runtime, t0_filt
 from scripts.run_semantic_judge_v3 import PACKET_FIELDS, parse_boolean, parse_vote
 from scripts.m3bench_checkpoint_runtime_v3 import LLAVA_MED_COMMIT, MODEL_FILES, MODEL_SHA, VISION_FILES, VISION_SHA
 from scripts.m3bench_runtime_canary_v3 import swap_map
+from scripts.m3bench_runtime_compare_v3 import opaque_id
 
 
 class DataRuntimeFinalizationV3Tests(unittest.TestCase):
@@ -55,6 +56,11 @@ class DataRuntimeFinalizationV3Tests(unittest.TestCase):
     def test_runtime_output_parity(self):
         audit = {"checkpoint_identity_verified": True, "native_runtime_stable": True, "official_prompt_image_generation": True, "no_runtime_errors": True, "normalized_parity": .995, "semantic_parity": .995, "source_accuracy": 0.0}
         self.assertEqual(select_runtime(audit), "runtime_a_official_parity")
+
+    def test_runtime_compare_ids_are_blind(self):
+        first, second = opaque_id("a", "private-query"), opaque_id("b", "private-query")
+        self.assertNotEqual(first, second)
+        self.assertNotIn("private-query", first + second)
 
     def test_runtime_swap_selection_is_score_independent(self):
         rows = [{"query_id": value, "image_path": value + ".png"} for value in ("a", "b", "c")]
