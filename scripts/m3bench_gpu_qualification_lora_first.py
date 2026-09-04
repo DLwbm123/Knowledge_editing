@@ -50,6 +50,7 @@ def write_new(path: Path, value: object, *, jsonl: bool = False) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(text, encoding="utf-8")
     os.replace(temporary, path)
+    os.chmod(path, 0o444)
 
 
 def event_probe_occurrences(events: list[dict], task: str) -> list[dict]:
