@@ -13,6 +13,7 @@ from scripts.m3bench_checkpoint_runtime_v3 import LLAVA_MED_COMMIT, MODEL_FILES,
 from scripts.m3bench_runtime_canary_v3 import swap_map
 from scripts.m3bench_runtime_compare_v3 import opaque_id
 from scripts.m3bench_base_inference_v3 import merged_rows, shard_rows
+from scripts.m3bench_data_runtime_finalize_v3 import anchor_task, lineage_relation_id
 
 
 class DataRuntimeFinalizationV3Tests(unittest.TestCase):
@@ -122,6 +123,15 @@ class DataRuntimeFinalizationV3Tests(unittest.TestCase):
 
     def test_semantic_judge_packet_is_method_blind(self):
         self.assertEqual(PACKET_FIELDS, {"opaque_query_id", "question", "gold_answer", "raw_base_answer", "adjudication_pass"})
+
+    def test_final_anchor_cohort_keeps_only_required_precondition(self):
+        edit = {"query_id": "e", "lineage": [{"relation_id": "legacy-e"}]}
+        inventory = {key: {"dataset": "d", "image_id": key} for key in ("e", "p1", "p2")}
+        relations = [{"legacy_edit_id": "legacy-e", "relation_id": "r", "task": "T1L", "members": [{"query_id": "p1"}, {"query_id": "p2"}]}]
+        _, formal, manifest = anchor_task("T1L", relations, {"legacy-e": edit}, {"e": False, "p1": True, "p2": False}, inventory)
+        self.assertEqual(lineage_relation_id(edit), "legacy-e")
+        self.assertEqual(formal[0]["probe_query_ids"], ["p1"])
+        self.assertEqual(manifest["eligible_probe_count"], 1)
 
 
 if __name__ == "__main__":
