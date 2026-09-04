@@ -251,7 +251,7 @@ def freeze_command(args: argparse.Namespace) -> None:
         audit.append({"candidate_id": row["candidate_id"], "edit_query_id": row["edit_query_id"], "probe_query_id": row["probe_query_id"], "question_a_base_correct": a_correct, "question_b_base_correct": b_correct, "eligible": eligible, "reason": reason})
         queue.append({key: row[key] for key in ("candidate_id", "image_id", "relative_image_path", "image_sha256", "lesion_a", "question_a", "lesion_b", "question_b", "review_flags")})
         if eligible:
-            config_hash = a.get("generation_config_sha256", a.get("config_hash"))
+            config_hash = a.get("runtime_config_sha256", a.get("generation_config_sha256", a.get("config_hash")))
             if not config_hash:
                 raise RuntimeError("T4L base verdict is missing generation config binding")
             formal.append({**row, "task": "T4L", "event_key": f"T4L:{row['candidate_id']}", "expected_behavior": "no_change", "base_config_hash": config_hash})
