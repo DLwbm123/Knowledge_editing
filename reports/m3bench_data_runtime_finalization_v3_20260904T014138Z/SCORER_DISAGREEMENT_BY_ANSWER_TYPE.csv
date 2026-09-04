@@ -1,0 +1,5 @@
+group,total,legacy_true_semantic_false,legacy_false_semantic_true,public_true_semantic_false,public_false_semantic_true
+binary,3915,0,2254,208,109
+free_text,1903,0,147,0,143
+numeric,341,0,167,1,0
+short_entity,4929,0,1899,289,238

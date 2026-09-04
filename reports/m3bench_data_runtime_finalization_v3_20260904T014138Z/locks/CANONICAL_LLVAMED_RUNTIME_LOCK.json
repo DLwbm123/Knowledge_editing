@@ -1,0 +1,19 @@
+{
+  "generation": {
+    "batch_size": 1,
+    "do_sample": false,
+    "max_new_tokens": 1024,
+    "num_beams": 1,
+    "temperature": 0,
+    "use_cache": true
+  },
+  "llava_med_code_commit": "30697ca50b5c29a8e955c99330b259776aef27b9",
+  "model_snapshot_sha": "91bb16c122001ddc9cf1fd36ce1dae09448943a2",
+  "parity": {
+    "decoded_parity": 0.9750566893424036,
+    "normalized_parity": 0.9750566893424036,
+    "semantic_parity": 0.9931972789115646
+  },
+  "selected_runtime": "runtime_b_official_native",
+  "vision_snapshot_sha": "ce19dc912ca5cd21c8a653c79e251e808ccabcd1"
+}

@@ -1,0 +1,20 @@
+{
+  "correct_count": 4467,
+  "duplicate": 0,
+  "incorrect_count": 6621,
+  "invalid_schema": 0,
+  "judge_config_sha256": "77260a1a994f72d72155a43367d3fc4fe5779502735b1e24a0b96684d081d4bd",
+  "judge_model": "Qwen/Qwen3-32B-AWQ",
+  "judge_prompt_sha256": "958bdfa67d8f7f08c0d9aad95d5a8ebdbc8f2a087d6417e24b5af10ad488567d",
+  "missing": 0,
+  "prediction_sha256": "5b875d726e9780316f19261b0f76108844ac361e68f5dfac1549b3fdb2d697b2",
+  "query_count": 11088,
+  "route_sha256": "b86a380bf5b24e907c5b53e3313140dbeedb42105f9956eab54da744fb077434",
+  "runtime_lock_sha256": "bef5219e90bdfd7bd079423c881881989882a7e9d0fc0bdd3157ce7fdc812c2d",
+  "semantic_judge_query_coverage": 11088,
+  "semantic_judge_vote_count": 16149,
+  "status": "BASE_VERDICT_V3_FROZEN",
+  "third_pass_count": 0,
+  "verdict_count": 11088,
+  "verdict_sha256": "4aacf169afc57c543efc660054efb6a0de9b7583077e75ae34b4fc5281976f77"
+}
