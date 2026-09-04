@@ -111,9 +111,17 @@ def merge_command(args: argparse.Namespace) -> None:
     if any(row.get("error") or row.get("empty") for row in rows):
         raise RuntimeError("canonical raw contains errors or empty answers")
     args.output_dir.mkdir(parents=True)
+    shard_dir = args.output_dir / "SHARD_MANIFESTS"
+    shard_dir.mkdir()
     predictions = args.output_dir / "BASE_PREDICTIONS_CANONICAL.jsonl"
     atomic(predictions, "".join(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n" for row in rows), new=True)
     manifests = [json.loads(path.read_text(encoding="utf-8")) for path in args.shard_manifests]
+    for manifest in manifests:
+        atomic(
+            shard_dir / f"shard_{manifest['shard_index']}.json",
+            json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+            new=True,
+        )
     runtime = json.loads(args.runtime_info.read_text(encoding="utf-8"))
     checkpoint = json.loads(args.checkpoint_lock.read_text(encoding="utf-8"))
     aggregate = {
