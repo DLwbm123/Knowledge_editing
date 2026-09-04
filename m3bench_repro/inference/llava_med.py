@@ -234,6 +234,12 @@ class LlavaMedAdapter(VLMAdapter):
         self, image_path: str | Path, question: str, generation_config: dict[str, Any]
     ) -> GenerationResult:
         batch = self.prepare_inputs(image_path, question)
+        return self.generate_prepared_with_result(batch, generation_config)
+
+    def generate_prepared_with_result(
+        self, batch: dict[str, Any], generation_config: dict[str, Any]
+    ) -> GenerationResult:
+        """Generate from an already prepared batch when prompt IDs must be retained."""
         kwargs = {
             key: value
             for key, value in generation_config.items()
