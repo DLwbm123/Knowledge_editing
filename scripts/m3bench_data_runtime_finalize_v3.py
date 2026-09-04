@@ -65,7 +65,10 @@ def unique_members(rows: list[dict]) -> list[dict]:
 
 
 def lineage_relation_id(row: dict) -> str:
-    values = {item.get("relation_id") for item in row.get("lineage", []) if item.get("relation_id")}
+    values = {
+        item.get("relation_id") for item in row.get("lineage", [])
+        if item.get("source_task") == "T0" and item.get("relation_id")
+    }
     if len(values) != 1:
         raise RuntimeError("T0 candidate must bind exactly one legacy edit ID")
     return values.pop()

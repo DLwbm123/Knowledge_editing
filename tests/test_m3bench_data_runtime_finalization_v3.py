@@ -125,7 +125,7 @@ class DataRuntimeFinalizationV3Tests(unittest.TestCase):
         self.assertEqual(PACKET_FIELDS, {"opaque_query_id", "question", "gold_answer", "raw_base_answer", "adjudication_pass"})
 
     def test_final_anchor_cohort_keeps_only_required_precondition(self):
-        edit = {"query_id": "e", "lineage": [{"relation_id": "legacy-e"}]}
+        edit = {"query_id": "e", "lineage": [{"source_task": "T0", "relation_id": "legacy-e"}, {"source_task": "T1L", "relation_id": "probe"}]}
         inventory = {key: {"dataset": "d", "image_id": key} for key in ("e", "p1", "p2")}
         relations = [{"legacy_edit_id": "legacy-e", "relation_id": "r", "task": "T1L", "members": [{"query_id": "p1"}, {"query_id": "p2"}]}]
         _, formal, manifest = anchor_task("T1L", relations, {"legacy-e": edit}, {"e": False, "p1": True, "p2": False}, inventory)
