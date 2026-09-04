@@ -1,0 +1,16 @@
+{
+  "all_required_checks_100_percent": true,
+  "check_pass_counts": {
+    "decoded": 412,
+    "empty_error_zero": 412,
+    "image_sha256": 412,
+    "normalized": 412,
+    "prompt_token_ids": 412,
+    "query_id": 412,
+    "raw_generated_token_ids": 412
+  },
+  "mismatches": [],
+  "query_count": 412,
+  "schema_version": "m3bench-g1r-v2-report-v1",
+  "status": "G1R_PASS__CURRENT_STACK_V4_CANONICAL"
+}
