@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -13,6 +14,17 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
 
 
 class CurrentStackV4Tests(unittest.TestCase):
+    def test_g1r_infer_does_not_require_base_shards(self):
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {"M3BENCH_FORMAL_AUTHORIZED_CUDA_VISIBLE_DEVICES": "2"}):
+            root = Path(directory)
+            write_jsonl(root / "inputs.jsonl", [{"query_id": "a"}])
+            (root / "manifest.json").write_text("{}", encoding="utf-8")
+            write_jsonl(root / "output.jsonl", [{"query_id": "a"}])
+            v4.infer(argparse.Namespace(
+                inputs=root / "inputs.jsonl", manifest=root / "manifest.json",
+                output=root / "output.jsonl", mode="g1r",
+            ))
+
     def test_merge_reuses_only_exact_raw_and_rejudges_every_change(self):
         with tempfile.TemporaryDirectory() as directory, patch.object(v4, "EXPECTED_QUERY_COUNT", 2):
             root = Path(directory)

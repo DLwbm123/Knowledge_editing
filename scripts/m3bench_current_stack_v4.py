@@ -202,9 +202,10 @@ def infer(args: argparse.Namespace) -> None:
     inputs = read_jsonl(args.inputs)
     manifest = read_json(args.manifest)
     physical_gpu = int(os.environ["M3BENCH_FORMAL_AUTHORIZED_CUDA_VISIBLE_DEVICES"])
-    shard = manifest["shards"].get(str(physical_gpu))
-    if args.mode == "base" and (not shard or shard["count"] != len(inputs) or shard["input_sha256"] != sha256(args.inputs)):
-        raise RuntimeError("base V4 shard lock mismatch")
+    if args.mode == "base":
+        shard = manifest["shards"].get(str(physical_gpu))
+        if not shard or shard["count"] != len(inputs) or shard["input_sha256"] != sha256(args.inputs):
+            raise RuntimeError("base V4 shard lock mismatch")
     partial = args.output.with_suffix(args.output.suffix + ".partial")
     if args.output.exists():
         done = read_jsonl(args.output)
