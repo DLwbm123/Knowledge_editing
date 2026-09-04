@@ -121,6 +121,7 @@ class EditorRecord:
     relative_image_path: str
     formal_sequence_position: int
     question_type: str
+    router_positive_source: str = "frozen_official_rephrase"
 
     @classmethod
     def from_dict(cls, row: dict[str, Any]) -> "EditorRecord":
@@ -134,6 +135,7 @@ class EditorRecord:
             relative_image_path=row["relative_image_path"],
             formal_sequence_position=int(row["formal_sequence_position"]),
             question_type=row["question_type"],
+            router_positive_source=row.get("router_positive_source", "frozen_official_rephrase"),
         )
 
 
@@ -280,6 +282,7 @@ class LlavaMedEditorRuntime:
         model_path: Path = MODEL_PATH,
         vision_path: Path = VISION_PATH,
         generation_config_path: Path | None = None,
+        loader_mode: str = "project",
     ):
         self.device = torch.device(device)
         self.run_root = Path(run_root)
@@ -288,7 +291,12 @@ class LlavaMedEditorRuntime:
         self.generation_config_path = Path(
             generation_config_path or FROZEN_GENERATION_CONFIG
         )
-        self.adapter = LlavaMedAdapter(self.model_path, self.vision_path, device=device)
+        self.adapter = LlavaMedAdapter(
+            self.model_path,
+            self.vision_path,
+            device=device,
+            load_mode=loader_mode,
+        )
         self.generation_config = json.loads(self.generation_config_path.read_text(encoding="utf-8"))
         self.inventory: dict[str, Any] | None = None
         self.target_lock: dict[str, Any] | None = None

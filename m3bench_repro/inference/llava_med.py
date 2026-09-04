@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import inspect
+import os
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -117,10 +118,20 @@ class LlavaMedAdapter(VLMAdapter):
     conversation_mode = "mistral_instruct"
     generation_sequence_contract = GenerationSequenceContract.CONTINUATION_ONLY
 
-    def __init__(self, model_path: str | Path, vision_tower_path: str | Path, device: str = "cuda:0"):
+    def __init__(
+        self,
+        model_path: str | Path,
+        vision_tower_path: str | Path,
+        device: str = "cuda:0",
+        *,
+        load_mode: str = "project",
+    ):
+        if load_mode not in {"project", "official_native"}:
+            raise ValueError(f"unknown LLaVA-Med load mode: {load_mode}")
         self.model_path = Path(model_path)
         self.vision_tower_path = Path(vision_tower_path)
         self.device = torch.device(device)
+        self.load_mode = load_mode
         self.tokenizer = self.model = self.image_processor = None
 
     def load(self) -> None:
@@ -131,8 +142,21 @@ class LlavaMedAdapter(VLMAdapter):
 
         if not self.model_path.is_dir() or not self.vision_tower_path.is_dir():
             raise FileNotFoundError("LLaVA-Med checkpoint or local vision-tower cache is absent")
-        install_llava_mistral_transformers_compat(LlavaMistralForCausalLM)
         disable_torch_init()
+        install_llava_mistral_transformers_compat(LlavaMistralForCausalLM)
+        if self.load_mode == "official_native":
+            from llava.mm_utils import get_model_name_from_path
+            from llava.model.builder import load_pretrained_model
+
+            os.environ.setdefault("HF_HUB_OFFLINE", "1")
+            os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+            os.environ["LLAVA_MED_VISION_TOWER_PATH"] = str(self.vision_tower_path)
+            self.tokenizer, self.model, self.image_processor, _ = load_pretrained_model(
+                str(self.model_path), None, get_model_name_from_path(str(self.model_path)),
+                device=str(self.device),
+            )
+            self.model.eval()
+            return
         config = AutoConfig.from_pretrained(self.model_path, local_files_only=True)
         config.mm_vision_tower = str(self.vision_tower_path)
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_path, use_fast=False, local_files_only=True)

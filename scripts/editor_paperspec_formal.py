@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import os
+import subprocess
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,7 +25,6 @@ from m3bench_repro.editors.routing import route_dict_equal
 
 
 METHODS = ("lora", "grace", "balancedit", "belora")
-EXPECTED_GPU_UUID = "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b"
 DEFAULT_RECORDS_PATH = "inputs/frozen/FORMAL_EDITOR_RECORDS_200.jsonl"
 DEFAULT_SEQUENCE_LABEL = "M3BENCH_FORMAL_ORIGINAL_200"
 
@@ -148,7 +148,12 @@ def runtime_environment(device: str) -> dict[str, Any]:
 def assert_authorized_device() -> None:
     override_name = "M3BENCH_FORMAL_AUTHORIZED_CUDA_VISIBLE_DEVICES"
     expected_visible_device = os.environ.get(override_name, "2")
-    if expected_visible_device not in {"0", "1", "2"}:
+    allowed = {
+        value.strip()
+        for value in os.environ.get("M3BENCH_FORMAL_ALLOWED_CUDA_VISIBLE_DEVICES", "2,3").split(",")
+        if value.strip()
+    }
+    if expected_visible_device not in allowed:
         raise RuntimeError(f"invalid {override_name}={expected_visible_device!r}")
     if os.environ.get("CUDA_VISIBLE_DEVICES") != expected_visible_device:
         raise RuntimeError(
@@ -157,6 +162,17 @@ def assert_authorized_device() -> None:
         )
     if not torch.cuda.is_available() or torch.cuda.device_count() != 1:
         raise RuntimeError("formal runner requires exactly one visible CUDA device")
+    expected_uuid = os.environ.get("M3BENCH_FORMAL_EXPECTED_GPU_UUID")
+    if not expected_uuid:
+        raise RuntimeError("M3BENCH_FORMAL_EXPECTED_GPU_UUID is required")
+    actual_uuid = subprocess.check_output(
+        ["nvidia-smi", "--query-gpu=uuid", "--format=csv,noheader", "-i", expected_visible_device],
+        text=True,
+    ).strip()
+    if actual_uuid != expected_uuid:
+        raise RuntimeError(
+            f"formal runner GPU UUID mismatch for physical device {expected_visible_device}"
+        )
 
 
 def resolve_run_path(run: Path, value: str) -> Path:
@@ -191,6 +207,7 @@ def sequence_lock(run: Path, args: argparse.Namespace) -> dict[str, Any]:
         "records_sha256": sha256(resolve_run_path(run, args.records_path)),
         "model_lock_sha256": sha256(run / "locks/FORMAL_MODEL_AND_GENERATION_LOCK.json"),
         "method_config_bundle_sha256": sha256(run / "locks/FORMAL_METHOD_CONFIG_BUNDLE.json"),
+        "canonical_runtime_lock_sha256": sha256(run / "locks/CANONICAL_LLVAMED_RUNTIME_LOCK.json"),
         "code_sha256": {str(path.relative_to(root)): sha256(path) for path in code_paths},
     }
 
@@ -207,26 +224,87 @@ def load_catalog(run: Path) -> dict[str, list[dict[str, Any]]]:
     return result
 
 
+def normalized_generation_contract(value: dict[str, Any]) -> dict[str, Any]:
+    result = {
+        key: value.get(key)
+        for key in ("batch_size", "do_sample", "max_new_tokens", "num_beams", "temperature", "use_cache")
+    }
+    if result["do_sample"] is False and result["temperature"] is None:
+        result["temperature"] = 0
+    return result
+
+
+def normalized_inventory_contract(value: dict[str, Any]) -> dict[str, Any]:
+    """Keep model topology immutable while ignoring host-specific provenance fields."""
+    linears = [
+        {key: item.get(key) for key in (
+            "path", "block", "projection", "in_features", "out_features",
+            "bias", "parameter_count", "dtype",
+        )}
+        for item in value.get("candidate_internal_linears", [])
+    ]
+    return {
+        key: value.get(key)
+        for key in (
+            "model_class", "language_block_count", "language_blocks",
+            "final_block_path", "final_mlp_path", "projector_candidates",
+            "projector_path", "vision_encoder_candidates", "vision_encoder_path",
+            "model_dtype", "total_model_parameters",
+        )
+    } | {"candidate_internal_linears": linears}
+
+
+def normalized_target_contract(value: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "methods": {
+            method: value.get(method)
+            for method in METHODS
+        },
+        "projector_excluded": value.get("projector_excluded"),
+        "vision_encoder_excluded": value.get("vision_encoder_excluded"),
+        "target_lists_sha256": value.get("target_lists_sha256"),
+    }
+
+
 def load_runtime(run: Path, device: str) -> LlavaMedEditorRuntime:
+    canonical_runtime = read_json(run / "locks/CANONICAL_LLVAMED_RUNTIME_LOCK.json")
+    if canonical_runtime.get("selected_runtime") != "runtime_b_official_native":
+        raise RuntimeError("formal runner requires the frozen official-native runtime")
+    generation_path = run / "inputs/frozen/llava_med_generation_frozen.json"
+    if normalized_generation_contract(read_json(generation_path)) != canonical_runtime.get("generation"):
+        raise RuntimeError("formal generation config differs from the canonical runtime lock")
     runtime = LlavaMedEditorRuntime(
         device=device,
         run_root=run,
-        generation_config_path=run / "inputs/frozen/llava_med_generation_frozen.json",
+        generation_config_path=generation_path,
+        loader_mode="official_native",
     )
     runtime.load_frozen_backbone(seed=20260828)
     inventory, target_lock = runtime.resolve_module_inventory(freeze=False)
     expected_inventory = read_json(run / "inputs/frozen/LLAVA_MED_MODULE_INVENTORY.json")
     expected_targets = read_json(run / "inputs/frozen/LLAVA_MED_EDIT_TARGET_LOCK.json")
-    if canonical_sha256(inventory) != canonical_sha256(expected_inventory):
+    if normalized_inventory_contract(inventory) != normalized_inventory_contract(expected_inventory):
         raise RuntimeError("formal module inventory differs from frozen parent")
-    if canonical_sha256(target_lock) != canonical_sha256(expected_targets):
+    if normalized_target_contract(target_lock) != normalized_target_contract(expected_targets):
         raise RuntimeError("formal target lock differs from frozen parent")
     return runtime
 
 
-def create_formal_editor(method: str, runtime: LlavaMedEditorRuntime, output: Path, *, sequential: bool) -> PaperSpecEditor:
+def create_formal_editor(
+    method: str,
+    runtime: LlavaMedEditorRuntime,
+    output: Path,
+    *,
+    run: Path,
+    sequential: bool,
+) -> PaperSpecEditor:
     state_store = output / "state_store" if sequential and method == "balancedit" else None
-    return create_editor(method, runtime, balancedit_inactive_store_dir=state_store)
+    editor = create_editor(method, runtime, balancedit_inactive_store_dir=state_store)
+    expected = read_json(run / "locks/FORMAL_METHOD_CONFIG_BUNDLE.json")["method_configs"][method]
+    expected_hash = expected.get("config_sha256")
+    if expected_hash != canonical_sha(editor.config_lock()):
+        raise RuntimeError(f"{method} runtime config differs from the frozen method bundle")
+    return editor
 
 
 def editor_empty(editor: PaperSpecEditor, method: str) -> dict[str, Any]:
@@ -358,6 +436,138 @@ def generate_probe(editor: PaperSpecEditor, row: dict[str, Any], generation_lock
     }
 
 
+def load_single_events(run: Path, task: str) -> list[dict[str, Any]]:
+    rows = [
+        row
+        for row in read_jsonl(run / "inputs/frozen/FORMAL_SINGLE_EVENT_CATALOG.jsonl")
+        if row["task"] == task
+    ]
+    expected = read_json(run / "locks/FORMAL_EXPECTED_COUNTS.json")["single"][
+        "events_per_task_per_method"
+    ][task]
+    positions = [int(row["event_position"]) for row in rows]
+    if len(rows) != expected or positions != list(range(1, expected + 1)):
+        raise RuntimeError(f"{task} single-event catalog lock failed")
+    if len({row["event_id"] for row in rows}) != len(rows):
+        raise RuntimeError(f"{task} single-event IDs are not unique")
+    return rows
+
+
+def command_single_events(args: argparse.Namespace) -> None:
+    assert_authorized_device()
+    run, output = Path(args.run_root), Path(args.output_dir)
+    if output.exists():
+        raise RuntimeError(f"single-event chunk output already exists: {output}")
+    events = load_single_events(run, args.task)
+    if args.start < 1 or args.end > len(events) or args.end < args.start or args.end - args.start + 1 > 25:
+        raise ValueError("single-event chunk must be a valid <=25-event interval")
+    selected = events[args.start - 1 : args.end]
+    output.mkdir(parents=True)
+    generation_lock_hash = sha256(run / "locks/FORMAL_MODEL_AND_GENERATION_LOCK.json")
+    runtime = load_runtime(run, args.device)
+    editor = create_formal_editor(args.method, runtime, output, run=run, sequential=False)
+    environment = runtime_environment(args.device)
+    chunk_base_before = full_base_hash(runtime)
+    artifacts = []
+    started = time.perf_counter()
+    for event in selected:
+        position = int(event["event_position"])
+        record = EditorRecord.from_dict(event["edit_record"])
+        event_dir = output / f"event_{position:04d}"
+        event_dir.mkdir()
+        empty_before = editor_empty(editor, args.method)
+        if not empty_before["pass"]:
+            raise RuntimeError(f"nonempty editor state before event {position}")
+        pre_nll = editor.score_target_nll(record)
+        event_started = time.perf_counter()
+        with runtime.peak_memory() as peak:
+            edit = editor.apply_edit(record)
+            post_nll = editor.score_target_nll(record)
+            state_summary = editor.state_summary()
+            state = save_state_atomic(
+                editor,
+                args.method,
+                event_dir / ("editor_state" if args.method == "lora" else "editor_state.pt"),
+            )
+            outputs = [generate_probe(editor, row, generation_lock_hash) for row in event["probes"]]
+        base_after_edit = editor.base_integrity()
+        editor.reset_editor_state()
+        empty_after = editor_empty(editor, args.method)
+        base_after_reset = editor.base_integrity()
+        if not empty_after["pass"] or not base_after_edit["unchanged"] or not base_after_reset["unchanged"]:
+            raise RuntimeError(f"state isolation/base integrity failure at event {position}")
+        report = {
+            "schema_version": "m3bench-formal-single-event-raw-v1",
+            "created_at_utc": utc_now(),
+            "status": "PASS",
+            "method": args.method,
+            "mode": "single",
+            "task": args.task,
+            "event_position": position,
+            "event_id": event["event_id"],
+            "edit_record_id": record.record_id,
+            "router_positive_source": event["edit_record"].get("router_positive_source"),
+            "pre_target_nll": pre_nll,
+            "post_target_nll": post_nll,
+            "edit": edit,
+            "editor_state": state,
+            "state_summary": state_summary,
+            "base_integrity_after_edit": base_after_edit,
+            "base_integrity_after_reset": base_after_reset,
+            "empty_state_before": empty_before,
+            "empty_state_after": empty_after,
+            "generation_lock_hash": generation_lock_hash,
+            "raw_outputs": outputs,
+            "raw_output_count": len(outputs),
+            "runtime_seconds": time.perf_counter() - event_started,
+            "peak_gpu_memory": peak,
+            "exit_status": "success",
+            "semantic_metrics_computed": False,
+        }
+        report_path = event_dir / "raw_event.json"
+        write_frozen_json(report_path, report)
+        artifacts.append({
+            "event_position": position,
+            "event_id": event["event_id"],
+            "report_sha256": sha256(report_path),
+            "state_sha256": state["sha256"],
+            "raw_output_count": len(outputs),
+        })
+        os.chmod(event_dir, 0o555)
+        torch.cuda.empty_cache()
+    chunk_base_after = full_base_hash(runtime)
+    checks = {
+        "event_count_exact": len(artifacts) == len(selected),
+        "event_positions_exact": [item["event_position"] for item in artifacts]
+        == list(range(args.start, args.end + 1)),
+        "base_full_hash_exact": chunk_base_before == chunk_base_after,
+        "all_raw_counts_positive": all(item["raw_output_count"] > 0 for item in artifacts),
+        "base_sentinel_unchanged": editor.base_integrity()["unchanged"],
+        "editor_empty_at_end": editor_empty(editor, args.method)["pass"],
+    }
+    manifest = {
+        "schema_version": "m3bench-formal-single-event-chunk-manifest-v1",
+        "created_at_utc": utc_now(),
+        "status": "PASS" if all(checks.values()) else "FAIL",
+        "method": args.method,
+        "task": args.task,
+        "start": args.start,
+        "end": args.end,
+        "checks": checks,
+        "events": artifacts,
+        "raw_output_count": sum(item["raw_output_count"] for item in artifacts),
+        "runtime_seconds": time.perf_counter() - started,
+        "environment": environment,
+        "semantic_metrics_computed": False,
+    }
+    write_frozen_json(output / "CHUNK_MANIFEST.json", manifest)
+    write_frozen_text(output / ("PASS" if manifest["status"] == "PASS" else "FAIL"), manifest["status"] + "\n")
+    os.chmod(output, 0o555)
+    print(json.dumps({"status": manifest["status"], "method": args.method, "task": args.task, "start": args.start, "end": args.end, "raw_outputs": manifest["raw_output_count"]}, indent=2))
+    if manifest["status"] != "PASS":
+        raise SystemExit(1)
+
+
 def command_single_chunk(args: argparse.Namespace) -> None:
     assert_authorized_device()
     run, output = Path(args.run_root), Path(args.output_dir)
@@ -376,7 +586,7 @@ def command_single_chunk(args: argparse.Namespace) -> None:
     catalog = load_catalog(run)
     generation_lock_hash = sha256(run / "locks/FORMAL_MODEL_AND_GENERATION_LOCK.json")
     runtime = load_runtime(run, args.device)
-    editor = create_formal_editor(args.method, runtime, output, sequential=False)
+    editor = create_formal_editor(args.method, runtime, output, run=run, sequential=False)
     environment = runtime_environment(args.device)
     chunk_base_before = full_base_hash(runtime)
     record_artifacts = []
@@ -598,7 +808,7 @@ def command_sequential_run(args: argparse.Namespace) -> None:
     catalog = load_catalog(run)
     generation_lock_hash = sha256(run / "locks/FORMAL_MODEL_AND_GENERATION_LOCK.json")
     runtime = load_runtime(run, args.device)
-    editor = create_formal_editor(args.method, runtime, output, sequential=True)
+    editor = create_formal_editor(args.method, runtime, output, run=run, sequential=True)
     environment = runtime_environment(args.device)
     base_full = full_base_hash(runtime)
     locked_sequence = sequence_lock(run, args)
@@ -803,7 +1013,7 @@ def command_sequential_replay(args: argparse.Namespace) -> None:
         return
     records = load_records(run, args.records_path, args.expected_record_count)
     runtime = load_runtime(run, args.device)
-    editor = create_formal_editor(args.method, runtime, output, sequential=True)
+    editor = create_formal_editor(args.method, runtime, output, run=run, sequential=True)
     locked_sequence = sequence_lock(run, args)
     final_position = args.final_prefix
     state_manifest = checkpoint_manifest_path(output, final_position)
@@ -867,6 +1077,16 @@ def parser() -> argparse.ArgumentParser:
     single.add_argument("--device", default="cuda:0")
     add_sequence_arguments(single)
     single.set_defaults(func=command_single_chunk)
+    events = sub.add_parser("single-events")
+    events.add_argument("--run-root", required=True)
+    events.add_argument("--output-dir", required=True)
+    events.add_argument("--method", choices=METHODS, required=True)
+    events.add_argument("--task", choices=("T0", "T1L", "T1G", "T2L", "T2G", "T3L", "T3G", "T4L", "T4G"), required=True)
+    events.add_argument("--start", type=int, required=True)
+    events.add_argument("--end", type=int, required=True)
+    events.add_argument("--device", default="cuda:0")
+    add_sequence_arguments(events)
+    events.set_defaults(func=command_single_events)
     sequential = sub.add_parser("sequential-run")
     sequential.add_argument("--run-root", required=True)
     sequential.add_argument("--output-dir", required=True)
