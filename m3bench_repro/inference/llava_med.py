@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import inspect
 import os
+from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -15,6 +16,21 @@ from transformers import AutoConfig, AutoTokenizer
 
 from m3bench_repro.models import VLMAdapter
 from .preprocessing import deterministic_process_image
+
+
+@contextmanager
+def redirect_official_vision_tower(tower_class: type[Any], local_path: Path):
+    """Keep the official checkout immutable while resolving its HF tower ID locally."""
+    original = tower_class.__init__
+
+    def local_init(instance: Any, _vision_tower: str, *args: Any, **kwargs: Any) -> None:
+        original(instance, str(local_path), *args, **kwargs)
+
+    tower_class.__init__ = local_init
+    try:
+        yield
+    finally:
+        tower_class.__init__ = original
 
 
 def install_llava_mistral_transformers_compat(model_class: type[Any]) -> bool:
@@ -156,14 +172,16 @@ class LlavaMedAdapter(VLMAdapter):
         if self.load_mode == "official_native":
             from llava.mm_utils import get_model_name_from_path
             from llava.model.builder import load_pretrained_model
+            from llava.model.multimodal_encoder.clip_encoder import CLIPVisionTower
 
             os.environ.setdefault("HF_HUB_OFFLINE", "1")
             os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
             os.environ["LLAVA_MED_VISION_TOWER_PATH"] = str(self.vision_tower_path)
-            self.tokenizer, self.model, self.image_processor, _ = load_pretrained_model(
-                str(self.model_path), None, get_model_name_from_path(str(self.model_path)),
-                device=str(self.device),
-            )
+            with redirect_official_vision_tower(CLIPVisionTower, self.vision_tower_path):
+                self.tokenizer, self.model, self.image_processor, _ = load_pretrained_model(
+                    str(self.model_path), None, get_model_name_from_path(str(self.model_path)),
+                    device=str(self.device),
+                )
             self.model.eval()
             return
         config = AutoConfig.from_pretrained(self.model_path, local_files_only=True)

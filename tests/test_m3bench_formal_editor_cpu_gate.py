@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from m3bench_repro.inference.llava_med import LlavaMedAdapter
+from m3bench_repro.inference.llava_med import LlavaMedAdapter, redirect_official_vision_tower
 from scripts.editor_paperspec_formal import (
     assert_authorized_device,
     assert_official_llavamed_source,
@@ -193,6 +193,19 @@ class FormalEditorCpuGateTests(unittest.TestCase):
     def test_invalid_loader_mode_is_rejected_without_loading(self):
         with self.assertRaises(ValueError):
             LlavaMedAdapter("model", "vision", load_mode="unknown")
+
+    def test_official_vision_tower_redirect_is_scoped(self):
+        calls = []
+
+        class Tower:
+            def __init__(self, path, *, delay_load=False):
+                calls.append((path, delay_load))
+
+        original = Tower.__init__
+        with redirect_official_vision_tower(Tower, Path("/frozen/vision")):
+            Tower("remote/id", delay_load=True)
+        self.assertIs(Tower.__init__, original)
+        self.assertEqual(calls, [("/frozen/vision", True)])
 
     def test_official_source_guard_runs_without_cuda(self):
         with tempfile.TemporaryDirectory() as directory:
