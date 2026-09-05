@@ -1,6 +1,6 @@
 # LoRA-Perf-v1 status
 
-Status: `LORA_PERF_CALIBRATION_RUNNING`
+Status: `LORA_PERF_DEV_SELECTED__QUAL_JUDGE_PENDING`
 
 - Frozen source baseline: `7f827a7f025d18a15da2602a9a0dd49eef3f153e`
 - Selection: frozen `LORA_DEV16_V2`; validation: frozen `LORA_QUAL16_V2`, exactly once after one DEV configuration is selected.
@@ -8,6 +8,10 @@ Status: `LORA_PERF_CALIBRATION_RUNNING`
 - The 2026-09-02 LoRA-strong traces are retained as historical evidence but are not reused as V4 validation: they predate the current V4 frozen cohorts and did not measure the required T1L/T1G/T2G panel.
 - The old paper-spec semantic qualification result is not a calibration prerequisite.
 
-No QUAL16 method output has been inspected or generated in this stage.
+DEV Judge coverage and strict schema passed at 3,765/3,765. The unique selected configuration is rank 16, alpha 16, all LM MLP gate/up/down projections, learning rate 5e-4, checkpoint 80:
 
-Launch state at 2026-09-05 UTC: DEV16 `lr=1e-4` is running on authorized GPU2, `lr=2e-4` is running on authorized GPU3, and `lr=5e-4` is queued behind the GPU2 exclusive lock. Results and semantic Judge decisions are pending.
+- T0 15/16; T1L macro 0.4143; T1G 0.8906; T2G 0.8906.
+- Target NLL decreased 16/16; empty/error 0; base unchanged 16/16.
+- Same-question, other-image edit-target copy rate 0.9205; this is reported as a limitation, not counted as visual-edit success.
+
+The single allowed QUAL16 generation has completed 16/16 mechanical checks on authorized GPU2. Its fixed semantic Judge is pending; no formal LoRA or MedTRACE GPU claim is made yet.
