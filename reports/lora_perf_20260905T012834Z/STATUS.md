@@ -1,6 +1,6 @@
 # LoRA-Perf-v1 status
 
-Status: `LORA_PERF_DEV_SELECTED__QUAL_JUDGE_PENDING`
+Status: `QUAL_VALIDATION_FAIL__FORMAL_LORA_PAUSED`
 
 - Frozen source baseline: `7f827a7f025d18a15da2602a9a0dd49eef3f153e`
 - Selection: frozen `LORA_DEV16_V2`; validation: frozen `LORA_QUAL16_V2`, exactly once after one DEV configuration is selected.
@@ -14,4 +14,6 @@ DEV Judge coverage and strict schema passed at 3,765/3,765. The unique selected 
 - Target NLL decreased 16/16; empty/error 0; base unchanged 16/16.
 - Same-question, other-image edit-target copy rate 0.9205; this is reported as a limitation, not counted as visual-edit success.
 
-The single allowed QUAL16 generation has completed 16/16 mechanical checks on authorized GPU2. Its fixed semantic Judge is pending; no formal LoRA or MedTRACE GPU claim is made yet.
+The single allowed QUAL16 run completed 16/16 mechanical checks and fixed Judge coverage was 255/255 with 255/255 schema-valid verdicts. It failed the unchanged readiness gate: T0 16/16, T1L macro 0.2000, T1G 1.0000, T2G 1.0000, target NLL decrease 16/16, empty/error 0, and same-question other-image edit-target copy rate 1.0000. T1L is below the required 0.25.
+
+Per protocol, this QUAL split will not be reused for tuning. Formal LoRA is paused, `LORA_DEVELOPMENT_READY__START_MEDTRACE` is not set, and no MedTRACE GPU result is claimed. The independently completed MedTRACE specification binding and CPU core remain available for review.

@@ -1,0 +1,2 @@
+profile_id,checkpoint,t0_correct,t0_total,t1l_macro,t1g,t2g,edit_target_copy_rate_same_question_other_image,target_nll_decrease,empty_or_error,trainable_parameters,runtime_seconds,readiness
+profile_ebf01ad24c7f,80,16,16,0.19999999999999998,1.0,1.0,1.0,16,0,28311552,511.17806819907855,False
