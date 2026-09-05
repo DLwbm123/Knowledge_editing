@@ -238,7 +238,6 @@ def train(args: argparse.Namespace) -> None:
         raise RuntimeError("optimizer boundary failure")
     primary = {"query_id": record.record_id, "question": record.question, "image_path": str(record.image_path)}
     canonical = make_canonical(runtime, primary, batch.target_token_ids)
-    short = make_canonical(runtime, primary | {"question": record.question + "\n\n" + SHORT_INSTRUCTION}, batch.target_token_ids)
     base_guard = runtime.base_guard
     if base_guard is None:
         raise RuntimeError("base guard missing")
@@ -330,6 +329,7 @@ def verify_candidate(args: argparse.Namespace) -> None:
     batch = runtime.build_edit_batch(record)
     primary = {"query_id": record.record_id, "question": record.question, "image_path": str(record.image_path)}
     canonical = make_canonical(runtime, primary, batch.target_token_ids)
+    short = make_canonical(runtime, primary | {"question": record.question + "\n\n" + SHORT_INSTRUCTION}, batch.target_token_ids)
     hook = MedTraceLayerHook(layer, expert)
     hook.attach()
     captured: list[torch.Tensor] = []
