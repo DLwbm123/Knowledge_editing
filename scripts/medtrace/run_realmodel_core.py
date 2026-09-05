@@ -315,6 +315,78 @@ def train(args: argparse.Namespace) -> None:
     write_json(args.out / "result.json", result)
 
 
+def verify_candidate(args: argparse.Namespace) -> None:
+    if args.out.exists():
+        raise FileExistsError(args.out)
+    event = selected_event(args.dev_manifest)
+    record = EditorRecord.from_dict(event["edit_record"])
+    runtime = load_real_runtime(args)
+    layer = runtime.get_module(LAYER)
+    saved = torch.load(args.checkpoint, map_location="cuda:0", weights_only=True)
+    expert = AsymmetricCPExpert(layer.in_features, layer.out_features, int(saved["rank"])).to("cuda:0")
+    expert.load_state_dict(saved["expert"])
+    batch = runtime.build_edit_batch(record)
+    primary = {"query_id": record.record_id, "question": record.question, "image_path": str(record.image_path)}
+    canonical = make_canonical(runtime, primary, batch.target_token_ids)
+    hook = MedTraceLayerHook(layer, expert)
+    hook.attach()
+    captured: list[torch.Tensor] = []
+    capture = layer.register_forward_pre_hook(lambda _module, values: captured.append(values[0].detach()))
+    try:
+        hook.set_teacher_routing(batch.labels)
+        with torch.no_grad():
+            score = runtime.score_target(batch)
+    finally:
+        capture.remove()
+    if len(captured) != 1:
+        raise RuntimeError("real activation capture failed")
+    activation = captured[0][:, -1:]
+    factorized = expert.residual(activation)
+    dense = expert.normalize_activation(activation) @ expert.materialize_dense().T
+    dense_error = float((factorized - dense).abs().max().item())
+    hook.set_generation_routing()
+    original = all_paths(runtime, canonical)
+    hook.clear_request_routing()
+    hook.detach()
+
+    reloaded = AsymmetricCPExpert(layer.in_features, layer.out_features, int(saved["rank"])).to("cuda:0")
+    reloaded.load_state_dict(saved["expert"])
+    replay_hook = MedTraceLayerHook(layer, reloaded)
+    replay_hook.attach()
+    replay_hook.set_generation_routing()
+    replay = all_paths(runtime, canonical)
+    replay_hook.clear_request_routing()
+    disabled = hf_trace(runtime, canonical)
+    replay_hook.detach()
+    base = next(row for row in read_jsonl(args.base_predictions) if row["query_id"] == record.record_id)
+    guard = runtime.base_guard.verify() if runtime.base_guard else None
+    passed = (
+        original["pass"]
+        and replay["pass"]
+        and original["hf"] == replay["hf"]
+        and score["first_target_token_rank"] == 1
+        and dense_error <= 1e-5
+        and disabled["token_ids"] == base["raw_generated_token_ids"]
+        and disabled["raw_output"] == base["model_answer_raw"]
+        and bool(guard and guard["unchanged"])
+    )
+    write_json(args.out, {
+        "status": "MEDTRACE_CP_ENGINEERING_PASS" if passed else "MEDTRACE_CP_ENGINEERING_FAIL",
+        "checkpoint": str(args.checkpoint),
+        "rank": int(saved["rank"]),
+        "step": int(saved["step"]),
+        "score": score,
+        "dense_factor_max_abs_error": dense_error,
+        "original_paths": original,
+        "reload_paths": replay,
+        "save_reload_generation_replay": original["hf"] == replay["hf"],
+        "disabled_restores_frozen_s0": disabled["token_ids"] == base["raw_generated_token_ids"] and disabled["raw_output"] == base["model_answer_raw"],
+        "base_guard": guard,
+    })
+    if not passed:
+        raise RuntimeError("MEDTRACE_CP_ENGINEERING_FAIL")
+
+
 def parser() -> argparse.ArgumentParser:
     value = argparse.ArgumentParser(description=__doc__)
     common = argparse.ArgumentParser(add_help=False)
@@ -330,9 +402,12 @@ def parser() -> argparse.ArgumentParser:
     run.add_argument("--steps", type=int, default=200)
     run.add_argument("--eval-every", type=int, default=20)
     run.add_argument("--out", type=Path, required=True)
+    verify = sub.add_parser("verify", parents=[common])
+    verify.add_argument("--checkpoint", type=Path, required=True)
+    verify.add_argument("--out", type=Path, required=True)
     return value
 
 
 if __name__ == "__main__":
     args = parser().parse_args()
-    (zero_effect if args.mode == "zero-effect" else train)(args)
+    {"zero-effect": zero_effect, "train": train, "verify": verify_candidate}[args.mode](args)
