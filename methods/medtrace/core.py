@@ -109,8 +109,8 @@ class MedTraceLayerHook:
         self.token_mask: torch.Tensor | None = None
         self.generation_routing = False
         self.generation_boundary: int | None = None
-        self.generation_trace: list[dict[str, int]] = []
-        self.last_generation_trace: tuple[dict[str, int], ...] = ()
+        self.generation_trace: list[dict[str, int | float]] = []
+        self.last_generation_trace: tuple[dict[str, int | float], ...] = ()
         self._handle = None
 
     def attach(self) -> None:
@@ -188,6 +188,8 @@ class MedTraceLayerHook:
         if mask is None or args[0].shape[:-1] != mask.shape:
             raise RuntimeError("assistant-only MedTRACE token mask does not match the layer activation")
         residual = self.expert.residual(args[0]).to(output.dtype)
+        if self.generation_routing:
+            self.generation_trace[-1]["active_residual_norm"] = float((residual * mask.to(residual.device).unsqueeze(-1)).float().norm().item())
         return output + residual * mask.to(output.device).unsqueeze(-1)
 
 
