@@ -31,6 +31,7 @@ Source-image, fact, and semantic-equivalence overlap are recorded independently.
 - Three T2G records are frozen question variants linked to the same edit. They are on-scope evaluation records, not calibration material.
 - All seven formal probes were already exposed by the zero-effect run and remain evaluation-only; none is called unseen.
 - The source rows, original/derived image lineage, image hashes, edit linkage, and frozen formal relation IDs were verified from the V4 static inventory and formal event records. Processed tensor hashes and V0.2 model-visible EqKeys are not present.
+- The complete record-level sidecar is private at `/remote-home/wangbomin/medtrace_runs/20260905T080754Z/MEDTRACE_SCOPE_SIDECAR_PRIVATE.json` (SHA-256 `4a9d362a955dac9e972576825ce6dd8f3a53a1d5a38943d701f80eac607ec59e`); the public manifest contains only aggregate counts, missing fields, and this lock hash.
 
 ## Exact blocker and minimum supplementation
 

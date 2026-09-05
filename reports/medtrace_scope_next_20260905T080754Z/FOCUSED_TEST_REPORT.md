@@ -28,6 +28,7 @@ Coverage includes:
 - Native and short requests: normalized literal target match and three-path token parity.
 - Reverse request order after reload: pass.
 - Eight-query zero-effect rerun: `MEDTRACE_ZERO_EFFECT_PASS`.
+- One-row vLLM Judge development run: output parsed, preserved `is_correct=true`, and produced a separate execution lock; no cross-backend bridge was run.
 - No retraining, rank search, full G1R, or 11,088-query base rerun was performed.
 
 Private prompts, answers, images, token sequences, checkpoint tensors, and raw Judge payloads remain on the experiment server.
