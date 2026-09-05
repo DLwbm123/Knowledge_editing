@@ -91,6 +91,7 @@ def main() -> None:
         gpu_memory_utilization=0.8,
         enforce_eager=True,
         generation_config="vllm",
+        guided_decoding_backend="xgrammar",
     )
     tokenizer = llm.get_tokenizer()
     prompts = [render(tokenizer, row) for row in rows]
@@ -101,7 +102,7 @@ def main() -> None:
         temperature=0,
         max_tokens=24,
         seed=0,
-        guided_decoding=GuidedDecodingParams(choice=CHOICES, backend="xgrammar"),
+        guided_decoding=GuidedDecodingParams(choice=CHOICES),
     )
     results = llm.generate(prompts, params, use_tqdm=False)
     output = []
