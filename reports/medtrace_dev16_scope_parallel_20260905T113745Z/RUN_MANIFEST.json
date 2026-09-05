@@ -1,0 +1,44 @@
+{
+  "schema_version": "medtrace-dev16-scope-parallel-public-run-manifest-v1",
+  "status": "READY_TO_LAUNCH",
+  "branch": "medtrace-dev16-scope-parallel-20260905T113745Z",
+  "start_commit": "b56b0633c030d4908bb67a21ae035aea2b61342c",
+  "execution_code_commit": "58093b1d2922e5c7e9601bdc968d72acafe3b924",
+  "method_labels": {
+    "track_a": "TIME_INSPIRED_CP_R4_DEV16_FORCED_ON",
+    "track_b": "MEDTRACE_NATIVE_TEXT_SCOPE_AUGMENTATION_PILOT"
+  },
+  "frozen_inputs": {
+    "dev16_private_inputs_sha256": "5a14dc5690b35501a0625dfed4e1c634d8e0c1e94019876dbfe127172a83c414",
+    "base_predictions_sha256": "b80d1ed97c86de2fc40f3ad5d52b0c95ea3a011024b15b0364da7940bd9bfc78",
+    "formal_probe_catalog_sha256": "7afbab4cd73d9018a17b9008a550fb247fbf23418543776df1be2b5ecacdd305",
+    "cpu_preflight_sha256": "7e95427cb6821f4192242c55300076fcb80020fba3ad072b1411fb0bdad599e8",
+    "historical_checkpoint_sha256": "f5186e8fd93064bfcd341bfa6000b3a990bd704c083b5f3430bae724b93a8d41",
+    "spec_v0_1_sha256": "f6c07541345c7033d68c20f4dcd4ab21f928c08ea09c9cdde815986ae3bfecbd",
+    "spec_v0_2_sha256": "0ba02155eb658201e9c0d140c6bcd811587b3a44af4923e2b72eebf3583d179c"
+  },
+  "track_a": {
+    "event_count": 16,
+    "gpu": 2,
+    "gpu_uuid": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b",
+    "seed_base": 20260905,
+    "maximum_steps_per_edit": 200,
+    "generation_check_interval": 20,
+    "training_generation_cap": 128,
+    "final_generation_cap": 1024
+  },
+  "track_b": {
+    "primary_edit_count": 1,
+    "source_census": "CPU",
+    "model_work_gpu": 3,
+    "gpu_uuid": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c",
+    "scope_scoring_started": false,
+    "execution_mode": "PENDING_SOURCE_CENSUS_AND_ROLE_FREEZE"
+  },
+  "private_output_artifact": "medtrace-dev16-scope-parallel-20260905T113745Z",
+  "historical_status_preserved": {
+    "lora": "QUAL_VALIDATION_FAIL",
+    "old_scope": "NOT_READY__NOT_RUN",
+    "old_training_seed": "UNKNOWN_NOT_INVENTED"
+  }
+}
