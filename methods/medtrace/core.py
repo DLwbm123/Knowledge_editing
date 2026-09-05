@@ -34,7 +34,8 @@ class AsymmetricCPExpert(nn.Module):
     def normalize_activation(self, activation: torch.Tensor) -> torch.Tensor:
         if activation.shape[-1] != self.d_in:
             raise ValueError(f"expected activation width {self.d_in}, got {activation.shape[-1]}")
-        return activation / (activation.float().square().mean(dim=-1, keepdim=True).sqrt().to(activation.dtype) + self.epsilon)
+        activation = activation.to(self.rho.dtype)
+        return activation / (activation.square().mean(dim=-1, keepdim=True).sqrt() + self.epsilon)
 
     @staticmethod
     def _columns(left: torch.Tensor, right: torch.Tensor) -> torch.Tensor:
@@ -83,6 +84,7 @@ class MedTraceLayerHook:
         self.layer, self.expert = layer, expert
         self.enabled = False
         self.token_mask: torch.Tensor | None = None
+        self.generation_routing = False
         self._handle = None
 
     def attach(self) -> None:
@@ -97,19 +99,37 @@ class MedTraceLayerHook:
 
     def set_request_routing(self, token_mask: torch.Tensor) -> None:
         self.token_mask = token_mask.bool()
+        self.generation_routing = False
+        self.enabled = True
+
+    def set_teacher_routing(self, labels: torch.Tensor, *, ignore_index: int = -100) -> None:
+        mask = torch.zeros_like(labels, dtype=torch.bool)
+        mask[:, :-1] = labels[:, 1:] != ignore_index
+        self.set_request_routing(mask)
+
+    def set_generation_routing(self) -> None:
+        self.token_mask = None
+        self.generation_routing = True
         self.enabled = True
 
     def clear_request_routing(self) -> None:
         self.enabled = False
         self.token_mask = None
+        self.generation_routing = False
 
     def _forward_hook(self, _module: nn.Module, args: tuple[torch.Tensor, ...], output: torch.Tensor) -> torch.Tensor:
         if not self.enabled:
             return output
-        if not args or self.token_mask is None or args[0].shape[:-1] != self.token_mask.shape:
+        if not args:
+            raise RuntimeError("MedTRACE hook did not receive a layer activation")
+        mask = self.token_mask
+        if self.generation_routing:
+            mask = torch.zeros(args[0].shape[:-1], dtype=torch.bool, device=args[0].device)
+            mask[..., -1] = True
+        if mask is None or args[0].shape[:-1] != mask.shape:
             raise RuntimeError("assistant-only MedTRACE token mask does not match the layer activation")
         residual = self.expert.residual(args[0]).to(output.dtype)
-        return output + residual * self.token_mask.to(output.device).unsqueeze(-1)
+        return output + residual * mask.to(output.device).unsqueeze(-1)
 
 
 @dataclass(frozen=True)
