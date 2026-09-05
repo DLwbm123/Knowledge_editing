@@ -373,6 +373,7 @@ def verify_candidate(args: argparse.Namespace) -> None:
     detached_short = hf_trace(runtime, short)
     base = next(row for row in read_jsonl(args.base_predictions) if row["query_id"] == record.record_id)
     guard = runtime.base_guard.verify() if runtime.base_guard else None
+    native_literal = normalize_medical_answer(original["hf"]["raw_output"]) == normalize_medical_answer(record.target)
     passed = (
         original["pass"]
         and original_short["pass"]
@@ -381,6 +382,7 @@ def verify_candidate(args: argparse.Namespace) -> None:
         and original["hf"] == replay["hf"]
         and original_short["hf"] == replay_short["hf"]
         and score["first_target_token_rank"] == 1
+        and native_literal
         and dense_error <= 1e-5
         and disabled["token_ids"] == base["raw_generated_token_ids"]
         and disabled["raw_output"] == base["model_answer_raw"]
@@ -400,6 +402,7 @@ def verify_candidate(args: argparse.Namespace) -> None:
         "reload_short_paths": replay_short,
         "save_reload_generation_replay": original["hf"] == replay["hf"],
         "save_reload_short_generation_replay": original_short["hf"] == replay_short["hf"],
+        "native_literal_normalized_target_match": native_literal,
         "short_literal_normalized_target_match": normalize_medical_answer(original_short["hf"]["raw_output"]) == normalize_medical_answer(record.target),
         "disabled_restores_frozen_s0": disabled["token_ids"] == base["raw_generated_token_ids"] and disabled["raw_output"] == base["model_answer_raw"],
         "short_disable_detach_identity": disabled_short == detached_short,
