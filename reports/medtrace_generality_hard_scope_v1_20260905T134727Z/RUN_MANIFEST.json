@@ -1,0 +1,34 @@
+{
+  "branch": "medtrace-generality-hard-scope-v1-20260905T134727Z",
+  "execution_code_commit": "80f131020f2323e59acd262fd8e7e5623b0b66f2",
+  "gpu_policy": {
+    "gpu1_used": false,
+    "track_a_gpu": 2,
+    "track_a_gpu_uuid": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b",
+    "track_b_gpu": 3,
+    "track_b_gpu_uuid": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c"
+  },
+  "schema_version": "medtrace-generality-hard-scope-run-manifest-public-v1",
+  "start_commit": "86c2036d4537793d803dfe982f6485cdbab9ce2c",
+  "status": "READY_FOR_CPU_DATA_FREEZE",
+  "track_a": {
+    "conditions": [
+      "CP_NATIVE_ORIGINAL",
+      "CP_NATIVE_CONTINUE_80",
+      "CP_NATIVE_PLUS_PARAPHRASE_80"
+    ],
+    "dev_edits": 16,
+    "new_paraphrases_per_edit": 4,
+    "new_optimizer_steps_per_condition_edit": 80
+  },
+  "track_b": {
+    "conditions": [
+      "ORIGINAL_Q_MATCHED_OUTPUT_FIT",
+      "BROAD_Q_MATCHED_OUTPUT_FIT",
+      "HARD_MIXED_Q_MATCHED_OUTPUT_FIT"
+    ],
+    "same_question_hard_groups": 13,
+    "same_image_challenge_rows": 12,
+    "same_fact_cross_language_rows_excluded_from_negatives": 1
+  }
+}
