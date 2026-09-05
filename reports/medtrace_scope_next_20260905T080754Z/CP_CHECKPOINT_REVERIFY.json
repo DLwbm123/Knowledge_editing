@@ -1,0 +1,74 @@
+{
+  "schema_version": "medtrace-cp-checkpoint-reverify-v1",
+  "status": "MEDTRACE_CP_ENGINEERING_PASS",
+  "scientific_scope": "single-edit forced-on expressivity; not intrinsic routing or benchmark performance",
+  "code": {
+    "training_commit": "737fd466888c2efcdf99a79f45561a6b12fe5ee5",
+    "reverification_commit": "952513e429804bd0388cfddef52834f5c4fb05a6"
+  },
+  "checkpoint": {
+    "rank": 4,
+    "step": 140,
+    "sha256": "f5186e8fd93064bfcd341bfa6000b3a990bd704c083b5f3430bae724b93a8d41",
+    "original_training_seed": "UNKNOWN_NOT_INVENTED",
+    "modified": false
+  },
+  "behavior": {
+    "native_literal_normalized_target_match": true,
+    "short_literal_normalized_target_match": true,
+    "answer_nll": 0.06048516929149628,
+    "target_content_nll": 0.06647900491952896,
+    "eos_template_tail_nll": 0.0005467826849780977,
+    "first_target_token_rank": 1,
+    "generated_token_count": 11
+  },
+  "request_orders": [
+    "fresh expert: native then short",
+    "reloaded expert: short then native"
+  ],
+  "paths": {
+    "native": {
+      "expanded_prompt_length": 603,
+      "first_active_predictor": 602,
+      "manual_no_cache_active_span_first": [602, 602],
+      "manual_no_cache_active_span_final": [602, 612],
+      "manual_cached_decode_active_span": [0, 0],
+      "hf_cached_decode_active_span": [0, 0],
+      "manual_no_cache_manual_cached_hf_token_parity": true
+    },
+    "short": {
+      "expanded_prompt_length": 620,
+      "first_active_predictor": 619,
+      "manual_no_cache_active_span_first": [619, 619],
+      "manual_no_cache_active_span_final": [619, 629],
+      "manual_cached_decode_active_span": [0, 0],
+      "hf_cached_decode_active_span": [0, 0],
+      "manual_no_cache_manual_cached_hf_token_parity": true
+    },
+    "fresh_and_reload_all_path_gates": true
+  },
+  "engineering": {
+    "save_reload_native_replay": true,
+    "save_reload_short_replay": true,
+    "disabled_restores_frozen_s0": true,
+    "short_disable_detach_identity": true,
+    "dense_factor_max_abs_error": 1.7881393432617188e-07,
+    "base_guard": {
+      "kind": "sampled_tensor_guard",
+      "sampled_tensor_count": 686,
+      "unchanged": true,
+      "changed_parameters": []
+    },
+    "eight_query_zero_effect": {
+      "status": "MEDTRACE_ZERO_EFFECT_PASS",
+      "frozen_base_match": true,
+      "four_state_exact_identity": true,
+      "canary_count": 8
+    }
+  },
+  "private_artifacts": {
+    "reverify": "/remote-home/wangbomin/medtrace_runs/20260905T080754Z/cp_checkpoint_reverify_v2.json",
+    "zero_effect": "/remote-home/wangbomin/medtrace_runs/20260905T080754Z/zero_effect_lifecycle.json",
+    "raw_prompts_answers_tokens_and_checkpoint": "server only"
+  }
+}

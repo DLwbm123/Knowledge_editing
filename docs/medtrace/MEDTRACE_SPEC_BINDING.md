@@ -6,5 +6,7 @@
 - Precedence: V0.2 overrides conflicting V0.1 requirements.
 - Current entry point: `methods/medtrace/core.py`
 - Current executable check: `python scripts/medtrace/verify_core.py`
+- Generation execution rule: every complete manual-no-cache, manual-cached, or Hugging Face generation owns an explicit begin/end request lifecycle; no boundary state crosses requests.
+- Scope data rule: fitting, calibration, evaluation, and native in-sample replay roles are recorded separately; evaluation-only probes and LoRA QUAL material cannot be repurposed.
 
 The source documents were supplied as user attachments; this repository records their names and hashes without publishing private absolute paths.
