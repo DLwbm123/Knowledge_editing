@@ -12,4 +12,6 @@ Status: `MEDTRACE_ZERO_EFFECT_PASS`
 - Predictor semantics: the final prompt position is active for the first answer token; each one-token cached decode forward uses a one-position active mask.
 - Base guard: all 686 sampled frozen parameter tensors were unchanged; no base parameter required gradients.
 
+The gate was repeated after the assistant predictor-span fix at commit `25804bde310a44c5a893b78736ad59ca086d30d3`; it produced the same aggregate result and the same private artifact SHA-256 `d5b453e13b2efa5ea8a48db0ff90512a2e8dc3cfb63d4361ee5cb8e2856d2963`.
+
 Private raw prompts, images, token sequences, decoded answers, and per-query records remain on the experiment server. This report contains only aggregate and opaque evidence.
