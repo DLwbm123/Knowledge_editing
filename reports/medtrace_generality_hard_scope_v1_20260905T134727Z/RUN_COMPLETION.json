@@ -1,0 +1,14 @@
+{
+  "evaluation": "COMPLETE",
+  "generality_judge_execution_sha256": "22ba79eca9ad0944d38116c107ab6289cdcfc386bb25cd1d5a2a4e1cc25ec601",
+  "generation": "COMPLETE",
+  "gpu1_used": false,
+  "judge": "COMPLETE",
+  "old_artifacts_modified": false,
+  "private_artifacts_withheld": true,
+  "publication": "COMPLETE",
+  "schema_version": "medtrace-generality-hard-scope-completion-public-v1",
+  "scope_judge_execution_sha256": "f37a0399acb9b9a45d662c7eca1d430731e79718b1e8b52aba93d40cdd98a537",
+  "status": "GENERALITY_AND_HARD_SCOPE_ABLATION_COMPLETE",
+  "training": "COMPLETE"
+}

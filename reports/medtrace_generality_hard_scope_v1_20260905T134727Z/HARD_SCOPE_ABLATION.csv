@@ -1,0 +1,13 @@
+condition,subset,n,on,activation_rate,base_correct,forced_correct,gated_correct,forced_damage_on_base_correct,gated_damage_on_base_correct,conditional_on_base_correct_damage_rate,forced_token_changed,gated_token_changed,off_count,off_token_parity
+ORIGINAL_Q_MATCHED_OUTPUT_FIT,positive,4,0,0.0,0,4,0,0,0,,4,0,4,4
+ORIGINAL_Q_MATCHED_OUTPUT_FIT,broad,15,0,0.0,12,11,12,1,0,,10,0,15,15
+ORIGINAL_Q_MATCHED_OUTPUT_FIT,same_question_different_image,5,0,0.0,2,3,2,0,0,,5,0,5,5
+ORIGINAL_Q_MATCHED_OUTPUT_FIT,same_image_other_fact,12,0,0.0,3,4,3,1,0,,10,0,12,12
+BROAD_Q_MATCHED_OUTPUT_FIT,positive,4,0,0.0,0,4,0,0,0,,4,0,4,4
+BROAD_Q_MATCHED_OUTPUT_FIT,broad,15,0,0.0,12,11,12,1,0,,10,0,15,15
+BROAD_Q_MATCHED_OUTPUT_FIT,same_question_different_image,5,0,0.0,2,3,2,0,0,,5,0,5,5
+BROAD_Q_MATCHED_OUTPUT_FIT,same_image_other_fact,12,0,0.0,3,4,3,1,0,,10,0,12,12
+HARD_MIXED_Q_MATCHED_OUTPUT_FIT,positive,4,3,0.75,0,4,3,0,0,,4,3,1,1
+HARD_MIXED_Q_MATCHED_OUTPUT_FIT,broad,15,0,0.0,12,12,12,0,0,,7,0,15,15
+HARD_MIXED_Q_MATCHED_OUTPUT_FIT,same_question_different_image,5,2,0.4,2,3,2,0,0,0.0,5,2,3,3
+HARD_MIXED_Q_MATCHED_OUTPUT_FIT,same_image_other_fact,12,0,0.0,3,4,3,1,0,,10,0,12,12

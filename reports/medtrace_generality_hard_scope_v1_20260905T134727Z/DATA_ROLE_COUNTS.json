@@ -8,7 +8,9 @@
   "private_artifacts_withheld": true,
   "schema_version": "medtrace-generality-hard-scope-role-counts-public-v1",
   "scope": {
-    "eqkey_status": "PENDING_MODEL_PREPROCESSING",
+    "eqkey_count": 88,
+    "eqkey_status": "COMPLETE_UNIQUE_AND_ROLE_ISOLATED",
+    "eqkey_unique": 88,
     "excluded_same_fact_cross_language": 1,
     "negative_counts": {
       "broad_fit_control": 20,
@@ -49,5 +51,5 @@
       "fit": 4
     }
   },
-  "status": "FROZEN_BEFORE_MODEL_SCORING__EQKEY_PENDING"
+  "status": "EVALUATION_COMPLETE"
 }
