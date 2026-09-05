@@ -39,14 +39,14 @@ def source_key(dataset: str, image: str, question: str, answer: str) -> tuple[st
 def select_candidates(
     primary: dict[str, Any], source_rows: list[dict[str, Any]], excluded: set[tuple[str, str, str, str]], limit: int = 120,
 ) -> list[dict[str, Any]]:
-    primary_image = Path(primary["relative_image_path"]).parent.name
+    primary_image = image_identity(primary["relative_image_path"])
     candidates = []
     for source_index, row in enumerate(source_rows):
         image = str(row.get("img_name") or "")
         key = source_key("SLAKE", image, row.get("question", ""), row.get("answer", ""))
         if key in excluded or normalize(row.get("answer")) == normalize(primary["gold_answer"]):
             continue
-        if image == primary_image:
+        if image_identity(image) == primary_image:
             relation = "same_image_other_source_fact"
             evidence = "source QA on the primary image with a different question and source answer"
         elif normalize(row.get("question")) == normalize(primary["question"]):
@@ -96,10 +96,10 @@ def main() -> None:
         "validation": json.loads(args.slake_validation.read_text()),
         "test": json.loads(args.slake_test.read_text()),
     }
-    primary_image = Path(primary["relative_image_path"]).parent.name
+    primary_image = image_identity(primary["relative_image_path"])
     matches = [
         (split, row) for split, rows in slake.items() for row in rows
-        if row.get("img_name") == primary_image
+        if image_identity(str(row.get("img_name") or "")) == primary_image
         and normalize(row.get("question")) == normalize(primary["question"])
         and normalize(row.get("answer")) == normalize(primary["gold_answer"])
     ]

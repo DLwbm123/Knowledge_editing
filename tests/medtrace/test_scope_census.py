@@ -10,7 +10,7 @@ class ScopeCensusTests(unittest.TestCase):
             "source_triple": ["x", "present", "yes"], "source_base_type": "presence",
         }
         rows = [
-            {"qid": 1, "img_name": "img0", "question": "What organ?", "answer": "lung", "triple": ["organ"], "base_type": "organ"},
+            {"qid": 1, "img_name": "img0/source.jpg", "question": "What organ?", "answer": "lung", "triple": ["organ"], "base_type": "organ"},
             {"qid": 2, "img_name": "img1", "question": "Is X present?", "answer": "no", "triple": ["x", "present", "no"], "base_type": "presence"},
             {"qid": 3, "img_name": "img2", "question": "What modality?", "answer": "CT", "triple": ["modality"], "base_type": "modality"},
         ]
