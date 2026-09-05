@@ -85,6 +85,7 @@ class MedTraceLayerHook:
         self.enabled = False
         self.token_mask: torch.Tensor | None = None
         self.generation_routing = False
+        self.generation_boundary: int | None = None
         self._handle = None
 
     def attach(self) -> None:
@@ -100,6 +101,7 @@ class MedTraceLayerHook:
     def set_request_routing(self, token_mask: torch.Tensor) -> None:
         self.token_mask = token_mask.bool()
         self.generation_routing = False
+        self.generation_boundary = None
         self.enabled = True
 
     def set_teacher_routing(self, labels: torch.Tensor, *, ignore_index: int = -100) -> None:
@@ -110,12 +112,14 @@ class MedTraceLayerHook:
     def set_generation_routing(self) -> None:
         self.token_mask = None
         self.generation_routing = True
+        self.generation_boundary = None
         self.enabled = True
 
     def clear_request_routing(self) -> None:
         self.enabled = False
         self.token_mask = None
         self.generation_routing = False
+        self.generation_boundary = None
 
     def _forward_hook(self, _module: nn.Module, args: tuple[torch.Tensor, ...], output: torch.Tensor) -> torch.Tensor:
         if not self.enabled:
@@ -125,7 +129,13 @@ class MedTraceLayerHook:
         mask = self.token_mask
         if self.generation_routing:
             mask = torch.zeros(args[0].shape[:-1], dtype=torch.bool, device=args[0].device)
-            mask[..., -1] = True
+            sequence_length = args[0].shape[-2]
+            if sequence_length == 1:
+                mask[...] = True
+            else:
+                if self.generation_boundary is None or sequence_length <= self.generation_boundary + 1:
+                    self.generation_boundary = sequence_length - 1
+                mask[..., self.generation_boundary:] = True
         if mask is None or args[0].shape[:-1] != mask.shape:
             raise RuntimeError("assistant-only MedTRACE token mask does not match the layer activation")
         residual = self.expert.residual(args[0]).to(output.dtype)
