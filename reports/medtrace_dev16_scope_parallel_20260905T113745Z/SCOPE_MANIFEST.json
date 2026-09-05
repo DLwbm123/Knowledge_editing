@@ -1,0 +1,37 @@
+{
+  "schema_version": "medtrace-dev16-scope-public-census-v1",
+  "status": "SOURCE_CENSUS_COMPLETE__POSITIVE_AUGMENTATION_REQUIRED",
+  "source_counts": {
+    "slake_train": 9835,
+    "slake_validation": 2099,
+    "slake_test": 2094,
+    "vqarad_all": 2248
+  },
+  "exclusion_key_count": 1378,
+  "positive_inventory": {
+    "native": 1,
+    "official_rephrase": 1,
+    "new_source_equivalent_records": 0,
+    "role_isolated_augmentation_required": true
+  },
+  "negative_candidates": {
+    "total": 120,
+    "broad_unrelated_source_qa": 120,
+    "same_image_other_source_fact": 0,
+    "same_question_different_image_conflicting_source_answer": 0
+  },
+  "role_counts": {
+    "scope_fit_positive": 0,
+    "scope_fit_negative": 0,
+    "calibration_positive": 0,
+    "calibration_negative": 0,
+    "new_evaluation_positive": 0,
+    "new_evaluation_negative": 0,
+    "historical_diagnostic": 7
+  },
+  "scope_scoring_started": false,
+  "threshold": null,
+  "tpr": null,
+  "fpr": null,
+  "private_census_sha256": "670227c34476dddc78a71e1d165db81ef81bddfd10b0a2255d8d087e9d03bf9b"
+}

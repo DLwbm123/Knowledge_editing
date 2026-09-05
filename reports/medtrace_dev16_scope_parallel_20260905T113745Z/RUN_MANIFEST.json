@@ -1,9 +1,9 @@
 {
   "schema_version": "medtrace-dev16-scope-parallel-public-run-manifest-v1",
-  "status": "READY_TO_LAUNCH",
+  "status": "LAUNCH_AUTHORIZED__MODEL_OUTPUT_PENDING",
   "branch": "medtrace-dev16-scope-parallel-20260905T113745Z",
   "start_commit": "b56b0633c030d4908bb67a21ae035aea2b61342c",
-  "execution_code_commit": "58093b1d2922e5c7e9601bdc968d72acafe3b924",
+  "execution_code_commit": "PENDING_FINAL_PRELAUNCH_CODE_COMMIT",
   "method_labels": {
     "track_a": "TIME_INSPIRED_CP_R4_DEV16_FORCED_ON",
     "track_b": "MEDTRACE_NATIVE_TEXT_SCOPE_AUGMENTATION_PILOT"
@@ -33,7 +33,9 @@
     "model_work_gpu": 3,
     "gpu_uuid": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c",
     "scope_scoring_started": false,
-    "execution_mode": "PENDING_SOURCE_CENSUS_AND_ROLE_FREEZE"
+    "execution_mode": "PENDING_POSITIVE_AUGMENTATION_AND_EQKEY",
+    "source_census_status": "SOURCE_CENSUS_COMPLETE__POSITIVE_AUGMENTATION_REQUIRED",
+    "source_census_private_sha256": "670227c34476dddc78a71e1d165db81ef81bddfd10b0a2255d8d087e9d03bf9b"
   },
   "private_output_artifact": "medtrace-dev16-scope-parallel-20260905T113745Z",
   "historical_status_preserved": {

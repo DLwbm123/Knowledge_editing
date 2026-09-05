@@ -144,6 +144,8 @@ def run_event(runtime: Any, event: dict[str, Any], base: dict[str, dict[str, Any
     record = EditorRecord.from_dict(event["edit_record"])
     random_lock = rng_lock(derive_seed(record.record_id))
     layer = runtime.get_module(LAYER)
+    if (layer.in_features, layer.out_features) != (14336, 4096):
+        raise RuntimeError(f"unexpected down_proj dimensions: {(layer.in_features, layer.out_features)}")
     expert = AsymmetricCPExpert(layer.in_features, layer.out_features, 4).to("cuda:0")
     hook = MedTraceLayerHook(layer, expert)
     batch = runtime.build_edit_batch(record)
