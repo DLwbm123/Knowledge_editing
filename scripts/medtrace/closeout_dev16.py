@@ -9,12 +9,16 @@ import hashlib
 import json
 import os
 import re
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 from statistics import mean, median
 from typing import Any
 
-from scripts.engram.stage0_generation_audit_utils import normalize_medical_answer
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from scripts.engram.stage0_generation_audit_utils import normalize_medical_answer  # noqa: E402
 
 TASKS = ("T0", "T1L", "T1G", "T2G")
 EXPECTED = {"T0": 16, "T1L": 26, "T1G": 62, "T2G": 59}

@@ -325,7 +325,8 @@ def finalize(args: argparse.Namespace) -> None:
     result = json.loads((args.private / "result_private.json").read_text())
     verdicts = {row["opaque_query_id"]: row for row in read_jsonl(args.judge_output)}
     sidecar = json.loads((args.private / "judge_sidecar_private.json").read_text())
-    if len(verdicts) != 96 or len(sidecar) != 96 or any(not verdicts[row["opaque_query_id"]]["parse_valid"] for row in sidecar):
+    expected_ids = {row["opaque_query_id"] for row in sidecar}
+    if len(sidecar) != 96 or set(verdicts) != expected_ids or any(not verdicts[query_id]["parse_valid"] for query_id in expected_ids):
         raise RuntimeError("scope Judge coverage is incomplete")
     judged = {(row["logical_id"], row["path"]): bool(verdicts[row["opaque_query_id"]]["is_correct"]) for row in sidecar}
     rows = result["evaluation"]
