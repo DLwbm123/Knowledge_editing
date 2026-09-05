@@ -1,0 +1,63 @@
+{
+  "schema_version": "medtrace-realmodel-core-lock-v1",
+  "status_at_freeze": "MEDTRACE_ZERO_EFFECT_PASS__CP_NOT_STARTED",
+  "code": {
+    "branch": "medtrace-realmodel-core-20260905T070408Z",
+    "commit": "737fd466888c2efcdf99a79f45561a6b12fe5ee5",
+    "base_medtrace_commit": "2d6e5d5ebc9a9439ad80bde449dce9746c6b586d"
+  },
+  "specification": {
+    "base": {
+      "name": "METHOD_SPEC_V0_1.md",
+      "sha256": "f6c07541345c7033d68c20f4dcd4ab21f928c08ea09c9cdde815986ae3bfecbd"
+    },
+    "binding_revision": {
+      "name": "MEDTRACE_IMPLEMENTATION_REVISION_V0_2.md",
+      "sha256": "0ba02155eb658201e9c0d140c6bcd811587b3a44af4923e2b72eebf3583d179c"
+    },
+    "precedence": "V0.2 overrides conflicting V0.1 requirements"
+  },
+  "v4_contracts": {
+    "canonical_runtime_lock_sha256": "f3e8d38054b5ce034a7f9b3499f86df420011c7e009eaa0bc81699f85323a748",
+    "generation_lock_sha256": "a53d8d5ac6d7fe4886ca6c8bf9b3a72ec40989f2f55fe23fde06bb145a4b9d55",
+    "module_inventory_sha256": "65514e01549ec7f975a075d5463fff6d232f943c819fd87d3c3bf9fcd7ece28a",
+    "edit_target_lock_sha256": "99287211d7960c01a295041c3dee8d86fc0b9a398c1f141755819f9b212fba61",
+    "dev16_manifest_sha256": "5a14dc5690b35501a0625dfed4e1c634d8e0c1e94019876dbfe127172a83c414",
+    "base_predictions_sha256": "b80d1ed97c86de2fc40f3ad5d52b0c95ea3a011024b15b0364da7940bd9bfc78"
+  },
+  "development_case": {
+    "opaque_record_id": "core9q-603881e73eba9ac4e23261b7",
+    "selection": "first row of the frozen DEV16 manifest",
+    "migration_reason": "the V0.1 record-953 case is absent from the current legal V4 DEV contract",
+    "selection_independent_of_lora_results": true,
+    "use": "single-edit CP training and checkpoint selection only"
+  },
+  "architecture": {
+    "layers": ["model.layers.21.mlp.down_proj"],
+    "down_proj_dimensions": [14336, 4096],
+    "capacity_ladder": ["one_layer_r4", "one_layer_r8", "one_layer_r16", "two_layers_r8_each"],
+    "stop_at_first_pass": true
+  },
+  "optimizer": {
+    "name": "AdamW",
+    "learning_rate": 0.001,
+    "weight_decay": 0,
+    "gradient_clip": 1.0,
+    "maximum_steps_per_capacity": 200,
+    "free_generation_interval_steps": 20
+  },
+  "generation": {
+    "greedy": true,
+    "maximum_new_tokens": 128,
+    "required_paths": ["manual_no_cache", "manual_cached", "hf_generate"]
+  },
+  "data_exclusions": [
+    "LoRA QUAL16 and its probes are not used for MedTRACE training, calibration, early stopping, or profile selection",
+    "formal locality probes are evaluation-only",
+    "no heldout, sealed blind, Stage-2, or T5 data"
+  ],
+  "zero_effect": {
+    "status": "MEDTRACE_ZERO_EFFECT_PASS",
+    "private_result_sha256": "d5b453e13b2efa5ea8a48db0ff90512a2e8dc3cfb63d4361ee5cb8e2856d2963"
+  }
+}
