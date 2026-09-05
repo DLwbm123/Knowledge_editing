@@ -80,6 +80,27 @@ class AsymmetricCPExpert(nn.Module):
         if not torch.allclose(before, self.materialize_dense().float(), rtol=tolerance, atol=tolerance):
             raise RuntimeError("CP normalization changed the materialized residual map")
 
+    @torch.no_grad()
+    def normalize_input_factors_(self) -> None:
+        """Normalize Q columns during scope fitting without touching P or rho."""
+        for component in range(self.rank):
+            self.u_in[:, component].div_(self.u_in[:, component].norm().clamp_min(self.epsilon))
+            self.v_in[:, component].div_(self.v_in[:, component].norm().clamp_min(self.epsilon))
+
+    @torch.no_grad()
+    def normalize_output_factors_(self, *, tolerance: float = 1e-5) -> None:
+        """Normalize P while preserving Q, rho-scaled residuals, and threshold metadata."""
+        before = self.materialize_dense().float()
+        for component in range(self.rank):
+            scale = self.rho.new_tensor(1.0)
+            for factor in (self.u_out, self.v_out):
+                norm = factor[:, component].norm().clamp_min(self.epsilon)
+                factor[:, component].div_(norm)
+                scale.mul_(norm)
+            self.rho[component].mul_(scale)
+        if not torch.allclose(before, self.materialize_dense().float(), rtol=tolerance, atol=tolerance):
+            raise RuntimeError("output-only normalization changed the materialized residual map")
+
 
 class MedTraceLayerHook:
     def __init__(self, layer: nn.Module, expert: AsymmetricCPExpert):

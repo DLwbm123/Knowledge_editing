@@ -119,6 +119,19 @@ class MedTraceCoreTests(unittest.TestCase):
         expert = AsymmetricCPExpert(12, 8, 4)
         self.assertNotIn("threshold", dict(expert.named_parameters()))
 
+    def test_scope_stage_normalization_boundaries(self):
+        torch.manual_seed(2)
+        expert = AsymmetricCPExpert(12, 8, 4)
+        expert.rho.data.normal_()
+        output_before = [value.detach().clone() for value in (expert.u_out, expert.v_out, expert.rho)]
+        expert.normalize_input_factors_()
+        self.assertTrue(all(torch.equal(a, b) for a, b in zip(output_before, (expert.u_out, expert.v_out, expert.rho), strict=True)))
+        q_before = expert.input_basis().detach().clone()
+        dense_before = expert.materialize_dense().detach().clone()
+        expert.normalize_output_factors_()
+        self.assertTrue(torch.equal(q_before, expert.input_basis()))
+        self.assertTrue(torch.allclose(dense_before, expert.materialize_dense(), atol=1e-5))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,29 @@
+{
+  "schema_version": "medtrace-dev16-closeout-scope-execute-public-manifest-v1",
+  "status": "READY_TO_RUN",
+  "branch": "medtrace-dev16-closeout-scope-execute-20260905T125112Z",
+  "start_commit": "d7ec198966cc2f95d7205e357346bd21cd17dc13",
+  "dev16_generation_commit": "d9a5af30be7ea12b38c3576f6f81c5d111ce97ea",
+  "execution_code_commit": "PENDING_PRELAUNCH_COMMIT",
+  "track_a": {
+    "existing_event_count": 16,
+    "existing_prediction_count": 163,
+    "additional_saved_base_t2g_judgments": 59,
+    "backbone_regeneration": false,
+    "gpu": 2,
+    "gpu_uuid": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b"
+  },
+  "track_b": {
+    "primary_count": 1,
+    "positive_roles": {"fit": 4, "calibration": 4, "evaluation": 4},
+    "negative_roles": {"fit": 20, "calibration": 20, "evaluation": 20},
+    "execution_mode": "EXPLORATORY_EVALUABLE_PENDING_EQKEY",
+    "gpu": 3,
+    "gpu_uuid": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c"
+  },
+  "historical_status_preserved": {
+    "lora": "QUAL_VALIDATION_FAIL",
+    "old_scope": "NOT_READY__NOT_RUN",
+    "old_training_seed": "UNKNOWN_NOT_INVENTED"
+  }
+}
