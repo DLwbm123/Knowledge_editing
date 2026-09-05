@@ -1,0 +1,53 @@
+{
+  "generality": {
+    "approved_paraphrases": 64,
+    "edit_count": 16,
+    "independent_clinical_review": false,
+    "per_edit": 4
+  },
+  "private_artifacts_withheld": true,
+  "schema_version": "medtrace-generality-hard-scope-role-counts-public-v1",
+  "scope": {
+    "eqkey_status": "PENDING_MODEL_PREPROCESSING",
+    "excluded_same_fact_cross_language": 1,
+    "negative_counts": {
+      "broad_fit_control": 20,
+      "calibration": 20,
+      "evaluation": 20,
+      "mixed_fit": 20,
+      "same_image_challenge": 12
+    },
+    "negative_relation_counts": {
+      "broad_fit_control": {
+        "broad_unrelated_source_qa": 20
+      },
+      "calibration": {
+        "broad_unrelated_source_qa": 16,
+        "same_question_different_image_conflicting_source_answer": 4
+      },
+      "evaluation": {
+        "broad_unrelated_source_qa": 15,
+        "same_question_different_image_conflicting_source_answer": 5
+      },
+      "mixed_fit": {
+        "broad_unrelated_source_qa": 16,
+        "same_question_different_image_conflicting_source_answer": 4
+      },
+      "same_image_challenge": {
+        "same_image_other_source_fact": 12
+      }
+    },
+    "patient_disjoint_claimed": false,
+    "positive_counts": {
+      "calibration": 4,
+      "evaluation": 4,
+      "fit": 4
+    },
+    "same_question_hard_group_counts": {
+      "calibration": 4,
+      "evaluation": 5,
+      "fit": 4
+    }
+  },
+  "status": "FROZEN_BEFORE_MODEL_SCORING__EQKEY_PENDING"
+}
