@@ -53,19 +53,51 @@ class MedTraceCoreTests(unittest.TestCase):
         self.assertTrue(torch.equal(base[:, :1], teacher[:, :1]))
         self.assertFalse(torch.equal(base[:, 1:3], teacher[:, 1:3]))
         self.assertTrue(torch.equal(base[:, 3:], teacher[:, 3:]))
-        hook.set_generation_routing()
-        generated = layer(activation)
+        with hook.generation_request():
+            generated = layer(activation)
+            longer = torch.randn(1, 5, 12)
+            longer_base = nn.functional.linear(longer, layer.weight)
+            longer_generated = layer(longer)
         self.assertTrue(torch.equal(base[:, :3], generated[:, :3]))
         self.assertFalse(torch.equal(base[:, 3:], generated[:, 3:]))
-        longer = torch.randn(1, 5, 12)
-        longer_base = nn.functional.linear(longer, layer.weight)
-        longer_generated = layer(longer)
         self.assertTrue(torch.equal(longer_base[:, :3], longer_generated[:, :3]))
         self.assertFalse(torch.equal(longer_base[:, 3:], longer_generated[:, 3:]))
         hook.detach()
         restored = MedTraceLayerHook(layer, AsymmetricCPExpert(12, 8, 4))
         self.assertFalse(restored.enabled)
         self.assertIsNone(restored.token_mask)
+
+    def test_generation_request_lifecycle(self):
+        layer = nn.Linear(12, 8, bias=False)
+        expert = AsymmetricCPExpert(12, 8, 4)
+        expert.rho.data.fill_(0.1)
+        hook = MedTraceLayerHook(layer, expert)
+        hook.attach()
+
+        def changed_positions(length):
+            activation = torch.randn(1, length, 12)
+            changed = layer(activation) != nn.functional.linear(activation, layer.weight)
+            return torch.where(changed.any(dim=-1)[0])[0].tolist()
+
+        with hook.generation_request():
+            self.assertEqual(changed_positions(4), [3])
+            self.assertEqual(changed_positions(7), [3, 4, 5, 6])
+        with hook.generation_request():
+            self.assertEqual(changed_positions(7), [6])
+        with hook.generation_request():
+            self.assertEqual(changed_positions(4), [3])
+        with hook.generation_request():
+            self.assertEqual(changed_positions(1), [0])
+        with self.assertRaisesRegex(RuntimeError, "boom"):
+            with hook.generation_request():
+                self.assertEqual(changed_positions(5), [4])
+                raise RuntimeError("boom")
+        self.assertFalse(hook.enabled)
+        self.assertFalse(hook.generation_routing)
+        with hook.generation_request():
+            self.assertEqual(changed_positions(6), [5])
+        hook.detach()
+        self.assertFalse(hook.enabled)
 
     def test_zero_rho_gradient_and_optimizer_boundary(self):
         base = nn.Linear(12, 8, bias=False)

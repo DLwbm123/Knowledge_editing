@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import math
+from contextlib import contextmanager
 from dataclasses import dataclass
+from typing import Iterator
 
 import torch
 import torch.nn as nn
@@ -86,6 +88,8 @@ class MedTraceLayerHook:
         self.token_mask: torch.Tensor | None = None
         self.generation_routing = False
         self.generation_boundary: int | None = None
+        self.generation_trace: list[dict[str, int]] = []
+        self.last_generation_trace: tuple[dict[str, int], ...] = ()
         self._handle = None
 
     def attach(self) -> None:
@@ -94,6 +98,7 @@ class MedTraceLayerHook:
         self._handle = self.layer.register_forward_hook(self._forward_hook)
 
     def detach(self) -> None:
+        self.clear_request_routing()
         if self._handle is not None:
             self._handle.remove()
             self._handle = None
@@ -109,11 +114,28 @@ class MedTraceLayerHook:
         mask[:, :-1] = labels[:, 1:] != ignore_index
         self.set_request_routing(mask)
 
-    def set_generation_routing(self) -> None:
+    def begin_generation_request(self) -> None:
+        if self.generation_routing:
+            raise RuntimeError("a MedTRACE generation request is already active")
         self.token_mask = None
         self.generation_routing = True
         self.generation_boundary = None
+        self.generation_trace = []
         self.enabled = True
+
+    def end_generation_request(self) -> None:
+        if not self.generation_routing:
+            raise RuntimeError("no MedTRACE generation request is active")
+        self.last_generation_trace = tuple(self.generation_trace)
+        self.clear_request_routing()
+
+    @contextmanager
+    def generation_request(self) -> Iterator[None]:
+        self.begin_generation_request()
+        try:
+            yield
+        finally:
+            self.end_generation_request()
 
     def clear_request_routing(self) -> None:
         self.enabled = False
@@ -136,6 +158,12 @@ class MedTraceLayerHook:
                 if self.generation_boundary is None or sequence_length <= self.generation_boundary + 1:
                     self.generation_boundary = sequence_length - 1
                 mask[..., self.generation_boundary:] = True
+            active = torch.where(mask[0])[0]
+            self.generation_trace.append({
+                "sequence_length": int(sequence_length),
+                "first_active_predictor": int(active[0]),
+                "active_predictor_count": int(active.numel()),
+            })
         if mask is None or args[0].shape[:-1] != mask.shape:
             raise RuntimeError("assistant-only MedTRACE token mask does not match the layer activation")
         residual = self.expert.residual(args[0]).to(output.dtype)

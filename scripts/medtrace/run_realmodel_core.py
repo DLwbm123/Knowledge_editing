@@ -114,16 +114,28 @@ def hf_trace(runtime: Any, canonical: CanonicalInputs) -> dict[str, Any]:
     return {"token_ids": list(result.raw_token_ids), "raw_output": result.decoded_text}
 
 
-def all_paths(runtime: Any, canonical: CanonicalInputs) -> dict[str, Any]:
+def all_paths(runtime: Any, canonical: CanonicalInputs, hook: MedTraceLayerHook) -> dict[str, Any]:
     model = audit_model(runtime)
     eos = eos_ids(runtime)
-    no_cache = manual_greedy_trace(model, canonical, CAP, eos, top_k=1)
-    cached = manual_cached_greedy_trace(model, canonical, CAP, eos, top_k=1)
-    hf = hf_trace(runtime, canonical)
+    with hook.generation_request():
+        no_cache = manual_greedy_trace(model, canonical, CAP, eos, top_k=1)
+    no_cache_lifecycle = hook.last_generation_trace
+    with hook.generation_request():
+        cached = manual_cached_greedy_trace(model, canonical, CAP, eos, top_k=1)
+    cached_lifecycle = hook.last_generation_trace
+    with hook.generation_request():
+        hf = hf_trace(runtime, canonical)
+    hf_lifecycle = hook.last_generation_trace
     return {
-        "manual_no_cache": {key: no_cache[key] for key in ("token_ids", "raw_output", "eos_step", "cap_hit")},
-        "manual_cached": {key: cached[key] for key in ("token_ids", "raw_output", "eos_step", "cap_hit")},
-        "hf": hf,
+        "manual_no_cache": {
+            **{key: no_cache[key] for key in ("token_ids", "raw_output", "eos_step", "cap_hit")},
+            "request_lifecycle": no_cache_lifecycle,
+        },
+        "manual_cached": {
+            **{key: cached[key] for key in ("token_ids", "raw_output", "eos_step", "cap_hit")},
+            "request_lifecycle": cached_lifecycle,
+        },
+        "hf": {**hf, "request_lifecycle": hf_lifecycle},
         "pass": no_cache["token_ids"] == cached["token_ids"] == hf["token_ids"] and not no_cache["cap_hit"] and not cached["cap_hit"],
     }
 
@@ -151,11 +163,15 @@ def zero_effect(args: argparse.Namespace) -> None:
         raise RuntimeError("base guard missing")
     canonical = {row["query_id"]: make_canonical(runtime, row) for row in queries}
 
-    def state_rows() -> list[dict[str, Any]]:
+    def state_rows(*, active: bool = False) -> list[dict[str, Any]]:
         rows = []
         for query in queries:
             value = canonical[query["query_id"]]
-            hf = hf_trace(runtime, value)
+            if active:
+                with hook.generation_request():
+                    hf = hf_trace(runtime, value)
+            else:
+                hf = hf_trace(runtime, value)
             rows.append({
                 "query_id": query["query_id"],
                 "prompt_token_ids": value.prompt_ids[0].detach().cpu().tolist(),
@@ -167,19 +183,15 @@ def zero_effect(args: argparse.Namespace) -> None:
     base = state_rows()
     hook.attach()
     disabled = state_rows()
-    hook.set_generation_routing()
-    zero = state_rows()
-    hook.clear_request_routing()
+    zero = state_rows(active=True)
     hook.detach()
     detached = state_rows()
     path_parity = {}
     for row in queries[:2]:
         hook.attach()
-        hook.set_generation_routing()
         try:
-            path_parity[row["query_id"]] = all_paths(runtime, canonical[row["query_id"]])
+            path_parity[row["query_id"]] = all_paths(runtime, canonical[row["query_id"]], hook)
         finally:
-            hook.clear_request_routing()
             hook.detach()
     frozen = all(
         row["prompt_token_ids"] == expected[row["query_id"]]["prompt_token_ids"]
@@ -271,8 +283,8 @@ def train(args: argparse.Namespace) -> None:
         hook.set_teacher_routing(batch.labels)
         with torch.no_grad():
             score = runtime.score_target(batch)
-        hook.set_generation_routing()
-        generation = hf_trace(runtime, canonical)
+        with hook.generation_request():
+            generation = hf_trace(runtime, canonical)
         literal = normalize_medical_answer(generation["raw_output"]) == normalize_medical_answer(record.target)
         checkpoint = checkpoints / f"step_{step:03d}.pt"
         torch.save({"rank": args.rank, "step": step, "expert": expert.state_dict()}, checkpoint)
@@ -294,7 +306,6 @@ def train(args: argparse.Namespace) -> None:
         if step and literal and row["first_token_rank_one"]:
             stop = row
             break
-    hook.clear_request_routing()
     disabled = hf_trace(runtime, canonical)
     hook.detach()
     base_expected = next(row for row in read_jsonl(args.base_predictions) if row["query_id"] == record.record_id)
@@ -346,20 +357,16 @@ def verify_candidate(args: argparse.Namespace) -> None:
     factorized = expert.residual(activation)
     dense = expert.normalize_activation(activation) @ expert.materialize_dense().T
     dense_error = float((factorized - dense).abs().max().item())
-    hook.set_generation_routing()
-    original = all_paths(runtime, canonical)
-    original_short = all_paths(runtime, short)
-    hook.clear_request_routing()
+    original = all_paths(runtime, canonical, hook)
+    original_short = all_paths(runtime, short, hook)
     hook.detach()
 
     reloaded = AsymmetricCPExpert(layer.in_features, layer.out_features, int(saved["rank"])).to("cuda:0")
     reloaded.load_state_dict(saved["expert"])
     replay_hook = MedTraceLayerHook(layer, reloaded)
     replay_hook.attach()
-    replay_hook.set_generation_routing()
-    replay = all_paths(runtime, canonical)
-    replay_short = all_paths(runtime, short)
-    replay_hook.clear_request_routing()
+    replay_short = all_paths(runtime, short, replay_hook)
+    replay = all_paths(runtime, canonical, replay_hook)
     disabled = hf_trace(runtime, canonical)
     disabled_short = hf_trace(runtime, short)
     replay_hook.detach()
