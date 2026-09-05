@@ -1,0 +1,18 @@
+{
+  "schema_version": "lora-perf-v1-protocol-v1",
+  "active_baseline": "LoRA-Perf-v1",
+  "selection_split": "LORA_DEV16_V2",
+  "validation_split": "LORA_QUAL16_V2_ONCE",
+  "initial_profiles": [
+    {"learning_rate": 0.0001, "rank": 16, "alpha": 16, "layer_scope": "all", "target_modules": ["gate_proj", "up_proj", "down_proj"]},
+    {"learning_rate": 0.0002, "rank": 16, "alpha": 16, "layer_scope": "all", "target_modules": ["gate_proj", "up_proj", "down_proj"]},
+    {"learning_rate": 0.0005, "rank": 16, "alpha": 16, "layer_scope": "all", "target_modules": ["gate_proj", "up_proj", "down_proj"]}
+  ],
+  "checkpoints": [5, 10, 20, 40, 80],
+  "readiness": {"t0_min": 14, "t1l_macro_min": 0.25, "t1g_min": 0.85, "t2g_min": 0.60, "target_nll_decrease_min": 14},
+  "gates": {
+    "calibration_allowed": ["integration_pass", "effect_active", "v4_inputs_verified"],
+    "new_method_code_allowed": ["v4_inputs_verified", "method_spec_resolved"],
+    "new_method_gpu_allowed": ["lora_development_ready", "new_method_zero_effect_tests_pass"]
+  }
+}

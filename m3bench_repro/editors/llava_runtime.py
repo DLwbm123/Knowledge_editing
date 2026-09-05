@@ -16,6 +16,7 @@ from typing import Any, Iterator
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from PIL import Image
 
 from m3bench_repro.inference.llava_med import LlavaMedAdapter
@@ -32,6 +33,27 @@ IGNORE_INDEX = -100
 MODULE_PATTERN = re.compile(
     r"^model\.layers\.(?P<block>\d+)\.mlp\.(?P<projection>gate_proj|up_proj|down_proj)$"
 )
+
+
+def target_nll_parts(logits: torch.Tensor, labels: torch.Tensor, eos_token_id: int) -> dict[str, float | int | None]:
+    shifted_logits = logits[:, :-1].float()
+    shifted_labels = labels[:, 1:]
+    mask = shifted_labels != IGNORE_INDEX
+    losses = F.cross_entropy(
+        shifted_logits.reshape(-1, shifted_logits.shape[-1]),
+        shifted_labels.reshape(-1),
+        ignore_index=IGNORE_INDEX,
+        reduction="none",
+    ).reshape_as(shifted_labels)
+    content = mask & (shifted_labels != eos_token_id)
+    tail = mask & (shifted_labels == eos_token_id)
+    mean = lambda selected: float(losses[selected].mean().detach().cpu()) if selected.any() else None
+    return {
+        "target_content_nll": mean(content),
+        "eos_template_tail_nll": mean(tail),
+        "target_content_token_count": int(content.sum().item()),
+        "eos_template_tail_token_count": int(tail.sum().item()),
+    }
 
 
 def select_unique_outer_module(candidates: list[str], *, label: str) -> str:
@@ -616,7 +638,7 @@ class LlavaMedEditorRuntime:
             raise FloatingPointError(f"non-finite edit loss: {loss}")
         return loss
 
-    def score_target(self, batch: PreparedBatch) -> dict[str, float | int]:
+    def score_target(self, batch: PreparedBatch) -> dict[str, float | int | None]:
         output = self.model(**batch.forward_kwargs())
         loss = output.loss
         if loss is None or not torch.isfinite(loss):
@@ -629,7 +651,12 @@ class LlavaMedEditorRuntime:
         logits = output.logits[0, first - 1].float()
         target_logit = logits[target_id]
         rank = int((logits > target_logit).sum().item()) + 1
-        return {"nll": float(loss.cpu().item()), "first_target_token_rank": rank}
+        eos_token_id = int(self.adapter.tokenizer.eos_token_id)
+        return {
+            "nll": float(loss.cpu().item()),
+            "first_target_token_rank": rank,
+            **target_nll_parts(output.logits, batch.labels, eos_token_id),
+        }
 
     def extract_layer_input_key(
         self,

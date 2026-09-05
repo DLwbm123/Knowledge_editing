@@ -57,6 +57,24 @@ class LoraEffectContractTests(unittest.TestCase):
         self.assertTrue(calibrated["paper_spec_deviation"])
         self.assertEqual(calibrated["epochs_per_edit"], 20)
 
+    def test_perf_profile_selects_explicit_layers_and_modules(self):
+        targets = [
+            f"model.layers.{layer}.mlp.{projection}"
+            for layer in range(32)
+            for projection in ("down_proj", "gate_proj", "up_proj")
+        ]
+        config = LoraRuntimeConfig(
+            profile_name="LoRA-Perf-v1",
+            rank=32,
+            alpha=32,
+            layer_scope="last_8",
+            target_modules=("down_proj",),
+        )
+        selected = config.select_targets(targets)
+        self.assertEqual(len(selected), 8)
+        self.assertEqual({int(target.split(".")[2]) for target in selected}, set(range(24, 32)))
+        self.assertTrue(all(target.endswith("down_proj") for target in selected))
+
     def test_lora_explicit_adapter_lifecycle(self):
         editor = object.__new__(LoraPaperSpecEditor)
         editor.peft_model = _Peft()

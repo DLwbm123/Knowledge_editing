@@ -1,0 +1,9 @@
+{
+  "schema_version": "lora-perf-medtrace-runtime-handoff-v1",
+  "base": "frozen current-stack V4 LLaVA-Med runtime",
+  "lora_factory": "m3bench_repro.editors.methods:LoraPaperSpecEditor",
+  "lora_runner": "scripts/m3bench_lora_perf.py",
+  "medtrace_base_rule": "start from the same original frozen backbone; never load the trained LoRA adapter",
+  "medtrace_reusable_components": ["model loading", "image and question preparation", "target-only loss", "free generation", "save and restore", "base integrity checks", "frozen evaluator interfaces"],
+  "medtrace_gpu_gate": ["LORA_DEVELOPMENT_READY__START_MEDTRACE", "MEDTRACE real-model zero-effect tests pass"]
+}

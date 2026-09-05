@@ -1,0 +1,21 @@
+{
+  "schema_version": "lora-perf-v1-public-protocol-v1",
+  "active_baseline": "LoRA-Perf-v1",
+  "source_baseline": "7f827a7f025d18a15da2602a9a0dd49eef3f153e",
+  "selection_split": "LORA_DEV16_V2",
+  "validation_split": "LORA_QUAL16_V2_ONCE",
+  "initial_profile_count": 3,
+  "learning_rates": [0.0001, 0.0002, 0.0005],
+  "rank": 16,
+  "alpha": 16,
+  "layer_scope": "all",
+  "target_modules": ["gate_proj", "up_proj", "down_proj"],
+  "checkpoints": [5, 10, 20, 40, 80],
+  "optimizer": "AdamW",
+  "batch_size": 1,
+  "gradient_clip": 1.0,
+  "readiness": {"t0_min_count": 14, "t0_denominator": 16, "t1l_macro_min": 0.25, "t1g_min": 0.85, "t2g_min": 0.60, "target_nll_decrease_min_count": 14},
+  "selection_order": ["readiness", "T0", "T1L", "T1G_T2G", "lower_cost"],
+  "paper_distance_objective": false,
+  "formal_probes_used_as_training_loss": false
+}

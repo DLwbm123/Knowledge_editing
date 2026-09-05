@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
@@ -41,14 +42,24 @@ class LoraRuntimeConfig:
     profile_name: str = "LoRA-paper-spec-5"
     learning_rate: float = 5e-5
     steps_per_edit: int = 5
+    rank: int = 16
+    alpha: int = 16
+    layer_scope: str = "all"
+    target_modules: tuple[str, ...] = ("gate_proj", "up_proj", "down_proj")
     stop_rule: str = "fixed"
     min_steps: int = 1
     check_interval: int = 1
     target_nll_threshold: float = 0.5
 
     def __post_init__(self) -> None:
-        if self.learning_rate <= 0 or self.steps_per_edit < 1:
+        if self.learning_rate <= 0 or self.steps_per_edit < 1 or self.rank < 1 or self.alpha < 1:
             raise ValueError("LoRA learning rate and steps must be positive")
+        if self.layer_scope not in {"all", "last_16", "last_8"}:
+            raise ValueError(f"unsupported LoRA layer scope: {self.layer_scope}")
+        if not self.target_modules or not set(self.target_modules) <= {
+            "gate_proj", "up_proj", "down_proj", "q_proj", "v_proj"
+        }:
+            raise ValueError(f"unsupported LoRA target modules: {self.target_modules}")
         if self.stop_rule not in {"fixed", "first_success"}:
             raise ValueError(f"unsupported LoRA stop rule: {self.stop_rule}")
         if self.min_steps < 1 or self.check_interval < 1 or self.min_steps > self.steps_per_edit:
@@ -57,6 +68,21 @@ class LoraRuntimeConfig:
     @property
     def paper_spec_default(self) -> bool:
         return self == LoraRuntimeConfig()
+
+    def select_targets(self, available: list[str]) -> list[str]:
+        parsed = []
+        for target in available:
+            match = re.search(r"\.layers\.(\d+)\..*\.(\w+_proj)$", target)
+            if match and match.group(2) in self.target_modules:
+                parsed.append((int(match.group(1)), target))
+        if not parsed:
+            raise ValueError("LoRA profile selected no available target modules")
+        final_layer = max(layer for layer, _ in parsed)
+        keep = {"all": final_layer + 1, "last_16": 16, "last_8": 8}[self.layer_scope]
+        selected = [target for layer, target in parsed if layer >= final_layer - keep + 1]
+        if not selected:
+            raise ValueError("LoRA profile selected no layers")
+        return selected
 
 
 def record_seed(record_id: str, namespace: str) -> int:
@@ -133,10 +159,10 @@ class LoraPaperSpecEditor(PaperSpecEditor):
         from peft import LoraConfig, get_peft_model
 
         self.runtime_config = config or LoraRuntimeConfig()
-        targets = list(runtime.target_lock["lora"]["targets"])
+        targets = self.runtime_config.select_targets(list(runtime.target_lock["lora"]["targets"]))
         config = LoraConfig(
-            r=16,
-            lora_alpha=16,
+            r=self.runtime_config.rank,
+            lora_alpha=self.runtime_config.alpha,
             lora_dropout=0.0,
             bias="none",
             target_modules=targets,
@@ -320,10 +346,10 @@ class LoraPaperSpecEditor(PaperSpecEditor):
             "schema_version": "m3bench-editor-method-config-v2",
             "method": "LoRA",
             "classification": CLASSIFICATION,
-            "scope": "all language-model MLP blocks",
+            "scope": "all language-model MLP blocks" if self.runtime_config.layer_scope == "all" else self.runtime_config.layer_scope.replace("_", " ") + " language-model blocks",
             "targets": self.targets,
-            "rank": 16,
-            "lora_alpha": 16,
+            "rank": self.runtime_config.rank,
+            "lora_alpha": self.runtime_config.alpha,
             "dropout": 0.0,
             "optimizer": "AdamW",
             "learning_rate": self.runtime_config.learning_rate,
@@ -338,7 +364,9 @@ class LoraPaperSpecEditor(PaperSpecEditor):
             lock.update({
                 "profile_name": self.runtime_config.profile_name,
                 "paper_spec_deviation": True,
-                "deviation_scope": "training intensity only",
+                "deviation_scope": "explicit training and adapter structure",
+                "layer_scope": self.runtime_config.layer_scope,
+                "target_modules": list(self.runtime_config.target_modules),
                 "stop_rule": self.runtime_config.stop_rule,
                 "min_steps": self.runtime_config.min_steps,
                 "check_interval": self.runtime_config.check_interval,
