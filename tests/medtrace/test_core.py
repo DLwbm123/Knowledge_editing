@@ -17,6 +17,9 @@ class MedTraceCoreTests(unittest.TestCase):
         before = expert.residual(activation)
         expert.normalize_factors_()
         self.assertTrue(torch.allclose(before, expert.residual(activation), atol=1e-5))
+        restored = AsymmetricCPExpert(12, 8, 4)
+        restored.load_state_dict(expert.state_dict())
+        self.assertTrue(torch.equal(expert.residual(activation), restored.residual(activation)))
 
     def test_zero_effect_and_assistant_only_mask(self):
         layer = nn.Linear(12, 8, bias=False)
