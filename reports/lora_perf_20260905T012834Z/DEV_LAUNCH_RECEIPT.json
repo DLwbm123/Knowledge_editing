@@ -1,0 +1,17 @@
+{
+  "schema_version": "lora-perf-v1-dev-launch-receipt-v1",
+  "status": "LORA_PERF_CALIBRATION_RUNNING",
+  "code_commit": "e9ce6d690201f4d8e6e6e42cb865353c61081473",
+  "source_baseline": "7f827a7f025d18a15da2602a9a0dd49eef3f153e",
+  "split": "LORA_DEV16_V2",
+  "runs": [
+    {"learning_rate": 0.0001, "physical_gpu": 2, "gpu_uuid": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b", "scheduler": "exclusive_file_lock", "state": "RUNNING"},
+    {"learning_rate": 0.0002, "physical_gpu": 3, "gpu_uuid": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c", "scheduler": "exclusive_file_lock", "state": "RUNNING"},
+    {"learning_rate": 0.0005, "physical_gpu": 2, "gpu_uuid": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b", "scheduler": "blocking_exclusive_file_lock", "state": "QUEUED"}
+  ],
+  "checkpoints": [5, 10, 20, 40, 80],
+  "qual16_started": false,
+  "medtrace_gpu_started": false,
+  "first_launch_failure": "preserved import-path failure before model load or GPU allocation",
+  "private_raw_published": false
+}

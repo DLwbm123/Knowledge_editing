@@ -1,6 +1,6 @@
 # LoRA-Perf-v1 status
 
-Status: `ENGINEERING_READY__CALIBRATION_NOT_STARTED`
+Status: `LORA_PERF_CALIBRATION_RUNNING`
 
 - Frozen source baseline: `7f827a7f025d18a15da2602a9a0dd49eef3f153e`
 - Selection: frozen `LORA_DEV16_V2`; validation: frozen `LORA_QUAL16_V2`, exactly once after one DEV configuration is selected.
@@ -9,3 +9,5 @@ Status: `ENGINEERING_READY__CALIBRATION_NOT_STARTED`
 - The old paper-spec semantic qualification result is not a calibration prerequisite.
 
 No QUAL16 method output has been inspected or generated in this stage.
+
+Launch state at 2026-09-05 UTC: DEV16 `lr=1e-4` is running on authorized GPU2, `lr=2e-4` is running on authorized GPU3, and `lr=5e-4` is queued behind the GPU2 exclusive lock. Results and semantic Judge decisions are pending.
