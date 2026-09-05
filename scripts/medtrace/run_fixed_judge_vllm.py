@@ -9,13 +9,13 @@ import importlib.metadata
 import inspect
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from scripts.editor_paperspec_formal import assert_authorized_device  # noqa: E402
 from scripts.run_semantic_judge_v3 import PACKET_FIELDS, atomic_new, lock_payload, parse_boolean, render  # noqa: E402
 
 
@@ -43,6 +43,20 @@ def tokenizer_files(model_path: Path) -> dict[str, str]:
     return {name: sha256_bytes((model_path / name).read_bytes()) for name in names if (model_path / name).is_file()}
 
 
+def authorized_device() -> dict[str, str]:
+    physical = os.environ.get("M3BENCH_FORMAL_AUTHORIZED_CUDA_VISIBLE_DEVICES", "")
+    expected_uuid = os.environ.get("M3BENCH_FORMAL_EXPECTED_GPU_UUID", "")
+    allowed = {value.strip() for value in os.environ.get("M3BENCH_FORMAL_ALLOWED_CUDA_VISIBLE_DEVICES", "2,3").split(",")}
+    if physical not in allowed or os.environ.get("CUDA_VISIBLE_DEVICES") != physical or not expected_uuid:
+        raise RuntimeError("Judge GPU authorization environment is incomplete or invalid")
+    name, actual_uuid = subprocess.check_output(
+        ["nvidia-smi", "--query-gpu=name,uuid", "--format=csv,noheader", "-i", physical], text=True,
+    ).strip().rsplit(", ", 1)
+    if actual_uuid != expected_uuid:
+        raise RuntimeError("Judge GPU UUID mismatch")
+    return {"physical_gpu": physical, "gpu_name": name, "gpu_uuid": actual_uuid}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model-path", type=Path, required=True)
@@ -53,7 +67,7 @@ def main() -> None:
     args = parser.parse_args()
     if args.output.exists() or args.execution_lock.exists():
         raise FileExistsError(args.output if args.output.exists() else args.execution_lock)
-    assert_authorized_device()
+    gpu = authorized_device()
     lock = json.loads(args.lock.read_text())
     expected = lock_payload(args.model_path.resolve(), constrained_boolean=True)
     for key in ("judge_model", "judge_snapshot_sha", "prompt", "temperature", "schema", "generation"):
@@ -116,7 +130,7 @@ def main() -> None:
     engine_mode = "V1" if ".v1." in engine_class else "V0"
     quant_config = getattr(config, "quant_config", None)
     model_config = getattr(config, "model_config", None)
-    gpu = __import__("torch").cuda.get_device_properties(0)
+    torch = __import__("torch")
     execution = {
         "schema_version": "medtrace-judge-vllm-execution-lock-v1",
         "model": {"name": lock["judge_model"], "snapshot": lock["judge_snapshot_sha"], "path": str(args.model_path.resolve())},
@@ -133,10 +147,8 @@ def main() -> None:
             "vllm": package_version("vllm"),
             "torch": package_version("torch"),
             "transformers": package_version("transformers"),
-            "cuda": __import__("torch").version.cuda,
-            "gpu_name": gpu.name,
-            "gpu_uuid": os.environ["M3BENCH_FORMAL_EXPECTED_GPU_UUID"],
-            "physical_gpu": os.environ["CUDA_VISIBLE_DEVICES"],
+            "cuda": torch.version.cuda,
+            **gpu,
             "engine_mode": engine_mode,
             "engine_class": engine_class,
             "quantization_requested": "awq",
