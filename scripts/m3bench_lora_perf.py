@@ -74,6 +74,17 @@ def run(args: argparse.Namespace) -> None:
         layer_scope=args.layer_scope,
         target_modules=tuple(args.target_modules),
     )
+    if args.split == "QUAL16":
+        if args.selection_lock is None or not args.selection_lock.is_file():
+            raise RuntimeError("QUAL16 requires the frozen unique DEV selection lock")
+        selection = json.loads(args.selection_lock.read_text(encoding="utf-8"))
+        selected_profile = selection.get("profile", {})
+        comparable = {**config.__dict__, "target_modules": list(config.target_modules)}
+        comparable.pop("steps_per_edit")
+        selected_profile = dict(selected_profile)
+        selected_profile.pop("steps_per_edit", None)
+        if selection.get("status") != "DEV_UNIQUE_PROFILE_SELECTED" or comparable != selected_profile or list(checkpoints) != [selection.get("checkpoint")]:
+            raise RuntimeError("QUAL16 configuration differs from the unique DEV selection")
     profile = {**config.__dict__, "target_modules": list(config.target_modules)}
     run_lock = {
         "schema_version": "lora-perf-v1-run-lock-v1",
@@ -200,6 +211,7 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--layer-scope", choices=("all", "last_16", "last_8"), default="all")
     result.add_argument("--target-modules", nargs="+", default=("gate_proj", "up_proj", "down_proj"))
     result.add_argument("--code-commit", required=True)
+    result.add_argument("--selection-lock", type=Path)
     return result
 
 
