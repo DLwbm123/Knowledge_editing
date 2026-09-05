@@ -6,10 +6,13 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 import time
 from pathlib import Path
 
 import torch
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from m3bench_repro.editors.llava_runtime import EditorRecord, canonical_sha256
 from m3bench_repro.editors.methods import LoraPaperSpecEditor, LoraRuntimeConfig, finite_gradients
