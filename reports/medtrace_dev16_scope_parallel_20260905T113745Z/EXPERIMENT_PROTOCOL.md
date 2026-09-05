@@ -5,7 +5,7 @@ Status: `FROZEN_BEFORE_MODEL_OUTPUT`
 ## Boundaries
 
 - Start commit: `b56b0633c030d4908bb67a21ae035aea2b61342c`.
-- Execution-code commit: `3363035c2cb7b60397d0fc72ec4f6b40dc2dc5ed`.
+- Execution-code commit: `d9a5af30be7ea12b38c3576f6f81c5d111ce97ea`.
 - V0.1 SHA-256: `f6c07541345c7033d68c20f4dcd4ab21f928c08ea09c9cdde815986ae3bfecbd`.
 - V0.2 SHA-256: `0ba02155eb658201e9c0d140c6bcd811587b3a44af4923e2b72eebf3583d179c`; conflicting V0.1 clauses are superseded.
 - LoRA remains `QUAL_VALIDATION_FAIL`; LoRA QUAL inputs and probes are excluded.

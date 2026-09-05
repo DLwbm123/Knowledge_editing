@@ -3,7 +3,7 @@
   "status": "LAUNCH_AUTHORIZED__MODEL_OUTPUT_PENDING",
   "branch": "medtrace-dev16-scope-parallel-20260905T113745Z",
   "start_commit": "b56b0633c030d4908bb67a21ae035aea2b61342c",
-  "execution_code_commit": "PENDING_FINAL_PRELAUNCH_CODE_COMMIT",
+  "execution_code_commit": "d9a5af30be7ea12b38c3576f6f81c5d111ce97ea",
   "method_labels": {
     "track_a": "TIME_INSPIRED_CP_R4_DEV16_FORCED_ON",
     "track_b": "MEDTRACE_NATIVE_TEXT_SCOPE_AUGMENTATION_PILOT"
