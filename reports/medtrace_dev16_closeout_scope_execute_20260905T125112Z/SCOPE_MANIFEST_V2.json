@@ -1,0 +1,73 @@
+{
+  "distinct_negative_source_images": 60,
+  "eligible_candidate_count_before_cap": 9734,
+  "eligible_candidates_by_relation_before_cap": {
+    "broad_unrelated_source_qa": 9708,
+    "same_image_other_source_fact": 13,
+    "same_question_different_image_conflicting_source_answer": 13
+  },
+  "excluded_model_visible_source_keys": 1378,
+  "execution_code_commit": "30524350705920c2a76457260d0895587882767f",
+  "negative_relation_counts_by_role": {
+    "calibration": {
+      "broad_unrelated_source_qa": 20
+    },
+    "evaluation": {
+      "broad_unrelated_source_qa": 20
+    },
+    "fit": {
+      "broad_unrelated_source_qa": 20
+    }
+  },
+  "patient_disjoint_claimed": false,
+  "positive_inventory": {
+    "approved_text_augmentations": 12,
+    "native": 1,
+    "new_source_equivalent_records": 0,
+    "new_source_equivalent_search_status": "SEARCHED__TEXT_REVIEW_REQUIRED",
+    "official_rephrase": 1,
+    "rejected_text_augmentations": 4
+  },
+  "primary_artifact_id": "core9q-603881e73eba9ac4e23261b7",
+  "retained_candidate_count_after_cap": 120,
+  "retained_candidates_by_relation_after_cap": {
+    "broad_unrelated_source_qa": 94,
+    "same_image_other_source_fact": 13,
+    "same_question_different_image_conflicting_source_answer": 13
+  },
+  "role_counts": {
+    "calibration": {
+      "negative": 20,
+      "positive": 4
+    },
+    "evaluation": {
+      "negative": 20,
+      "positive": 4
+    },
+    "fit": {
+      "negative": 20,
+      "positive": 4
+    }
+  },
+  "schema_version": "medtrace-scope-manifest-public-v2",
+  "scope_scoring_started": false,
+  "search_scope": {
+    "actually_searched_allowed_rows": 9835,
+    "allowed_supervision_sources": [
+      "SLAKE/train"
+    ],
+    "audit_only_sources": [
+      "SLAKE/validation",
+      "SLAKE/test",
+      "VQA-RAD/all"
+    ],
+    "loaded_inventory_rows": 16276
+  },
+  "source_counts": {
+    "slake_test": 2094,
+    "slake_train": 9835,
+    "slake_validation": 2099,
+    "vqarad_all": 2248
+  },
+  "status": "EXPLORATORY_EVALUABLE__EQKEY_PENDING"
+}
