@@ -4,7 +4,7 @@
   "branch": "medtrace-dev16-closeout-scope-execute-20260905T125112Z",
   "start_commit": "d7ec198966cc2f95d7205e357346bd21cd17dc13",
   "dev16_generation_commit": "d9a5af30be7ea12b38c3576f6f81c5d111ce97ea",
-  "execution_code_commit": "PENDING_PRELAUNCH_COMMIT",
+  "execution_code_commit": "7ddee1cba0d3d9f8340bc4b2c523bf2b7f2b0363",
   "track_a": {
     "existing_event_count": 16,
     "existing_prediction_count": 163,
