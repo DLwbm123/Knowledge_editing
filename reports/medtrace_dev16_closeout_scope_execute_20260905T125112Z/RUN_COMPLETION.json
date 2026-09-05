@@ -1,0 +1,12 @@
+{
+  "historical_run_lock_sha256": "4c4a934f54c154686372079931730378342d9ad0bd634bc435b4cc33acc62e7c",
+  "historical_run_lock_status": "RUNNING_STARTUP_SNAPSHOT_NOT_MUTATED",
+  "judge_execution_sha256": "9fa356a6663cc1a29605ed42af1631434f572d8b6e406ffe28c90cc0af1349f7",
+  "private_artifacts_withheld": true,
+  "publication": "COMPLETE",
+  "schema_version": "medtrace-run-completion-public-v1",
+  "scope": "SCOPE_PILOT_EVALUATION_COMPLETE",
+  "semantic_judge": "COMPLETE",
+  "status": "CP_DEV16_AND_SCOPE_PILOT_EVALUATION_COMPLETE",
+  "training_generation": "COMPLETE"
+}

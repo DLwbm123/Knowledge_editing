@@ -1,0 +1,25 @@
+{
+  "duplicates": 0,
+  "empty_outputs": 0,
+  "event_count": 16,
+  "generation_config_sha256": "a53d8d5ac6d7fe4886ca6c8bf9b3a72ec40989f2f55fe23fde06bb145a4b9d55",
+  "judge_packet_count": 222,
+  "length": {
+    "ended_with_eos": 160,
+    "evidence_boundary": "derived from saved token IDs; generation stop_reason was not saved",
+    "reached_limit": 3,
+    "truncated_without_eos": 3
+  },
+  "missing": 0,
+  "prediction_count": 163,
+  "run_lock_sha256": "4c4a934f54c154686372079931730378342d9ad0bd634bc435b4cc33acc62e7c",
+  "schema_version": "medtrace-dev16-raw-closure-private-v1",
+  "source_run_code_commit": "d9a5af30be7ea12b38c3576f6f81c5d111ce97ea",
+  "status": "COMPLETE",
+  "task_counts": {
+    "T0": 16,
+    "T1G": 62,
+    "T1L": 26,
+    "T2G": 59
+  }
+}

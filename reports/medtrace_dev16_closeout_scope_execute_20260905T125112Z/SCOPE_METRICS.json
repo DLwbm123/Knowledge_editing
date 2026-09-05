@@ -1,0 +1,55 @@
+{
+  "control": {
+    "calibration_fpr": 0.0,
+    "calibration_tpr": 1.0,
+    "evaluation_negative_fpr": 0.1,
+    "evaluation_positive_activation": 1.0,
+    "threshold": 5.193878173828125
+  },
+  "execution_mode": "EXPLORATORY_EVALUABLE",
+  "final": {
+    "activated_negative_damage": 0,
+    "all_negative_behavior_exact_base": 20,
+    "base_correct_negative_count": 14,
+    "base_correct_negative_preserved": 14,
+    "calibration_fpr": 0.0,
+    "calibration_tpr": 1.0,
+    "evaluation_negative_fpr": 0.1,
+    "evaluation_positive_activation": 1.0,
+    "off_request_count": 18,
+    "off_token_parity": 18,
+    "positive_base_correct": 0,
+    "positive_forced_correct": 4,
+    "positive_gated_correct": 4,
+    "threshold": 4.388545036315918
+  },
+  "limitations": [
+    "single image and single fact for all positives",
+    "reviewed text augmentation only",
+    "broad source negatives may dominate",
+    "no patient-disjoint claim",
+    "not V0.2 qualified"
+  ],
+  "native": {
+    "exact_forced": true,
+    "exact_gated": true,
+    "on": true
+  },
+  "role_counts": {
+    "calibration": {
+      "negative": 20,
+      "positive": 4
+    },
+    "evaluation": {
+      "negative": 20,
+      "positive": 4
+    },
+    "fit": {
+      "negative": 20,
+      "positive": 4
+    }
+  },
+  "schema_version": "medtrace-scope-pilot-public-metrics-v1",
+  "status": "SCOPE_PILOT_EVALUATION_COMPLETE",
+  "v02_scope_qualified": false
+}
