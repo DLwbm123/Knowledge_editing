@@ -35,6 +35,7 @@ from scripts.engram.stage0_generation_audit_utils import (  # noqa: E402
 
 LAYER = "model.layers.21.mlp.down_proj"
 CAP = 128
+SHORT_INSTRUCTION = "Answer with only the final medical answer. Do not provide an explanation."
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -237,6 +238,7 @@ def train(args: argparse.Namespace) -> None:
         raise RuntimeError("optimizer boundary failure")
     primary = {"query_id": record.record_id, "question": record.question, "image_path": str(record.image_path)}
     canonical = make_canonical(runtime, primary, batch.target_token_ids)
+    short = make_canonical(runtime, primary | {"question": record.question + "\n\n" + SHORT_INSTRUCTION}, batch.target_token_ids)
     base_guard = runtime.base_guard
     if base_guard is None:
         raise RuntimeError("base guard missing")
@@ -346,6 +348,7 @@ def verify_candidate(args: argparse.Namespace) -> None:
     dense_error = float((factorized - dense).abs().max().item())
     hook.set_generation_routing()
     original = all_paths(runtime, canonical)
+    original_short = all_paths(runtime, short)
     hook.clear_request_routing()
     hook.detach()
 
@@ -355,19 +358,26 @@ def verify_candidate(args: argparse.Namespace) -> None:
     replay_hook.attach()
     replay_hook.set_generation_routing()
     replay = all_paths(runtime, canonical)
+    replay_short = all_paths(runtime, short)
     replay_hook.clear_request_routing()
     disabled = hf_trace(runtime, canonical)
+    disabled_short = hf_trace(runtime, short)
     replay_hook.detach()
+    detached_short = hf_trace(runtime, short)
     base = next(row for row in read_jsonl(args.base_predictions) if row["query_id"] == record.record_id)
     guard = runtime.base_guard.verify() if runtime.base_guard else None
     passed = (
         original["pass"]
+        and original_short["pass"]
         and replay["pass"]
+        and replay_short["pass"]
         and original["hf"] == replay["hf"]
+        and original_short["hf"] == replay_short["hf"]
         and score["first_target_token_rank"] == 1
         and dense_error <= 1e-5
         and disabled["token_ids"] == base["raw_generated_token_ids"]
         and disabled["raw_output"] == base["model_answer_raw"]
+        and disabled_short == detached_short
         and bool(guard and guard["unchanged"])
     )
     write_json(args.out, {
@@ -378,9 +388,14 @@ def verify_candidate(args: argparse.Namespace) -> None:
         "score": score,
         "dense_factor_max_abs_error": dense_error,
         "original_paths": original,
+        "original_short_paths": original_short,
         "reload_paths": replay,
+        "reload_short_paths": replay_short,
         "save_reload_generation_replay": original["hf"] == replay["hf"],
+        "save_reload_short_generation_replay": original_short["hf"] == replay_short["hf"],
+        "short_literal_normalized_target_match": normalize_medical_answer(original_short["hf"]["raw_output"]) == normalize_medical_answer(record.target),
         "disabled_restores_frozen_s0": disabled["token_ids"] == base["raw_generated_token_ids"] and disabled["raw_output"] == base["model_answer_raw"],
+        "short_disable_detach_identity": disabled_short == detached_short,
         "base_guard": guard,
     })
     if not passed:
