@@ -1,0 +1,63 @@
+{
+  "mapped_outputs": 8937,
+  "private_raw_withheld": true,
+  "public_artifacts": {
+    "A2_MULTISEED_PAIRED_REPORT.md": {
+      "bytes": 518,
+      "sha256": "3bb5dd33a7a0205ecb7f02e4c4f56c9f7b5fe4852b7ac2fafdc4ad4f7bd9c8ae"
+    },
+    "A2_MULTISEED_RESULTS.csv": {
+      "bytes": 31995,
+      "sha256": "4858cc2c6d3f805c318f700a3632ad0faa3c35058baaa6c4444663fddbb60fd3"
+    },
+    "CAMPAIGN_CONFIG.json": {
+      "bytes": 1961,
+      "sha256": "58ea87b4eb55596483d6a654fb61e3a4a2333a4c5c6b2fa74e30b9272a86bbba"
+    },
+    "CAMPAIGN_PROTOCOL.md": {
+      "bytes": 2656,
+      "sha256": "8d4e277230d9f0f3eb57576835173682ced3da54332dfaffb462ee59afa35bbd"
+    },
+    "DATA_COVERAGE_AND_ROLE_COUNTS.json": {
+      "bytes": 7043,
+      "sha256": "03b86ef3cfa9abbfee5a09882c889a81864e66b462e1f6f0285ec8f7ebd52aee"
+    },
+    "END_TO_END_BY_EDIT_SEED.csv": {
+      "bytes": 32365,
+      "sha256": "ef9600ef9656d1c6ff359a07e00f0ce4f8b0d28bc82c19cd489474bb775cfbee"
+    },
+    "END_TO_END_FORCED_GATED_REPORT.md": {
+      "bytes": 451,
+      "sha256": "4fec74c1857f9bd28b90231aea5acce6e3e0e619e17e8420c58f06a3009f420b"
+    },
+    "GPU_THROUGHPUT_AND_BUDGET_REPORT.md": {
+      "bytes": 459,
+      "sha256": "e1a6ea9ecb054ccbdba11990c00634201a7a0e64f6495516431e953241e5f039"
+    },
+    "JUDGE_EXECUTION_AND_DISAGREEMENT_REPORT.md": {
+      "bytes": 451,
+      "sha256": "0fd925392a9cb3b3a8de5fa9a4171304d480566206849daab61a34b2619d34ad"
+    },
+    "ROUTER_CALIBRATION_RESULTS.csv": {
+      "bytes": 44269,
+      "sha256": "89bb07afae30ca221b30cbe4dc9a65582f231768683d94f509ea3ef1c5f94328"
+    },
+    "ROUTER_REPRESENTATION_REPORT.md": {
+      "bytes": 786,
+      "sha256": "7c6cd2cd2c6da3165858bc9b5b1870e882874b7cf7a794f9f445eeaaf926afb8"
+    },
+    "SELECTED_PROFILE.json": {
+      "bytes": 4134,
+      "sha256": "73d02b5ac246fa40db0430cd5b040c376ddd8e7b1648c7b9d1220922b83c9c55"
+    },
+    "TASK_LEDGER.jsonl": {
+      "bytes": 23013,
+      "sha256": "2294b742f2f61a77f1d790c0c38da41a93bee5da9027fc6e1e3b7ca585d81090"
+    }
+  },
+  "schema_version": "medtrace-campaign-raw-closure-public-v1",
+  "task_status_counts": {
+    "COMPLETE": 120
+  },
+  "unique_judge_payloads": 1951
+}

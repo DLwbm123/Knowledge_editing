@@ -1,13 +1,12 @@
 {
+  "generation": "COMPLETE_FOR_REPORTED_TASKS",
+  "gpu1_used": false,
+  "judge": "COMPLETE_FOR_REPORTED_TASKS",
+  "old_artifacts_modified": false,
+  "private_artifacts_withheld": true,
   "schema_version": "medtrace-route-representation-campaign-completion-v1",
-  "status": "FORMAL_CAMPAIGN_RUNNING",
-  "generation": "RUNNING",
-  "judge": "NOT_STARTED",
-  "publication": "PRELAUNCH_PUSHED",
-  "formal_launch_utc": "2026-09-06T03:39:21Z",
-  "bounded_profile": {
-    "gpu2_a_task_seconds": 78.78481141792145,
-    "gpu3_b_task_seconds": 111.29557983204722,
-    "status": "PASS"
+  "status": "MEDTRACE_ROUTE_REPRESENTATION_CAMPAIGN_COMPLETE",
+  "task_status_counts": {
+    "COMPLETE": 120
   }
 }
