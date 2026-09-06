@@ -227,13 +227,14 @@ def prepare_data(args: argparse.Namespace) -> None:
             else:
                 edit["source_triple"], edit["source_base_type"] = hits[0].get("triple"), hits[0].get("base_type")
                 candidates = scan_candidates(edit, slake, excluded, args.slake_train.parent / "imgs")
-                one_per_image: dict[str, dict[str, Any]] = {}
-                for row in candidates:
-                    one_per_image.setdefault(image_identity(row["image_name"]), row)
-                values = list(one_per_image.values())
-                hard = [row for row in values if row["fact_relation"] == "same_question_different_image_conflicting_source_answer"]
-                broad = [row for row in values if row["fact_relation"] == "broad_unrelated_source_qa"]
-                challenge = [row for row in values if row["fact_relation"] == "same_image_other_source_fact"]
+                def one_per_image(relation: str) -> list[dict[str, Any]]:
+                    selected: dict[str, dict[str, Any]] = {}
+                    for row in stable_rows(record_id, [value for value in candidates if value["fact_relation"] == relation]):
+                        selected.setdefault(image_identity(row["image_name"]), row)
+                    return list(selected.values())
+                hard = one_per_image("same_question_different_image_conflicting_source_answer")
+                broad = one_per_image("broad_unrelated_source_qa")
+                challenge = stable_rows(record_id, [row for row in candidates if row["fact_relation"] == "same_image_other_source_fact"])
                 hard_roles = allocate_hard(record_id, hard)
                 used_groups = {image_identity(row["image_name"]) for rows in hard_roles.values() for row in rows}
                 broad = [row for row in stable_rows(record_id, broad) if image_identity(row["image_name"]) not in used_groups]
