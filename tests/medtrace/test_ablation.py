@@ -15,6 +15,7 @@ from scripts.medtrace.run_longrun_campaign import (
     score_with_frozen_prototypes,
     state_hash,
 )
+from scripts.medtrace.repair_route_calibration import metric
 from scripts.medtrace.run_generality_ablation import CONDITIONS, micro_plan
 from scripts.medtrace.run_hard_scope_ablation import validate_eqkeys
 
@@ -131,6 +132,16 @@ class AblationTests(unittest.TestCase):
         expected = expert.component_contraction(prompt).abs().mean(dim=-1)
         actual = score_with_frozen_prototypes(expert, prompt, visual, REPRESENTATIONS[0], {"irrelevant": torch.randn(4)})
         self.assertTrue(torch.allclose(expected, actual))
+
+    def test_fixed_gate_metric_keeps_damage_denominators(self):
+        rows = [
+            {"category": "native", "new_on": False, "base_correct": True, "forced_correct": False, "new_gated_correct": True},
+            {"category": "evaluation_positive", "new_on": True, "base_correct": True, "forced_correct": True, "new_gated_correct": True},
+            {"category": "broad_unrelated_source_qa", "new_on": False, "base_correct": False, "forced_correct": False, "new_gated_correct": False},
+        ]
+        value = metric(rows)
+        self.assertEqual((value["forced_damage_num"], value["damage_den"], value["forced_damage_avoided_num"]), (1, 2, 1))
+        self.assertEqual((value["rejected_correct_positive_num"], value["rejected_correct_positive_den"]), (0, 1))
 
     def test_coverage_calibration_is_not_all_off(self):
         points = calibrate_operating_points([0.8, 0.9, 1.0, 1.1], [0.85, 0.95], [0.1, 0.2], hard_evaluable=True)
