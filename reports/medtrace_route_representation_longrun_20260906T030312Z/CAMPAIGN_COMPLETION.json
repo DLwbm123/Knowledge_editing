@@ -1,7 +1,13 @@
 {
   "schema_version": "medtrace-route-representation-campaign-completion-v1",
-  "status": "READY_FOR_PROFILE_AND_GPU_SMOKE",
-  "generation": "NOT_STARTED",
+  "status": "FORMAL_CAMPAIGN_RUNNING",
+  "generation": "RUNNING",
   "judge": "NOT_STARTED",
-  "publication": "PRELAUNCH_PENDING"
+  "publication": "PRELAUNCH_PUSHED",
+  "formal_launch_utc": "2026-09-06T03:39:21Z",
+  "bounded_profile": {
+    "gpu2_a_task_seconds": 78.78481141792145,
+    "gpu3_b_task_seconds": 111.29557983204722,
+    "status": "PASS"
+  }
 }
