@@ -140,13 +140,24 @@ def save_checkpoint(path: Path, payload: dict[str, Any]) -> str:
     return sha256_file(path)
 
 
-def run_event(runtime: Any, event: dict[str, Any], base: dict[str, dict[str, Any]], out: Path) -> dict[str, Any]:
+def run_event(
+    runtime: Any,
+    event: dict[str, Any],
+    base: dict[str, dict[str, Any]],
+    out: Path,
+    *,
+    seed_base: int = SEED_BASE,
+) -> dict[str, Any]:
     record = EditorRecord.from_dict(event["edit_record"])
-    random_lock = rng_lock(derive_seed(record.record_id))
+    random_lock = rng_lock(derive_seed(record.record_id, base=seed_base))
     layer = runtime.get_module(LAYER)
     if (layer.in_features, layer.out_features) != (14336, 4096):
         raise RuntimeError(f"unexpected down_proj dimensions: {(layer.in_features, layer.out_features)}")
     expert = AsymmetricCPExpert(layer.in_features, layer.out_features, 4).to("cuda:0")
+    initial_expert_sha256 = sha256_json({
+        name: hashlib.sha256(value.detach().cpu().numpy().tobytes()).hexdigest()
+        for name, value in expert.state_dict().items()
+    })
     hook = MedTraceLayerHook(layer, expert)
     batch = runtime.build_edit_batch(record)
     with torch.no_grad():
@@ -180,7 +191,7 @@ def run_event(runtime: Any, event: dict[str, Any], base: dict[str, dict[str, Any
             if not math.isfinite(grad_norm) or not math.isfinite(rho_grad_norm):
                 raise FloatingPointError("non-finite CP gradient")
             optimizer.step()
-            expert.normalize_factors_()
+            expert.normalize_factors_(verify_dense=step == 1 or step % 20 == 0)
         condition = cp_condition(expert)
         if not math.isfinite(condition) or condition > 1e4:
             raise RuntimeError(f"CP input basis condition hard stop: {condition}")
@@ -258,6 +269,7 @@ def run_event(runtime: Any, event: dict[str, Any], base: dict[str, dict[str, Any
             "parameter_count": sum(parameter.numel() for parameter in expert.parameters()),
             "beta": expert.beta, "epsilon": expert.epsilon,
         },
+        "initial_expert_sha256": initial_expert_sha256,
         "optimizer": optimizer_lock(optimizer), "base_score": base_score, "selected": selected,
         "nll_decreased": selected["score"]["nll"] < base_score["nll"],
         "checkpoint": {"artifact": "expert.pt", "sha256": checkpoint_sha, "step": selected["step"]},

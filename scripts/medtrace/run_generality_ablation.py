@@ -63,12 +63,20 @@ def diagnostics(runtime: Any, hook: MedTraceLayerHook, batches: list[Any], step:
     return {"step": step, "native": values[0], "paraphrases": values[1:]}
 
 
-def train_condition(runtime: Any, record: EditorRecord, questions: list[str], checkpoint: dict[str, Any], condition: str) -> tuple[AsymmetricCPExpert, dict[str, Any]]:
+def train_condition(
+    runtime: Any,
+    record: EditorRecord,
+    questions: list[str],
+    checkpoint: dict[str, Any],
+    condition: str,
+    *,
+    seed_base: int = 20260906,
+) -> tuple[AsymmetricCPExpert, dict[str, Any]]:
     layer = runtime.get_module(LAYER)
     expert = AsymmetricCPExpert(layer.in_features, layer.out_features, 4).to("cuda:0")
     expert.load_state_dict(checkpoint["expert"])
     start_state = {name: value.detach().cpu().clone() for name, value in expert.state_dict().items()}
-    seed = derive_seed(record.record_id, base=20260906)
+    seed = derive_seed(record.record_id, base=seed_base)
     seed_everything(seed)
     optimizer = torch.optim.AdamW(expert.parameters(), lr=1e-3, weight_decay=0)
     optimized = {id(parameter) for group in optimizer.param_groups for parameter in group["params"]}
@@ -104,7 +112,7 @@ def train_condition(runtime: Any, record: EditorRecord, questions: list[str], ch
             if not math.isfinite(grad_norm) or any(not math.isfinite(value) for value in losses):
                 raise FloatingPointError("non-finite paired CP continuation")
             optimizer.step()
-            expert.normalize_factors_()
+            expert.normalize_factors_(verify_dense=step in (1, 40, 80))
             if step in (40, 80):
                 row = diagnostics(runtime, hook, batches, step)
                 row |= {"micro_losses": losses, "gradient_norm": grad_norm}

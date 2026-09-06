@@ -132,6 +132,35 @@ def build_target_only_labels(
     return labels, target_ids
 
 
+def expanded_image_span(
+    raw_input_ids: torch.Tensor,
+    raw_attention: torch.Tensor,
+    expanded_attention: torch.Tensor | None,
+    expanded_length: int,
+    *,
+    image_token_index: int,
+) -> tuple[int, int]:
+    """Derive the exact visual-token span from LLaVA's realized expansion."""
+    if raw_input_ids.shape != raw_attention.shape or raw_input_ids.shape[0] != 1:
+        raise ValueError("image-span derivation requires one aligned raw sequence")
+    valid_raw = raw_input_ids[0, raw_attention[0].bool()]
+    positions = torch.where(valid_raw == image_token_index)[0]
+    if len(positions) != 1:
+        raise RuntimeError("image-span derivation requires exactly one image token")
+    expanded_mask = (
+        expanded_attention[0].bool()
+        if expanded_attention is not None
+        else torch.ones(expanded_length, dtype=torch.bool, device=raw_input_ids.device)
+    )
+    valid_expanded = torch.where(expanded_mask)[0]
+    visual_count = len(valid_expanded) - (len(valid_raw) - 1)
+    start = int(valid_expanded[0].item()) + int(positions[0].item())
+    end = start + visual_count
+    if visual_count < 1 or end > expanded_length or not expanded_mask[start:end].all():
+        raise RuntimeError("realized multimodal expansion produced an invalid image span")
+    return start, end
+
+
 @dataclass(frozen=True)
 class EditorRecord:
     record_id: str
@@ -175,6 +204,8 @@ class PreparedBatch:
     key_token_text: str
     key_token_index: int
     image_token_count: int
+    image_token_start: int
+    image_token_end: int
     image_tensor_shape: list[int] | list[list[int]]
     prompt: str
     image_sha256: str
@@ -210,6 +241,7 @@ class PreparedBatch:
             "key_token_index": self.key_token_index,
             "text_space_sequence_length": int(self.raw_input_ids.shape[1]),
             "image_token_count": self.image_token_count,
+            "image_token_span": [self.image_token_start, self.image_token_end],
             "image_tensor_shape": self.image_tensor_shape,
             "multimodal_expansion_verified": self.labels.shape[1] > self.raw_input_ids.shape[1],
             "prompt_and_image_positions_masked": bool(
@@ -542,6 +574,10 @@ class LlavaMedEditorRuntime:
         if image_count != 1:
             raise RuntimeError("edit batch must contain exactly one image token")
         images = full["images"] if isinstance(full["images"], list) else [full["images"]]
+        image_start, image_end = expanded_image_span(
+            raw_input_ids, full["attention_mask"], attention, inputs_embeds.shape[1],
+            image_token_index=IMAGE_TOKEN_INDEX,
+        )
         image_shape: list[int] | list[list[int]] = (
             [list(item.shape) for item in images]
             if isinstance(full["images"], list)
@@ -562,6 +598,8 @@ class LlavaMedEditorRuntime:
             ),
             key_token_index=key_index,
             image_token_count=image_count,
+            image_token_start=image_start,
+            image_token_end=image_end,
             image_tensor_shape=image_shape,
             prompt=full["prompt"],
             image_sha256=full["image_sha256"],
@@ -600,6 +638,10 @@ class LlavaMedEditorRuntime:
             if isinstance(raw["images"], list)
             else list(raw["images"].shape)
         )
+        image_start, image_end = expanded_image_span(
+            raw_input_ids, raw["attention_mask"], attention, inputs_embeds.shape[1],
+            image_token_index=IMAGE_TOKEN_INDEX,
+        )
         return PreparedBatch(
             inputs_embeds=inputs_embeds,
             attention_mask=attention,
@@ -615,6 +657,8 @@ class LlavaMedEditorRuntime:
             ),
             key_token_index=key_index,
             image_token_count=image_count,
+            image_token_start=image_start,
+            image_token_end=image_end,
             image_tensor_shape=image_shape,
             prompt=raw["prompt"],
             image_sha256=raw["image_sha256"],
@@ -664,6 +708,25 @@ class LlavaMedEditorRuntime:
         module_path: str,
         pooling: str,
     ) -> torch.Tensor:
+        activation = self.extract_layer_input_features(batch, module_path=module_path)
+        if pooling == "last_prompt":
+            key = activation[batch.key_token_index]
+        elif pooling == "mean":
+            if batch.attention_mask is None:
+                key = activation.mean(dim=0)
+            else:
+                key = activation[batch.attention_mask[0].bool()].mean(dim=0)
+        else:
+            raise ValueError(f"unknown pooling: {pooling}")
+        return key.to(dtype=torch.float32)
+
+    def extract_layer_input_features(
+        self,
+        batch: PreparedBatch,
+        *,
+        module_path: str,
+    ) -> torch.Tensor:
+        """Capture the realized prompt sequence once for prompt and visual routing."""
         module = self.get_module(module_path)
         captured: list[torch.Tensor] = []
 
@@ -685,16 +748,7 @@ class LlavaMedEditorRuntime:
         activation = captured[0]
         if activation.ndim != 3 or activation.shape[0] != 1:
             raise RuntimeError(f"unexpected activation shape: {tuple(activation.shape)}")
-        if pooling == "last_prompt":
-            key = activation[0, batch.key_token_index]
-        elif pooling == "mean":
-            if batch.attention_mask is None:
-                key = activation[0].mean(dim=0)
-            else:
-                key = activation[0, batch.attention_mask[0].bool()].mean(dim=0)
-        else:
-            raise ValueError(f"unknown pooling: {pooling}")
-        return key.to(dtype=torch.float32)
+        return activation[0].to(dtype=torch.float32)
 
     def generate(
         self,

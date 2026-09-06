@@ -1,7 +1,12 @@
 import unittest
 
+import torch
+
+from m3bench_repro.editors.llava_runtime import expanded_image_span
+from methods.medtrace import AsymmetricCPExpert
 from scripts.medtrace.build_ablation_data import freeze_scope_roles
 from scripts.medtrace.finalize_ablation import task_metrics
+from scripts.medtrace.run_longrun_campaign import REPRESENTATIONS, calibrate_operating_points, representation_score
 from scripts.medtrace.run_generality_ablation import CONDITIONS, micro_plan
 from scripts.medtrace.run_hard_scope_ablation import validate_eqkeys
 
@@ -70,6 +75,24 @@ class AblationTests(unittest.TestCase):
         self.assertEqual(value["eligible_edits"], 2)
         self.assertAlmostEqual(value["semantic_micro"], 2 / 3)
         self.assertAlmostEqual(value["semantic_macro"], 0.75)
+
+    def test_realized_visual_span_and_route_scores(self):
+        raw = torch.tensor([[0, 10, -200, 11, 12]])
+        raw_attention = torch.tensor([[0, 1, 1, 1, 1]])
+        expanded_attention = torch.tensor([[0, 1, 1, 1, 1, 1, 1]])
+        self.assertEqual(expanded_image_span(raw, raw_attention, expanded_attention, 7, image_token_index=-200), (2, 5))
+        expert = AsymmetricCPExpert(12, 8, 4)
+        prompt = torch.randn(3, 12)
+        visual = [torch.randn(2, 12) for _ in range(3)]
+        for representation in REPRESENTATIONS:
+            scores, metadata = representation_score(expert, prompt, visual, representation, 2)
+            self.assertEqual(scores.shape, (3,))
+            self.assertEqual("visual_prototype" in metadata, representation == REPRESENTATIONS[2])
+
+    def test_coverage_calibration_is_not_all_off(self):
+        points = calibrate_operating_points([0.8, 0.9, 1.0, 1.1], [0.85, 0.95], [0.1, 0.2], hard_evaluable=True)
+        self.assertGreaterEqual(points["COVERAGE_CONSTRAINED"]["positive_tpr"], 0.75)
+        self.assertEqual(points["SAFETY_FIRST"]["broad_fpr"], 0)
 
 
 if __name__ == "__main__":
