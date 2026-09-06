@@ -57,6 +57,8 @@ GPU_UUIDS = {
     "3": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c",
 }
 STOP_REQUESTED = False
+SCORE_DEFINITION = "medtrace-frozen-fit-prototype-score-v1"
+SCORE_DEFINITION_SHA256 = hashlib.sha256(SCORE_DEFINITION.encode()).hexdigest()
 
 
 def atomic_text(path: Path, value: str) -> None:
@@ -99,26 +101,44 @@ def response_parts(
     return prompt_response, torch.stack(pooled)
 
 
-def representation_score(
+def build_fit_prototypes(
+    expert: AsymmetricCPExpert,
+    fit_prompt: torch.Tensor,
+    fit_visual: list[torch.Tensor],
+    representation: str,
+) -> dict[str, torch.Tensor]:
+    if representation == REPRESENTATIONS[0]:
+        return {}
+    if not len(fit_prompt):
+        raise ValueError("fit prototypes require at least one fit-positive input")
+    prompt_response, visual_response = response_parts(expert, fit_prompt, fit_visual, representation)
+    prompt_prototype = normalize_rows(normalize_rows(prompt_response).mean(dim=0, keepdim=True))[0].detach()
+    metadata = {"prompt_prototype": prompt_prototype}
+    if representation == REPRESENTATIONS[2]:
+        if visual_response is None:
+            raise RuntimeError("visual-conditioned prototype is missing visual responses")
+        metadata["visual_prototype"] = normalize_rows(normalize_rows(visual_response).mean(dim=0, keepdim=True))[0].detach()
+    return metadata
+
+
+def score_with_frozen_prototypes(
     expert: AsymmetricCPExpert,
     prompt: torch.Tensor,
     visual: list[torch.Tensor],
     representation: str,
-    fit_count: int,
-) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+    prototypes: dict[str, torch.Tensor],
+) -> torch.Tensor:
     prompt_response, visual_response = response_parts(expert, prompt, visual, representation)
     if representation == REPRESENTATIONS[0]:
-        return prompt_response.abs().mean(dim=-1), {}
-    prompt_prototype = normalize_rows(normalize_rows(prompt_response[:fit_count]).mean(dim=0, keepdim=True))[0].detach()
+        return prompt_response.abs().mean(dim=-1)
+    prompt_prototype = prototypes["prompt_prototype"].to(prompt_response.device)
     score = normalize_rows(prompt_response) @ prompt_prototype
-    metadata = {"prompt_prototype": prompt_prototype}
     if representation == REPRESENTATIONS[2]:
         if visual_response is None:
             raise RuntimeError("visual-conditioned score is missing visual responses")
-        visual_prototype = normalize_rows(normalize_rows(visual_response[:fit_count]).mean(dim=0, keepdim=True))[0].detach()
+        visual_prototype = prototypes["visual_prototype"].to(visual_response.device)
         score = 0.5 * score + 0.5 * (normalize_rows(visual_response) @ visual_prototype)
-        metadata["visual_prototype"] = visual_prototype
-    return score, metadata
+    return score
 
 
 def calibrate_operating_points(
@@ -500,7 +520,8 @@ def train_router_candidate(
     started = time.monotonic()
     for step in range(1, 801):
         optimizer.zero_grad(set_to_none=True)
-        scores, _ = representation_score(expert, prompt, visual, representation, fit_count)
+        prototypes = build_fit_prototypes(expert, prompt[:fit_count], visual[:fit_count], representation)
+        scores = score_with_frozen_prototypes(expert, prompt, visual, representation, prototypes)
         positive, negative = scores[:fit_count], scores[fit_count:]
         logits = torch.cat((positive[:, None], negative.expand(len(positive), -1)), dim=1) / 0.1
         infonce = F.cross_entropy(logits, torch.zeros(len(positive), dtype=torch.long, device=logits.device))
@@ -517,23 +538,25 @@ def train_router_candidate(
         if step % 100 == 0:
             trajectory.append({"step": step, "loss": float(loss.item()), "infonce": float(infonce.item()), "hinge": float(hinge.item()), "orthogonality": float(orthogonality.item()), "gradient_norm": grad_norm})
         if step in BUDGETS:
-            _, prototypes = representation_score(expert, prompt, visual, representation, fit_count)
+            prototypes = build_fit_prototypes(expert, prompt[:fit_count], visual[:fit_count], representation)
             checkpoint = out / f"{representation}__step{step}.pt"
             checkpoint.parent.mkdir(parents=True, exist_ok=True)
             checkpoint_sha = save_checkpoint(checkpoint, {
                 "representation": representation, "step": step, "rank": 4,
                 "expert": expert.state_dict(), "prototypes": {key: value.cpu() for key, value in prototypes.items()},
+                "q_sha256": tensor_sha256(expert.input_basis()), "prototype_sha256": state_hash(prototypes),
+                "score_definition_sha256": SCORE_DEFINITION_SHA256,
             })
-            saved[str(step)] = {"checkpoint": checkpoint.name, "checkpoint_sha256": checkpoint_sha, "q_sha256": tensor_sha256(expert.input_basis()), "prototype_bytes": sum(value.numel() * value.element_size() for value in prototypes.values())}
+            saved[str(step)] = {"checkpoint": checkpoint.name, "checkpoint_sha256": checkpoint_sha, "q_sha256": tensor_sha256(expert.input_basis()), "prototype_sha256": state_hash(prototypes), "score_definition_sha256": SCORE_DEFINITION_SHA256, "prototype_bytes": sum(value.numel() * value.element_size() for value in prototypes.values())}
     return {"representation": representation, "trajectory": trajectory, "saved": saved, "elapsed_seconds": time.monotonic() - started}
 
 
 def score_checkpoint(
-    checkpoint: dict[str, Any], rows: list[dict[str, Any]], prompt: torch.Tensor, visual: list[torch.Tensor], fit_count: int,
+    checkpoint: dict[str, Any], rows: list[dict[str, Any]], prompt: torch.Tensor, visual: list[torch.Tensor],
 ) -> list[dict[str, Any]]:
     expert = AsymmetricCPExpert(prompt.shape[-1], 4096, 4).to("cuda:0")
     expert.load_state_dict(checkpoint["expert"])
-    scores, _ = representation_score(expert, prompt, visual, checkpoint["representation"], fit_count)
+    scores = score_with_frozen_prototypes(expert, prompt, visual, checkpoint["representation"], checkpoint["prototypes"])
     return [{"logical_id": value["row"]["logical_id"], "role": value["row"]["role"], "label": value["row"]["label"], "fact_relation": value["row"]["fact_relation"], "score": float(score.item())} for value, score in zip(rows, scores, strict=True)]
 
 
@@ -610,12 +633,11 @@ def execute_b(runtime: Any, frozen: dict[str, Any], task: dict[str, Any], out: P
         atomic_json(marker, value)
         candidates.append(value)
     cal_rows, cal_prompt, cal_visual = ordered_features(cache, roles=("calibration",))
-    cal_fit_count = sum(value["row"]["label"] == "positive" for value in cal_rows)
     calibrations = {}
     for representation in REPRESENTATIONS:
         for budget in BUDGETS:
             checkpoint = torch.load(out / f"{representation}__step{budget}.pt", map_location="cuda:0", weights_only=True)
-            scored = score_checkpoint(checkpoint, cal_rows, cal_prompt, cal_visual, cal_fit_count)
+            scored = score_checkpoint(checkpoint, cal_rows, cal_prompt, cal_visual)
             positive = [row["score"] for row in scored if row["label"] == "positive"]
             hard = [row["score"] for row in scored if row["fact_relation"] == "same_question_different_image_conflicting_source_answer"]
             broad = [row["score"] for row in scored if row["fact_relation"] == "broad_unrelated_source_qa"]
@@ -676,14 +698,7 @@ def select_profiles(run_root: Path, queue: TaskQueue, public_dir: Path) -> bool:
 
 
 def route_score_one(expert: AsymmetricCPExpert, checkpoint: dict[str, Any], prompt: torch.Tensor, visual: torch.Tensor) -> float:
-    score, _ = representation_score(expert, prompt[None], [visual], checkpoint["representation"], 1)
-    if checkpoint["representation"] != REPRESENTATIONS[0]:
-        prompt_response, visual_response = response_parts(expert, prompt[None], [visual], checkpoint["representation"])
-        prompt_prototype = checkpoint["prototypes"]["prompt_prototype"].to(prompt.device)
-        score = normalize_rows(prompt_response) @ prompt_prototype
-        if checkpoint["representation"] == REPRESENTATIONS[2]:
-            visual_prototype = checkpoint["prototypes"]["visual_prototype"].to(prompt.device)
-            score = 0.5 * score + 0.5 * (normalize_rows(visual_response) @ visual_prototype)
+    score = score_with_frozen_prototypes(expert, prompt[None], [visual], checkpoint["representation"], checkpoint["prototypes"])
     return float(score[0].item())
 
 

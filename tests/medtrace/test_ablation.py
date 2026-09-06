@@ -6,7 +6,15 @@ from m3bench_repro.editors.llava_runtime import expanded_image_span
 from methods.medtrace import AsymmetricCPExpert
 from scripts.medtrace.build_ablation_data import freeze_scope_roles
 from scripts.medtrace.finalize_ablation import task_metrics
-from scripts.medtrace.run_longrun_campaign import REPRESENTATIONS, allocate_hard, calibrate_operating_points, representation_score
+from scripts.medtrace.run_longrun_campaign import (
+    REPRESENTATIONS,
+    allocate_hard,
+    build_fit_prototypes,
+    calibrate_operating_points,
+    route_score_one,
+    score_with_frozen_prototypes,
+    state_hash,
+)
 from scripts.medtrace.run_generality_ablation import CONDITIONS, micro_plan
 from scripts.medtrace.run_hard_scope_ablation import validate_eqkeys
 
@@ -85,9 +93,44 @@ class AblationTests(unittest.TestCase):
         prompt = torch.randn(3, 12)
         visual = [torch.randn(2, 12) for _ in range(3)]
         for representation in REPRESENTATIONS:
-            scores, metadata = representation_score(expert, prompt, visual, representation, 2)
+            metadata = build_fit_prototypes(expert, prompt[:2], visual[:2], representation)
+            scores = score_with_frozen_prototypes(expert, prompt, visual, representation, metadata)
             self.assertEqual(scores.shape, (3,))
             self.assertEqual("visual_prototype" in metadata, representation == REPRESENTATIONS[2])
+
+    def test_frozen_fit_prototype_is_batch_and_label_independent(self):
+        torch.manual_seed(3)
+        expert = AsymmetricCPExpert(12, 8, 4)
+        fit_prompt = torch.randn(2, 12)
+        fit_visual = [torch.randn(3, 12) for _ in fit_prompt]
+        target_prompt = torch.randn(3, 12)
+        target_visual = [torch.randn(2, 12) for _ in target_prompt]
+        for representation in REPRESENTATIONS[1:]:
+            fit_prototypes = build_fit_prototypes(expert, fit_prompt, fit_visual, representation)
+            calibration_prototypes = build_fit_prototypes(expert, target_prompt[:2], target_visual[:2], representation)
+            expected = score_with_frozen_prototypes(expert, target_prompt, target_visual, representation, fit_prototypes)
+            legacy = score_with_frozen_prototypes(expert, target_prompt, target_visual, representation, calibration_prototypes)
+            self.assertFalse(torch.allclose(expected, legacy))
+            permutation = torch.tensor([2, 0, 1])
+            permuted = score_with_frozen_prototypes(expert, target_prompt[permutation], [target_visual[i] for i in permutation], representation, fit_prototypes)
+            self.assertTrue(torch.allclose(expected[permutation], permuted))
+            split = torch.cat([
+                score_with_frozen_prototypes(expert, target_prompt[:1], target_visual[:1], representation, fit_prototypes),
+                score_with_frozen_prototypes(expert, target_prompt[1:], target_visual[1:], representation, fit_prototypes),
+            ])
+            self.assertTrue(torch.allclose(expected, split))
+            checkpoint = {"representation": representation, "prototypes": {key: value.clone() for key, value in fit_prototypes.items()}}
+            self.assertAlmostEqual(float(expected[0]), route_score_one(expert, checkpoint, target_prompt[0], target_visual[0]), places=6)
+            self.assertEqual(state_hash(fit_prototypes), state_hash(checkpoint["prototypes"]))
+
+    def test_r0_regression_ignores_prototypes(self):
+        torch.manual_seed(4)
+        expert = AsymmetricCPExpert(12, 8, 4)
+        prompt = torch.randn(3, 12)
+        visual = [torch.randn(2, 12) for _ in prompt]
+        expected = expert.component_contraction(prompt).abs().mean(dim=-1)
+        actual = score_with_frozen_prototypes(expert, prompt, visual, REPRESENTATIONS[0], {"irrelevant": torch.randn(4)})
+        self.assertTrue(torch.allclose(expected, actual))
 
     def test_coverage_calibration_is_not_all_off(self):
         points = calibrate_operating_points([0.8, 0.9, 1.0, 1.1], [0.85, 0.95], [0.1, 0.2], hard_evaluable=True)
