@@ -1,0 +1,22 @@
+{
+  "actual_replays": 7,
+  "corrected_e2e": "COMPLETE",
+  "gpu1_used": false,
+  "method_effectiveness": "R2_ROUTER_CALIBRATION_FIXED__END_TO_END_NOT_SUPPORTED_OVER_R0_ON_CURRENT_DEV",
+  "new_gpu_hours": 0.20903436077965631,
+  "new_gpu_seconds": 752.5236988067627,
+  "new_judge_requests": 0,
+  "next_training_step": "TARGETED_Q_P_COUPLING_OR_OUTPUT_RECOVERY_CHANGE_NEEDED_BEFORE_EXPANSION",
+  "original_campaign_execution": "COMPLETE",
+  "private_qa_images_tokens_weights_and_mapping_withheld": true,
+  "reused": {
+    "final_expert_checkpoints": 72,
+    "frozen_base_outputs": 1494,
+    "frozen_forced_outputs": 2988,
+    "judge_opaque_verdicts": 1756,
+    "router_candidate_checkpoints": 216
+  },
+  "router_calibration": "FIXED",
+  "schema_version": "medtrace-fixed-prototype-closeout-v1",
+  "track_a_multiseed": "PRESERVED_UNCHANGED"
+}

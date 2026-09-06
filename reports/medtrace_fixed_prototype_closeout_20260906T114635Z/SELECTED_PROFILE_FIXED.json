@@ -1,0 +1,148 @@
+{
+  "all_calibration_profiles": [
+    {
+      "broad_fpr": 0.0,
+      "budget": 200,
+      "hard_fpr": 0.0,
+      "hard_task_count": 21,
+      "operating_point": "SAFETY_FIRST",
+      "positive_tpr": 0.8541666666666666,
+      "representation": "R0_MAGNITUDE_LAST_PROMPT",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.007716049382716049,
+      "budget": 200,
+      "hard_fpr": 0.05952380952380952,
+      "hard_task_count": 21,
+      "operating_point": "COVERAGE_CONSTRAINED",
+      "positive_tpr": 0.9375,
+      "representation": "R0_MAGNITUDE_LAST_PROMPT",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.0,
+      "budget": 800,
+      "hard_fpr": 0.0,
+      "hard_task_count": 21,
+      "operating_point": "SAFETY_FIRST",
+      "positive_tpr": 0.8541666666666666,
+      "representation": "R0_MAGNITUDE_LAST_PROMPT",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.0030864197530864196,
+      "budget": 800,
+      "hard_fpr": 0.07142857142857142,
+      "hard_task_count": 21,
+      "operating_point": "COVERAGE_CONSTRAINED",
+      "positive_tpr": 0.9375,
+      "representation": "R0_MAGNITUDE_LAST_PROMPT",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.0,
+      "budget": 200,
+      "hard_fpr": 0.0,
+      "hard_task_count": 21,
+      "operating_point": "SAFETY_FIRST",
+      "positive_tpr": 0.3611111111111111,
+      "representation": "R1_SIGNED_CP_RESPONSE",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.043055555555555555,
+      "budget": 200,
+      "hard_fpr": 0.8333333333333334,
+      "hard_task_count": 21,
+      "operating_point": "COVERAGE_CONSTRAINED",
+      "positive_tpr": 0.9791666666666666,
+      "representation": "R1_SIGNED_CP_RESPONSE",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.0,
+      "budget": 800,
+      "hard_fpr": 0.0,
+      "hard_task_count": 21,
+      "operating_point": "SAFETY_FIRST",
+      "positive_tpr": 0.4930555555555556,
+      "representation": "R1_SIGNED_CP_RESPONSE",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.07118055555555555,
+      "budget": 800,
+      "hard_fpr": 0.7142857142857143,
+      "hard_task_count": 21,
+      "operating_point": "COVERAGE_CONSTRAINED",
+      "positive_tpr": 0.9652777777777778,
+      "representation": "R1_SIGNED_CP_RESPONSE",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.0,
+      "budget": 200,
+      "hard_fpr": 0.0,
+      "hard_task_count": 21,
+      "operating_point": "SAFETY_FIRST",
+      "positive_tpr": 0.9166666666666666,
+      "representation": "R2_VISUAL_CONDITIONED_CP_RESPONSE",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.027777777777777776,
+      "budget": 200,
+      "hard_fpr": 0.13095238095238096,
+      "hard_task_count": 21,
+      "operating_point": "COVERAGE_CONSTRAINED",
+      "positive_tpr": 0.9861111111111112,
+      "representation": "R2_VISUAL_CONDITIONED_CP_RESPONSE",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.0,
+      "budget": 800,
+      "hard_fpr": 0.0,
+      "hard_task_count": 21,
+      "operating_point": "SAFETY_FIRST",
+      "positive_tpr": 0.9375,
+      "representation": "R2_VISUAL_CONDITIONED_CP_RESPONSE",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.0,
+      "budget": 800,
+      "hard_fpr": 0.03571428571428571,
+      "hard_task_count": 21,
+      "operating_point": "COVERAGE_CONSTRAINED",
+      "positive_tpr": 0.9722222222222222,
+      "representation": "R2_VISUAL_CONDITIONED_CP_RESPONSE",
+      "task_count": 36
+    }
+  ],
+  "alternative": {
+    "broad_fpr": 0.0,
+    "budget": 800,
+    "hard_fpr": 0.0,
+    "hard_task_count": 21,
+    "operating_point": "SAFETY_FIRST",
+    "positive_tpr": 0.9375,
+    "representation": "R2_VISUAL_CONDITIONED_CP_RESPONSE",
+    "task_count": 36
+  },
+  "private_thresholds_withheld": true,
+  "r0": {
+    "broad_fpr": 0.0,
+    "budget": 200,
+    "hard_fpr": 0.0,
+    "hard_task_count": 21,
+    "operating_point": "SAFETY_FIRST",
+    "positive_tpr": 0.8541666666666666,
+    "representation": "R0_MAGNITUDE_LAST_PROMPT",
+    "task_count": 36
+  },
+  "schema_version": "medtrace-selected-route-profile-fixed-v1",
+  "selection_source": "original_calibration_roles_with_frozen_fit_prototypes",
+  "status": "FROZEN_BEFORE_CORRECTED_EVALUATION_SCORING"
+}

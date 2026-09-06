@@ -1,0 +1,62 @@
+{
+  "by_candidate_family": {
+    "R0_MAGNITUDE_LAST_PROMPT__step200": {
+      "calibration_scores": 864,
+      "changed_score_count": 0,
+      "legacy_decision_changes_at_coverage_threshold": 0,
+      "legacy_decision_changes_at_safety_threshold": 0,
+      "maximum_abs_score_difference": 0.0,
+      "mean_abs_score_difference": 0.0
+    },
+    "R0_MAGNITUDE_LAST_PROMPT__step800": {
+      "calibration_scores": 864,
+      "changed_score_count": 0,
+      "legacy_decision_changes_at_coverage_threshold": 0,
+      "legacy_decision_changes_at_safety_threshold": 0,
+      "maximum_abs_score_difference": 0.0,
+      "mean_abs_score_difference": 0.0
+    },
+    "R1_SIGNED_CP_RESPONSE__step200": {
+      "calibration_scores": 864,
+      "changed_score_count": 864,
+      "legacy_decision_changes_at_coverage_threshold": 123,
+      "legacy_decision_changes_at_safety_threshold": 126,
+      "maximum_abs_score_difference": 1.172738939523697,
+      "mean_abs_score_difference": 0.0633861508987913
+    },
+    "R1_SIGNED_CP_RESPONSE__step800": {
+      "calibration_scores": 864,
+      "changed_score_count": 864,
+      "legacy_decision_changes_at_coverage_threshold": 104,
+      "legacy_decision_changes_at_safety_threshold": 103,
+      "maximum_abs_score_difference": 1.3847823441028595,
+      "mean_abs_score_difference": 0.13327188013957952
+    },
+    "R2_VISUAL_CONDITIONED_CP_RESPONSE__step200": {
+      "calibration_scores": 864,
+      "changed_score_count": 864,
+      "legacy_decision_changes_at_coverage_threshold": 59,
+      "legacy_decision_changes_at_safety_threshold": 58,
+      "maximum_abs_score_difference": 1.4817587733268738,
+      "mean_abs_score_difference": 0.08026524759932524
+    },
+    "R2_VISUAL_CONDITIONED_CP_RESPONSE__step800": {
+      "calibration_scores": 864,
+      "changed_score_count": 864,
+      "legacy_decision_changes_at_coverage_threshold": 41,
+      "legacy_decision_changes_at_safety_threshold": 38,
+      "maximum_abs_score_difference": 1.0575262010097504,
+      "mean_abs_score_difference": 0.10291315494881323
+    }
+  },
+  "candidate_checkpoint_count": 216,
+  "checkpoint_hash_failures": 0,
+  "fit_prototype_rebuild_failures": 0,
+  "maximum_batch_request_score_difference": 1.430511474609375e-06,
+  "maximum_fit_prototype_rebuild_difference": 8.493661880493164e-07,
+  "maximum_legacy_score_reproduction_difference": 7.152557373046875e-07,
+  "private_qa_and_activation_values_withheld": true,
+  "prototype_source": "original_scope_fit_positive_rows_only",
+  "schema_version": "medtrace-prototype-source-score-parity-public-v1",
+  "score_definition_sha256": "117533708068ae04c46478433e5d752f5bfb254c86304401fbf5e6f7b20e8ea8"
+}
