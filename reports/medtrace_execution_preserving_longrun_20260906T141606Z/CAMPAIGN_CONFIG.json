@@ -1,0 +1,31 @@
+{
+  "base_commit": "13af63477085f83de273a673c196d0b4f01c483b",
+  "code_commit": "16ed1a65bb2ad22f7503c7bc9995d45638b16c1f",
+  "cohort": {
+    "broad_only": 5,
+    "fit_only_excluded": 4,
+    "hard_evaluable": 7
+  },
+  "conditions": [
+    "C1_R2_FIXED_Q_LONG_RECOVERY",
+    "C2_R2_SHARED_Q_JOINT",
+    "C3_R2_SHARED_Q_EXECUTION_ANCHOR"
+  ],
+  "devices": {
+    "gpu1_forbidden": true,
+    "physical": [
+      2,
+      3
+    ]
+  },
+  "main_trajectories": 108,
+  "micro_forwards_each_step": 2,
+  "optimizer_steps_each": 800,
+  "private_artifacts_withheld": true,
+  "schema_version": "medtrace-execution-preservation-public-config-v1",
+  "seeds": [
+    20260906,
+    20260907,
+    20260908
+  ]
+}
