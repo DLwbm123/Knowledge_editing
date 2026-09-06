@@ -34,6 +34,7 @@ from scripts.medtrace.run_longrun_campaign import (  # noqa: E402
     route_score_one,
     score_with_frozen_prototypes,
     state_hash,
+    verify_gpu,
 )
 
 ORIGINAL_CODE_COMMIT = "7d4fc0558e0ea1a02bd4a3e17a5201eed47806c7"
@@ -129,6 +130,8 @@ def recalculate(args: argparse.Namespace) -> None:
     if len(b_tasks) != 36:
         raise RuntimeError(f"expected 36 complete B tasks, got {len(b_tasks)}")
     device = torch.device(args.device)
+    if device.type == "cuda":
+        verify_gpu()
     fixed_results, parity_rows, csv_rows = [], [], []
     for task in b_tasks:
         task_dir = run_root / "private/tasks" / task["task_id"]
