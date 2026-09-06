@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 
 from methods.medtrace import AsymmetricCPExpert, MedTraceLayerHook
-from scripts.medtrace.run_execution_preserving_longrun import CONDITIONS, condition_order, parameter_groups, route_loss
+from scripts.medtrace.run_execution_preserving_longrun import CONDITIONS, active_residual, condition_order, parameter_groups, route_loss
 
 
 class ExecutionPreservingTests(unittest.TestCase):
@@ -56,6 +56,13 @@ class ExecutionPreservingTests(unittest.TestCase):
         self.assertEqual(first, condition_order(20260906, 1))
         self.assertEqual(set(first), set(CONDITIONS))
         self.assertEqual(len(first), 3)
+
+    def test_teacher_cache_accepts_unbatched_extractor_shape(self):
+        residual = torch.randn(5, 8)
+        mask = torch.tensor([[False, True, False, True, False]])
+        self.assertTrue(torch.equal(active_residual(residual, mask), residual[[1, 3]]))
+        with self.assertRaisesRegex(RuntimeError, "shapes"):
+            active_residual(residual, torch.ones(1, 4, dtype=torch.bool))
 
 
 if __name__ == "__main__":

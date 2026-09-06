@@ -170,6 +170,13 @@ def _diagnostics(runtime: Any, expert: AsymmetricCPExpert, batches: list[Any], l
     return [{"input": label, **score_state(runtime, expert, batch)} for label, batch in zip(labels, batches, strict=True)]
 
 
+def active_residual(residual: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
+    active_mask = mask[0] if residual.ndim == 2 and mask.ndim == 2 and mask.shape[0] == 1 else mask
+    if residual.shape[:-1] != active_mask.shape:
+        raise RuntimeError("teacher residual and predictor mask shapes do not align")
+    return residual[active_mask]
+
+
 def load_or_build_anchor_cache(
     runtime: Any,
     teacher: AsymmetricCPExpert,
@@ -189,7 +196,7 @@ def load_or_build_anchor_cache(
             activation = runtime.extract_layer_input_features(batch, module_path=LAYER)
             mask = torch.zeros_like(batch.labels, dtype=torch.bool)
             mask[:, :-1] = batch.labels[:, 1:] != -100
-            residual = teacher.residual(activation)[mask].detach().cpu()
+            residual = active_residual(teacher.residual(activation), mask).detach().cpu()
             values.append(residual)
             near_zero.append(float(residual.float().square().sum()) < 1e-8)
     cached = {
