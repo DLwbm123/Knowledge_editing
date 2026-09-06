@@ -820,6 +820,7 @@ def worker(args: argparse.Namespace) -> None:
     base = {row["query_id"]: row for row in read_jsonl(Path(config["base_predictions"]))}
     runtime = load_real_runtime(argparse.Namespace(cpu_gate=Path(config["cpu_gate"])))
     worker_id = f"gpu{physical}"
+    completed_here = 0
     try:
         with Telemetry(run_root / "private/GPU_TELEMETRY.jsonl", physical, worker_id) as telemetry:
             while True:
@@ -848,6 +849,7 @@ def worker(args: argparse.Namespace) -> None:
                         execute_e2e(runtime, frozen, task, task_dir, run_root, locks)
                         status = "RAW_READY"
                     queue.update(task["task_id"], status, elapsed_seconds=time.monotonic() - started, finished_at=time.time())
+                    completed_here += 1
                 except torch.OutOfMemoryError as error:
                     torch.cuda.empty_cache()
                     if task["attempts"] < 2:
@@ -860,6 +862,8 @@ def worker(args: argparse.Namespace) -> None:
                 finally:
                     telemetry.task_id = None
                     torch.cuda.empty_cache()
+                if args.max_tasks and completed_here >= args.max_tasks:
+                    break
     finally:
         del runtime
         torch.cuda.empty_cache()
@@ -1080,6 +1084,7 @@ def parser() -> argparse.ArgumentParser:
     worker_parser = sub.add_parser("worker")
     worker_parser.add_argument("--run-root", type=Path, required=True)
     worker_parser.add_argument("--expected-code-commit", required=True)
+    worker_parser.add_argument("--max-tasks", type=int, default=0)
     worker_parser.set_defaults(func=worker)
     judge = sub.add_parser("prepare-judge")
     judge.add_argument("--run-root", type=Path, required=True)
