@@ -6,7 +6,7 @@ from m3bench_repro.editors.llava_runtime import expanded_image_span
 from methods.medtrace import AsymmetricCPExpert
 from scripts.medtrace.build_ablation_data import freeze_scope_roles
 from scripts.medtrace.finalize_ablation import task_metrics
-from scripts.medtrace.run_longrun_campaign import REPRESENTATIONS, calibrate_operating_points, representation_score
+from scripts.medtrace.run_longrun_campaign import REPRESENTATIONS, allocate_hard, calibrate_operating_points, representation_score
 from scripts.medtrace.run_generality_ablation import CONDITIONS, micro_plan
 from scripts.medtrace.run_hard_scope_ablation import validate_eqkeys
 
@@ -93,6 +93,10 @@ class AblationTests(unittest.TestCase):
         points = calibrate_operating_points([0.8, 0.9, 1.0, 1.1], [0.85, 0.95], [0.1, 0.2], hard_evaluable=True)
         self.assertGreaterEqual(points["COVERAGE_CONSTRAINED"]["positive_tpr"], 0.75)
         self.assertEqual(points["SAFETY_FIRST"]["broad_fpr"], 0)
+
+    def test_sparse_hard_groups_are_spread_across_roles(self):
+        rows = [candidate(i, "same_question_different_image_conflicting_source_answer", f"h{i}") for i in range(3)]
+        self.assertEqual({role: len(values) for role, values in allocate_hard("p", rows).items()}, {"fit": 1, "calibration": 1, "evaluation": 1})
 
 
 if __name__ == "__main__":

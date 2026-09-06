@@ -177,8 +177,11 @@ def allocate_hard(record_id: str, rows: list[dict[str, Any]]) -> dict[str, list[
     result = {role: [] for role in ("fit", "calibration", "evaluation")}
     capacities = {"fit": 4, "calibration": 4, "evaluation": 5}
     cycle = ("fit", "calibration", "evaluation")
+    role_index = 0
     for row in stable_rows(record_id, rows):
-        for role in cycle:
+        for _ in cycle:
+            role = cycle[role_index % len(cycle)]
+            role_index += 1
             if len(result[role]) < capacities[role]:
                 result[role].append(row)
                 break
@@ -234,7 +237,7 @@ def prepare_data(args: argparse.Namespace) -> None:
                     return list(selected.values())
                 hard = one_per_image("same_question_different_image_conflicting_source_answer")
                 broad = one_per_image("broad_unrelated_source_qa")
-                challenge = stable_rows(record_id, [row for row in candidates if row["fact_relation"] == "same_image_other_source_fact"])
+                challenge = stable_rows(record_id, [row for row in candidates if row["fact_relation"] == "same_image_other_source_fact"])[:12]
                 hard_roles = allocate_hard(record_id, hard)
                 used_groups = {image_identity(row["image_name"]) for rows in hard_roles.values() for row in rows}
                 broad = [row for row in stable_rows(record_id, broad) if image_identity(row["image_name"]) not in used_groups]
