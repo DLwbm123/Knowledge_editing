@@ -111,6 +111,8 @@ class MedTraceLayerHook:
         self.generation_boundary: int | None = None
         self.generation_trace: list[dict[str, int | float]] = []
         self.last_generation_trace: tuple[dict[str, int | float], ...] = ()
+        self.anchor_reference: torch.Tensor | None = None
+        self.anchor_loss: torch.Tensor | None = None
         self._handle = None
 
     def attach(self) -> None:
@@ -126,6 +128,8 @@ class MedTraceLayerHook:
 
     def set_request_routing(self, token_mask: torch.Tensor) -> None:
         self.token_mask = token_mask.bool()
+        self.anchor_reference = None
+        self.anchor_loss = None
         self.generation_routing = False
         self.generation_boundary = None
         self.enabled = True
@@ -134,6 +138,23 @@ class MedTraceLayerHook:
         mask = torch.zeros_like(labels, dtype=torch.bool)
         mask[:, :-1] = labels[:, 1:] != ignore_index
         self.set_request_routing(mask)
+
+    def set_anchor_reference(self, residual: torch.Tensor) -> None:
+        """Bind a detached teacher residual for the active predictor positions."""
+        if self.token_mask is None or self.generation_routing:
+            raise RuntimeError("anchor reference requires active teacher routing")
+        if residual.requires_grad:
+            raise ValueError("anchor reference must be detached")
+        self.anchor_reference = residual
+        self.anchor_loss = None
+
+    def pop_anchor_loss(self) -> torch.Tensor:
+        if self.anchor_loss is None:
+            raise RuntimeError("anchor loss was not produced by a forward pass")
+        value = self.anchor_loss
+        self.anchor_loss = None
+        self.anchor_reference = None
+        return value
 
     def begin_generation_request(self) -> None:
         if self.generation_routing:
@@ -161,6 +182,8 @@ class MedTraceLayerHook:
     def clear_request_routing(self) -> None:
         self.enabled = False
         self.token_mask = None
+        self.anchor_reference = None
+        self.anchor_loss = None
         self.generation_routing = False
         self.generation_boundary = None
 
@@ -188,6 +211,14 @@ class MedTraceLayerHook:
         if mask is None or args[0].shape[:-1] != mask.shape:
             raise RuntimeError("assistant-only MedTRACE token mask does not match the layer activation")
         residual = self.expert.residual(args[0]).to(output.dtype)
+        if self.anchor_reference is not None:
+            current = residual[mask]
+            reference = self.anchor_reference.to(device=current.device, dtype=current.dtype)
+            if current.shape != reference.shape:
+                raise RuntimeError("anchor residual does not match active predictor positions")
+            numerator = (current.float() - reference.float()).square().sum()
+            denominator = reference.float().square().sum().clamp_min(1e-8)
+            self.anchor_loss = numerator / denominator
         if self.generation_routing:
             self.generation_trace[-1]["active_residual_norm"] = float((residual * mask.to(residual.device).unsqueeze(-1)).float().norm().item())
         return output + residual * mask.to(output.device).unsqueeze(-1)
