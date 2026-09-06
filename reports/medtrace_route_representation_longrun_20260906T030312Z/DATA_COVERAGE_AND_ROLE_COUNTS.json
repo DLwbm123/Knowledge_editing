@@ -1,0 +1,303 @@
+{
+  "edit_counts": {
+    "BROAD_ONLY": 5,
+    "FIT_ONLY_INSUFFICIENT": 4,
+    "HARD_EVALUABLE": 7
+  },
+  "edits": [
+    {
+      "dataset": "SLAKE",
+      "event_index": 1,
+      "hard_counts": {
+        "calibration": 4,
+        "evaluation": 5,
+        "fit": 4
+      },
+      "negative_counts": {
+        "calibration": 20,
+        "evaluation": 20,
+        "fit": 20,
+        "same_image_challenge": 12
+      },
+      "opaque_edit": "01223e258bbc7a1f",
+      "reason": null,
+      "status": "HARD_EVALUABLE"
+    },
+    {
+      "dataset": "SLAKE",
+      "event_index": 2,
+      "hard_counts": {
+        "calibration": 4,
+        "evaluation": 5,
+        "fit": 4
+      },
+      "negative_counts": {
+        "calibration": 20,
+        "evaluation": 20,
+        "fit": 20,
+        "same_image_challenge": 2
+      },
+      "opaque_edit": "1534fc99d84ef734",
+      "reason": null,
+      "status": "HARD_EVALUABLE"
+    },
+    {
+      "dataset": "SLAKE",
+      "event_index": 3,
+      "hard_counts": {
+        "calibration": 4,
+        "evaluation": 5,
+        "fit": 4
+      },
+      "negative_counts": {
+        "calibration": 20,
+        "evaluation": 20,
+        "fit": 20,
+        "same_image_challenge": 0
+      },
+      "opaque_edit": "1b0d2271e842e01a",
+      "reason": null,
+      "status": "HARD_EVALUABLE"
+    },
+    {
+      "dataset": "SLAKE",
+      "event_index": 4,
+      "hard_counts": {
+        "calibration": 0,
+        "evaluation": 0,
+        "fit": 1
+      },
+      "negative_counts": {
+        "calibration": 20,
+        "evaluation": 20,
+        "fit": 20,
+        "same_image_challenge": 12
+      },
+      "opaque_edit": "029f61ab6aaeeef1",
+      "reason": null,
+      "status": "BROAD_ONLY"
+    },
+    {
+      "dataset": "SLAKE",
+      "event_index": 5,
+      "hard_counts": {
+        "calibration": 1,
+        "evaluation": 0,
+        "fit": 1
+      },
+      "negative_counts": {
+        "calibration": 20,
+        "evaluation": 20,
+        "fit": 20,
+        "same_image_challenge": 9
+      },
+      "opaque_edit": "1607639d73eb56a8",
+      "reason": null,
+      "status": "BROAD_ONLY"
+    },
+    {
+      "dataset": "SLAKE",
+      "event_index": 6,
+      "hard_counts": {
+        "calibration": 0,
+        "evaluation": 0,
+        "fit": 0
+      },
+      "negative_counts": {
+        "calibration": 0,
+        "evaluation": 0,
+        "fit": 0,
+        "same_image_challenge": 0
+      },
+      "opaque_edit": "3c85dca5f44ddb09",
+      "reason": "SLAKE train source QA unique-match count was 0",
+      "status": "FIT_ONLY_INSUFFICIENT"
+    },
+    {
+      "dataset": "SLAKE",
+      "event_index": 7,
+      "hard_counts": {
+        "calibration": 2,
+        "evaluation": 2,
+        "fit": 2
+      },
+      "negative_counts": {
+        "calibration": 20,
+        "evaluation": 20,
+        "fit": 20,
+        "same_image_challenge": 12
+      },
+      "opaque_edit": "13d861159cbf9477",
+      "reason": null,
+      "status": "HARD_EVALUABLE"
+    },
+    {
+      "dataset": "SLAKE",
+      "event_index": 8,
+      "hard_counts": {
+        "calibration": 0,
+        "evaluation": 0,
+        "fit": 0
+      },
+      "negative_counts": {
+        "calibration": 20,
+        "evaluation": 20,
+        "fit": 20,
+        "same_image_challenge": 12
+      },
+      "opaque_edit": "06e9147a95404227",
+      "reason": null,
+      "status": "BROAD_ONLY"
+    },
+    {
+      "dataset": "SLAKE",
+      "event_index": 9,
+      "hard_counts": {
+        "calibration": 1,
+        "evaluation": 0,
+        "fit": 1
+      },
+      "negative_counts": {
+        "calibration": 20,
+        "evaluation": 20,
+        "fit": 20,
+        "same_image_challenge": 12
+      },
+      "opaque_edit": "0b2d75291d40cb7c",
+      "reason": null,
+      "status": "BROAD_ONLY"
+    },
+    {
+      "dataset": "VQA-RAD",
+      "event_index": 10,
+      "hard_counts": {
+        "calibration": 0,
+        "evaluation": 0,
+        "fit": 0
+      },
+      "negative_counts": {
+        "calibration": 0,
+        "evaluation": 0,
+        "fit": 0,
+        "same_image_challenge": 0
+      },
+      "opaque_edit": "12455e8fcf87ab67",
+      "reason": "VQA-RAD remained audit-only in the authorized source contract",
+      "status": "FIT_ONLY_INSUFFICIENT"
+    },
+    {
+      "dataset": "SLAKE",
+      "event_index": 11,
+      "hard_counts": {
+        "calibration": 0,
+        "evaluation": 0,
+        "fit": 0
+      },
+      "negative_counts": {
+        "calibration": 0,
+        "evaluation": 0,
+        "fit": 0,
+        "same_image_challenge": 0
+      },
+      "opaque_edit": "0278a8fed3c9c842",
+      "reason": "SLAKE train source QA unique-match count was 0",
+      "status": "FIT_ONLY_INSUFFICIENT"
+    },
+    {
+      "dataset": "SLAKE",
+      "event_index": 12,
+      "hard_counts": {
+        "calibration": 0,
+        "evaluation": 0,
+        "fit": 0
+      },
+      "negative_counts": {
+        "calibration": 20,
+        "evaluation": 20,
+        "fit": 20,
+        "same_image_challenge": 12
+      },
+      "opaque_edit": "319cba8ffa622b0e",
+      "reason": null,
+      "status": "BROAD_ONLY"
+    },
+    {
+      "dataset": "SLAKE",
+      "event_index": 13,
+      "hard_counts": {
+        "calibration": 2,
+        "evaluation": 1,
+        "fit": 2
+      },
+      "negative_counts": {
+        "calibration": 20,
+        "evaluation": 20,
+        "fit": 20,
+        "same_image_challenge": 0
+      },
+      "opaque_edit": "1379df4696783d47",
+      "reason": null,
+      "status": "HARD_EVALUABLE"
+    },
+    {
+      "dataset": "VQA-RAD",
+      "event_index": 14,
+      "hard_counts": {
+        "calibration": 0,
+        "evaluation": 0,
+        "fit": 0
+      },
+      "negative_counts": {
+        "calibration": 0,
+        "evaluation": 0,
+        "fit": 0,
+        "same_image_challenge": 0
+      },
+      "opaque_edit": "152d5bee9d9058e0",
+      "reason": "VQA-RAD remained audit-only in the authorized source contract",
+      "status": "FIT_ONLY_INSUFFICIENT"
+    },
+    {
+      "dataset": "SLAKE",
+      "event_index": 15,
+      "hard_counts": {
+        "calibration": 4,
+        "evaluation": 5,
+        "fit": 4
+      },
+      "negative_counts": {
+        "calibration": 20,
+        "evaluation": 20,
+        "fit": 20,
+        "same_image_challenge": 0
+      },
+      "opaque_edit": "11999d89b31d5f06",
+      "reason": null,
+      "status": "HARD_EVALUABLE"
+    },
+    {
+      "dataset": "SLAKE",
+      "event_index": 16,
+      "hard_counts": {
+        "calibration": 4,
+        "evaluation": 5,
+        "fit": 4
+      },
+      "negative_counts": {
+        "calibration": 20,
+        "evaluation": 20,
+        "fit": 20,
+        "same_image_challenge": 0
+      },
+      "opaque_edit": "30c09c9279241ba5",
+      "reason": null,
+      "status": "HARD_EVALUABLE"
+    }
+  ],
+  "independent_clinical_review": false,
+  "patient_disjoint_claimed": false,
+  "private_artifacts_withheld": true,
+  "schema_version": "medtrace-route-representation-coverage-public-v1",
+  "status": "FROZEN_BEFORE_MODEL_SCORING__EQKEY_PENDING",
+  "vqarad_scope_supervision_used": false
+}

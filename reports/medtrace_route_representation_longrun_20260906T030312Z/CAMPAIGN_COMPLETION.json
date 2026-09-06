@@ -1,0 +1,7 @@
+{
+  "schema_version": "medtrace-route-representation-campaign-completion-v1",
+  "status": "READY_FOR_PROFILE_AND_GPU_SMOKE",
+  "generation": "NOT_STARTED",
+  "judge": "NOT_STARTED",
+  "publication": "PRELAUNCH_PENDING"
+}

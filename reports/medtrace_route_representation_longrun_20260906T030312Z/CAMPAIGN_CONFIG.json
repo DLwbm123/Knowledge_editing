@@ -1,0 +1,50 @@
+{
+  "campaign": "MEDTRACE_ROUTE_REPRESENTATION_DEVELOPMENT_CAMPAIGN_V1",
+  "schema_version": "medtrace-route-representation-campaign-config-v1",
+  "status": "FROZEN_BEFORE_GPU_SCORING",
+  "branch": "medtrace-route-representation-longrun-20260906T030312Z",
+  "start_commit": "34dc083706b690f1a1f5ae19132571dc02be78d4",
+  "execution_code_commit": "7d4fc0558e0ea1a02bd4a3e17a5201eed47806c7",
+  "budget": {
+    "wall_hours": 24,
+    "training_generation_hours": 20,
+    "maximum_gpu_hours": 48,
+    "telemetry_interval_seconds": 60
+  },
+  "gpus": {
+    "2": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b",
+    "3": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c",
+    "gpu1_used": false
+  },
+  "track_a": {
+    "edit_count": 16,
+    "seed_bases": [20260906, 20260907, 20260908],
+    "a0_maximum_steps": 200,
+    "continuation_steps": 80,
+    "micro_forwards_per_continuation_step": 2,
+    "conditions": ["A0_NATIVE", "A1_NATIVE_CONTINUE", "A2_NATIVE_PLUS_PARAPHRASE"]
+  },
+  "track_b": {
+    "hard_evaluable_edits": 7,
+    "broad_only_edits": 5,
+    "fit_only_or_insufficient_edits": 4,
+    "representations": ["R0_MAGNITUDE_LAST_PROMPT", "R1_SIGNED_CP_RESPONSE", "R2_VISUAL_CONDITIONED_CP_RESPONSE"],
+    "router_steps": [200, 800],
+    "operating_points": ["SAFETY_FIRST", "COVERAGE_CONSTRAINED"],
+    "output_fit_steps": 80,
+    "temperature": 0.1,
+    "margin": 0.1,
+    "orthogonality_weight": 0.01,
+    "visual_pool_temperature": 0.1,
+    "visual_fusion_weight": 0.5
+  },
+  "task_counts": {"A": 48, "B": 36, "E2E": 36, "total": 120},
+  "locks": {
+    "private_data_sha256": "57521cb898723fab93b536ebd7df660b0285fc00a6c59e92216aabed2ff4ff6d",
+    "initial_task_queue_sha256": "3fe9f1fa089903f2e52d9a979f5866f8a64bb2e4d88d022eee44fca7a26a2408",
+    "canonical_runtime_lock_sha256": "f3e8d38054b5ce034a7f9b3499f86df420011c7e009eaa0bc81699f85323a748"
+  },
+  "private_artifacts_withheld": true,
+  "independent_clinical_review": false,
+  "patient_disjoint_claimed": false
+}
