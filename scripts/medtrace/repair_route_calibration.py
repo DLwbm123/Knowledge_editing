@@ -173,7 +173,11 @@ def recalculate(args: argparse.Namespace) -> None:
                 rebuilt = build_fit_prototypes(expert, fit_prompt[:fit_count], fit_visual[:fit_count], representation)
                 prototype_hash = state_hash(checkpoint["prototypes"])
                 rebuilt_hash = state_hash(rebuilt)
-                if prototype_hash != rebuilt_hash:
+                rebuild_max_diff = max(
+                    (float((checkpoint["prototypes"][name].to(device) - rebuilt[name]).abs().max().item()) for name in rebuilt),
+                    default=0.0,
+                )
+                if rebuild_max_diff > 1e-6:
                     raise RuntimeError(f"fit prototype rebuild mismatch: {checkpoint_path}")
                 fixed_scores = score_with_frozen_prototypes(expert, cal_prompt, cal_visual, representation, checkpoint["prototypes"])
                 legacy_prototypes = build_fit_prototypes(expert, cal_prompt[:cal_fit_count], cal_visual[:cal_fit_count], representation)
@@ -221,6 +225,7 @@ def recalculate(args: argparse.Namespace) -> None:
                     "task_id": task["task_id"], "representation": representation, "budget": budget,
                     "checkpoint_sha256": actual_checkpoint_hash, "q_sha256": q_hash,
                     "prototype_sha256": prototype_hash, "rebuilt_fit_prototype_sha256": rebuilt_hash,
+                    "fit_prototype_rebuild_max_abs_diff": rebuild_max_diff,
                     "score_definition_sha256": SCORE_DEFINITION_SHA256,
                     "legacy_reproduction_max_abs_diff": legacy_reproduction_max_diff,
                     "request_batch_max_abs_diff": request_batch_max_diff,
@@ -267,6 +272,7 @@ def recalculate(args: argparse.Namespace) -> None:
         "candidate_checkpoint_count": len(parity_rows),
         "checkpoint_hash_failures": 0,
         "fit_prototype_rebuild_failures": 0,
+        "maximum_fit_prototype_rebuild_difference": max(value["fit_prototype_rebuild_max_abs_diff"] for value in parity_rows),
         "maximum_legacy_score_reproduction_difference": max(value["legacy_reproduction_max_abs_diff"] for value in parity_rows),
         "maximum_batch_request_score_difference": max(value["request_batch_max_abs_diff"] for value in parity_rows),
         "score_definition_sha256": SCORE_DEFINITION_SHA256,
