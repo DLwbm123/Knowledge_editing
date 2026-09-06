@@ -1,0 +1,148 @@
+{
+  "all_calibration_profiles": [
+    {
+      "broad_fpr": 0.0,
+      "budget": 200,
+      "hard_fpr": 0.0,
+      "hard_task_count": 21,
+      "operating_point": "SAFETY_FIRST",
+      "positive_tpr": 0.8541666666666666,
+      "representation": "R0_MAGNITUDE_LAST_PROMPT",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.007716049382716049,
+      "budget": 200,
+      "hard_fpr": 0.05952380952380952,
+      "hard_task_count": 21,
+      "operating_point": "COVERAGE_CONSTRAINED",
+      "positive_tpr": 0.9375,
+      "representation": "R0_MAGNITUDE_LAST_PROMPT",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.0,
+      "budget": 800,
+      "hard_fpr": 0.0,
+      "hard_task_count": 21,
+      "operating_point": "SAFETY_FIRST",
+      "positive_tpr": 0.8541666666666666,
+      "representation": "R0_MAGNITUDE_LAST_PROMPT",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.0030864197530864196,
+      "budget": 800,
+      "hard_fpr": 0.07142857142857142,
+      "hard_task_count": 21,
+      "operating_point": "COVERAGE_CONSTRAINED",
+      "positive_tpr": 0.9375,
+      "representation": "R0_MAGNITUDE_LAST_PROMPT",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.0,
+      "budget": 200,
+      "hard_fpr": 0.0,
+      "hard_task_count": 21,
+      "operating_point": "SAFETY_FIRST",
+      "positive_tpr": 0.8263888888888888,
+      "representation": "R1_SIGNED_CP_RESPONSE",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.0,
+      "budget": 200,
+      "hard_fpr": 0.17857142857142858,
+      "hard_task_count": 21,
+      "operating_point": "COVERAGE_CONSTRAINED",
+      "positive_tpr": 0.9513888888888888,
+      "representation": "R1_SIGNED_CP_RESPONSE",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.0,
+      "budget": 800,
+      "hard_fpr": 0.0,
+      "hard_task_count": 21,
+      "operating_point": "SAFETY_FIRST",
+      "positive_tpr": 0.9027777777777778,
+      "representation": "R1_SIGNED_CP_RESPONSE",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.0,
+      "budget": 800,
+      "hard_fpr": 0.09523809523809523,
+      "hard_task_count": 21,
+      "operating_point": "COVERAGE_CONSTRAINED",
+      "positive_tpr": 0.9722222222222222,
+      "representation": "R1_SIGNED_CP_RESPONSE",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.0,
+      "budget": 200,
+      "hard_fpr": 0.0,
+      "hard_task_count": 21,
+      "operating_point": "SAFETY_FIRST",
+      "positive_tpr": 0.9652777777777778,
+      "representation": "R2_VISUAL_CONDITIONED_CP_RESPONSE",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.0,
+      "budget": 200,
+      "hard_fpr": 0.023809523809523808,
+      "hard_task_count": 21,
+      "operating_point": "COVERAGE_CONSTRAINED",
+      "positive_tpr": 0.9861111111111112,
+      "representation": "R2_VISUAL_CONDITIONED_CP_RESPONSE",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.0,
+      "budget": 800,
+      "hard_fpr": 0.0,
+      "hard_task_count": 21,
+      "operating_point": "SAFETY_FIRST",
+      "positive_tpr": 0.9861111111111112,
+      "representation": "R2_VISUAL_CONDITIONED_CP_RESPONSE",
+      "task_count": 36
+    },
+    {
+      "broad_fpr": 0.0,
+      "budget": 800,
+      "hard_fpr": 0.023809523809523808,
+      "hard_task_count": 21,
+      "operating_point": "COVERAGE_CONSTRAINED",
+      "positive_tpr": 1.0,
+      "representation": "R2_VISUAL_CONDITIONED_CP_RESPONSE",
+      "task_count": 36
+    }
+  ],
+  "alternative": {
+    "broad_fpr": 0.0,
+    "budget": 800,
+    "hard_fpr": 0.0,
+    "hard_task_count": 21,
+    "operating_point": "SAFETY_FIRST",
+    "positive_tpr": 0.9861111111111112,
+    "representation": "R2_VISUAL_CONDITIONED_CP_RESPONSE",
+    "task_count": 36
+  },
+  "private_thresholds_withheld": true,
+  "r0": {
+    "broad_fpr": 0.0,
+    "budget": 200,
+    "hard_fpr": 0.0,
+    "hard_task_count": 21,
+    "operating_point": "SAFETY_FIRST",
+    "positive_tpr": 0.8541666666666666,
+    "representation": "R0_MAGNITUDE_LAST_PROMPT",
+    "task_count": 36
+  },
+  "schema_version": "medtrace-selected-route-profile-v1",
+  "selection_source": "calibration_only",
+  "status": "FROZEN_BEFORE_EVALUATION_SCORING"
+}
