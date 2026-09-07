@@ -1,18 +1,26 @@
 {
-  "authorization": "User 2026-09-07: \u53ef\u4ee5\u7528 gpu0 \u548c 1; supersedes plan GPU1 prohibition; idle-only",
+  "active_seconds": 5938.630033969879,
+  "authorization": "User 2026-09-07: \u7528 gpu2 \u548c gpu3; supersedes GPU0/1; idle-only",
+  "gpu2_3_used": true,
   "preflight": {
-    "0": {
-      "checked_epoch": 1788769792.135277,
-      "gpu": "0",
+    "2": {
+      "checked_epoch": 1788776294.1267242,
+      "gpu": "2",
       "used_mib": 1,
-      "uuid": "GPU-688ed629-7a46-b62c-e3e4-0940e1649b5f"
+      "uuid": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b"
     },
-    "1": {
-      "checked_epoch": 1788769792.2038321,
-      "gpu": "1",
+    "3": {
+      "checked_epoch": 1788776294.1972897,
+      "gpu": "3",
       "used_mib": 1,
-      "uuid": "GPU-5fac6011-5432-229f-bb11-9ce9f104a334"
+      "uuid": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c"
     }
   },
-  "started_epoch": null
+  "processes": {
+    "coordinator": 914110,
+    "worker_gpu2": 914120,
+    "worker_gpu3": 914122
+  },
+  "started_epoch": null,
+  "timing_scope": "active time excluding user pause"
 }

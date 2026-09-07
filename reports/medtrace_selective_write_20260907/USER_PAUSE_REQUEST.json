@@ -1,0 +1,8 @@
+{
+  "status": "PAUSE_REQUESTED_BY_USER",
+  "reason": "User needs GPU0 and GPU1 for other tasks; resume this project later only when requested.",
+  "run_id": "20260907_selective_write_v1_r01",
+  "scope": "This run's coordinator and workers only; no unrelated process termination",
+  "preserve": ["completed raw results", "step320 checkpoints", "optimizer and dual states", "teacher caches", "original manifests", "current task queue"],
+  "automatic_resume": false
+}

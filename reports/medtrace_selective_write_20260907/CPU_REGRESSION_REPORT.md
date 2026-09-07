@@ -2,7 +2,9 @@
 
 Remote existing Python 3.12 / Torch 2.6.0+cu124; tests run with `CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=1`. No package or environment changes.
 
-Latest regression after the pending-priority amendment: **6 tests passed**, 3.005 seconds, source 5106c14. The added check proves scheduling leaves active tasks and every scientific task field unchanged while advancing each edit's paired W0/W1/W2 conditions before the next edit block. No Judge result or evaluation score is read by this scheduling operation.
+Latest resume regression: **7 tests passed**, 3.872 seconds. Resume implementation source c4397a7. The new check loads the exact step320 expert, refuses wrong-step/wrong-task checkpoints, asserts that the resume path never constructs an optimizer, preserves unknown pre-pause timing as null, rejects GPU0/1, and excludes paused time from the active clock. Both actual paused P4 (1,476 parameters) and L16 (294,912 parameters) checkpoints also loaded successfully on CPU before launch. Live GPU2/3 logs subsequently confirmed endpoint-only resume and zero added optimizer steps. No environment changes or new dependencies.
+
+Historical regression after the pending-priority amendment: **6 tests passed**, 3.005 seconds, source 5106c14. The added check proves scheduling leaves active tasks and every scientific task field unchanged while advancing each edit's paired W0/W1/W2 conditions before the next edit block. No Judge result or evaluation score is read by this scheduling operation.
 
 `python -m unittest discover -s tests/medtrace -p test_selective_write.py -v`: **5 tests passed**, 4.345 seconds, source commit 502a912. Coverage: lossless CP transfer with non-unit beta, zero extra output columns and factor-normalization parity; optimizer expert-only/FP32 contract; image/prompt/padding exclusion plus first-answer/EOS shifted masks; full-vocabulary teacher identity/perturbation and live student gradients; true OFF and request cleanup; fit-only group-balanced deterministic sampling; detached dual state and calibration-only global selection; failed result files cannot imply completion; complete-answer one-shot Judge packet with exact-tuple deduplication.
 

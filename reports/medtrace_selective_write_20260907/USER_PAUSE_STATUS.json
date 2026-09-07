@@ -1,0 +1,35 @@
+{
+  "all_project_processes_stopped": true,
+  "automatic_resume": false,
+  "completed_results_preserved": true,
+  "counts": {
+    "PAUSED_BY_USER": 2,
+    "PENDING": 56,
+    "RAW_READY": 12
+  },
+  "endpoint_only_resume_support_required": true,
+  "gpu0_used_mib": 1,
+  "gpu1_remaining_allocation": "OTHER_TASK_NOT_STOPPED",
+  "gpu1_total_used_mib_after_project_exit": 15363,
+  "interrupted_tasks": [
+    {
+      "checkpoint_bytes": 24690,
+      "optimizer_step": 320,
+      "phase": "ENDPOINT_GENERATION",
+      "raw_result_saved": false,
+      "task_id": "SW_e02_P4_W0_TASK_ONLY"
+    },
+    {
+      "checkpoint_bytes": 3542924,
+      "optimizer_step": 320,
+      "phase": "ENDPOINT_GENERATION",
+      "raw_result_saved": false,
+      "task_id": "SW_e02_L16_W0_TASK_ONLY"
+    }
+  ],
+  "judge": "NOT_RUN",
+  "original_start_preserved": true,
+  "paused_utc": "2026-09-07T10:09:14.294286+00:00",
+  "status": "PAUSED_BY_USER",
+  "wall_clock_resume_adjustment_required": true
+}

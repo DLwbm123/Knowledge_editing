@@ -1,13 +1,16 @@
 {
+  "authorization": "User 2026-09-07: \u7528 gpu2 \u548c gpu3; supersedes GPU0/1; idle-only",
   "counts": {
-    "PENDING": 67,
-    "RAW_READY": 1,
+    "PENDING": 56,
+    "RAW_READY": 12,
     "RUNNING": 2
   },
   "evaluation": "NOT_COMPLETE",
   "expected": 70,
   "judge": "NOT_RUN",
   "novel_n": 0,
+  "publication": "IN_PROGRESS_SNAPSHOT",
   "scientific_gain": "NOT_EVALUATED",
-  "status": "INCOMPLETE"
+  "snapshot_epoch": 1788776427.7601779,
+  "status": "RUNNING"
 }

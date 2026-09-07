@@ -1,0 +1,51 @@
+{
+  "authorization": "User 2026-09-07: \u7528 gpu2 \u548c gpu3; supersedes GPU0/1; idle-only",
+  "code_provenance": {
+    "checkpoint_preflight": [
+      {
+        "checkpoint_load": "PASS",
+        "parameters": 1476,
+        "step": 320,
+        "task_id": "SW_e02_P4_W0_TASK_ONLY"
+      },
+      {
+        "checkpoint_load": "PASS",
+        "parameters": 294912,
+        "step": 320,
+        "task_id": "SW_e02_L16_W0_TASK_ONLY"
+      }
+    ],
+    "cpu_tests": "7 passed; 3.872 seconds",
+    "finalizer_source_commit": "5106c14",
+    "original_training_cache_binding": "0c72cfef615390d1bf37de43998690dda3a7efd3",
+    "remote_base_commit": "502a912aa2771aed230793abcedb5d00ebcbf610",
+    "resume_code_commit": "c4397a730b0bb49c22e8fd7471e68fb91082e5cf",
+    "source_deployment": "explicit scp of runner coordinator and CPU regression tests"
+  },
+  "counts": {
+    "PENDING": 56,
+    "RAW_READY": 12,
+    "RUNNING": 2
+  },
+  "elapsed_before_pause_seconds": 5805.069608926773,
+  "endpoint_only_tasks": [
+    "SW_e02_P4_W0_TASK_ONLY",
+    "SW_e02_L16_W0_TASK_ONLY"
+  ],
+  "gpu_uuids": {
+    "2": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b",
+    "3": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c"
+  },
+  "judge": "NOT_RUN",
+  "optimizer_steps_added_for_resumed_tasks": 0,
+  "original_start_preserved": true,
+  "paused_epoch": 1788775754.2942855,
+  "processes": {
+    "coordinator": 914110,
+    "worker_gpu2": 914120,
+    "worker_gpu3": 914122
+  },
+  "resumed_epoch": 1788776294.2078335,
+  "status": "RESUMED",
+  "verified_epoch": 1788776427.7551813
+}

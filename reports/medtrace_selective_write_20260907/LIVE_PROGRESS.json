@@ -1,12 +1,12 @@
 {
   "counts": {
-    "PENDING": 67,
-    "RAW_READY": 1,
+    "PENDING": 56,
+    "RAW_READY": 12,
     "RUNNING": 2
   },
   "expected": 70,
   "publication_scope": "IN_PROGRESS_SNAPSHOT",
-  "raw_ready": 1,
+  "raw_ready": 12,
   "scientific_gain": "NOT_EVALUATED",
-  "trained_320": 1
+  "trained_320": 14
 }
