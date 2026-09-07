@@ -1,6 +1,10 @@
 import copy
 import unittest
 import tempfile
+import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -13,6 +17,25 @@ from methods.medtrace.selective_write import (LowRankExpert, full_vocab_kl, pred
 
 
 class SelectiveWriteTest(unittest.TestCase):
+    def test_neutral_entrypoint_preserves_runtime_and_hides_command_arguments(self):
+        from scripts.medtrace.neutral_entrypoint import neutral_command
+        from scripts.medtrace import neutral_entrypoint
+        with tempfile.TemporaryDirectory(prefix='job.') as directory:
+            entry=Path(directory)/'main.py'
+            entry.symlink_to(Path(neutral_entrypoint.__file__).resolve())
+            # This test file doubles as a tiny child-process probe; no GPU is loaded.
+            original=[sys.executable,str(Path(__file__).resolve()),'--neutral-probe','wangbomin/medtrace']
+            command,env=neutral_command(original,dict(os.environ,JOB_ENTRYPOINT=str(entry),PYTHONPATH=str(Path(__file__).resolve().parents[2])),'run')
+            self.assertNotIn('wangbomin',' '.join(command))
+            self.assertNotIn('medtrace',' '.join(command))
+            child=json.loads(subprocess.check_output(command,env=env,text=True))
+            self.assertEqual(child['argument'],'wangbomin/medtrace')
+            self.assertEqual(child['prefix'],sys.prefix)
+            if sys.platform=='linux':
+                self.assertEqual(child['comm'],'run')
+                self.assertNotIn('wangbomin',child['cmdline'])
+                self.assertNotIn('medtrace',child['cmdline'])
+
     def test_endpoint_resume_skips_optimizer_and_excludes_pause(self):
         from scripts.medtrace import run_selective_write as runmod
         with tempfile.TemporaryDirectory() as directory:
@@ -196,4 +219,9 @@ class SelectiveWriteTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    if '--neutral-probe' in sys.argv:
+        print(json.dumps(dict(argument=sys.argv[-1],prefix=sys.prefix,
+            comm=Path('/proc/self/comm').read_text().strip() if sys.platform=='linux' else None,
+            cmdline=Path('/proc/self/cmdline').read_bytes().replace(b'\0',b' ').decode() if sys.platform=='linux' else None)))
+    else:
+        unittest.main()

@@ -12,6 +12,7 @@ import time
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT))
 from scripts.medtrace.run_selective_write import GPUS, AUTHORIZATION, active_elapsed, gpu_check, read, vf
+from scripts.medtrace.neutral_entrypoint import neutral_command
 
 LLAVA = "/remote-home/wangbomin/worktrees/llava-official-30697ca-20260904T090859Z"
 MODEL = "/remote-home/wangbomin/hugging_cache/medical_vlms/llava_med_v1_5_mistral_7b"
@@ -33,14 +34,19 @@ def main():
     parser.add_argument('--run-root',type=Path,required=True)
     parser.add_argument('--public-dir',type=Path,required=True)
     parser.add_argument('--resume',action='store_true',help='one explicit endpoint-only recovery of USER_PAUSE_STATE')
+    parser.add_argument('--resume-attempt',choices=('resume01','resume02'),default='resume01')
+    parser.add_argument('--pause-state',choices=('USER_PAUSE_STATE.json','USER_RENAME_PAUSE_STATE.json'),default='USER_PAUSE_STATE.json')
     args=parser.parse_args()
     run,public=args.run_root,args.public_dir
     config=read(run/'private/CAMPAIGN_CONFIG.json')
-    attempt=run/'resume01' if args.resume else run
+    attempt=run/args.resume_attempt if args.resume else run
     if args.resume:
-        if attempt.exists() or (run/'private/ACTIVE_RESUME.json').exists():
-            raise FileExistsError('resume01 already exists; inspect before another attempt')
-        pause=read(run/'private/USER_PAUSE_STATE.json')
+        if attempt.exists():
+            raise FileExistsError(f'{attempt.name} already exists; inspect before another attempt')
+        pause=read(run/'private'/args.pause_state)
+        previous=run/'private/ACTIVE_RESUME.json'
+        if previous.exists() and read(previous)['resumed_epoch']>=pause['paused_epoch']:
+            raise ValueError('pause ledger predates the active attempt')
         tasks=read(run/'private/TASK_QUEUE.json')['tasks']
         interrupted={t['task_id']:t for t in pause['interrupted_tasks']}
         if not (run/'STOP').exists() or not (run/'FIRST_TASK_PASS.json').exists():
@@ -56,6 +62,8 @@ def main():
             if not checkpoint.is_file() or (checkpoint.parent.parent/'result_private.json').exists():
                 raise ValueError('missing checkpoint or endpoint already exists')
         attempt.mkdir()
+        if previous.exists():
+            vf.atomic_json(attempt/'PREVIOUS_RESUME_STATE.json',read(previous))
     elif config['gpu_uuids'] != GPUS or (run/'STOP').exists():
         raise ValueError('paused or differently authorized campaign requires explicit --resume')
     commands,processes,exits,resources={},{},{},{}
@@ -70,6 +78,8 @@ def main():
     def launch(name,command,env):
         commands[name]=command
         vf.atomic_json(attempt/'COMMANDS_PRIVATE.json',commands)
+        if 'JOB_ENTRYPOINT' in env:
+            command,env=neutral_command(command,env,'run' if name.startswith('worker_') or name=='first_integration' else 'job')
         with (attempt/f'{name}.log').open('x') as log:
             processes[name]=subprocess.Popen(command,cwd=ROOT,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
         vf.atomic_json(attempt/'PIDS.json',dict(coordinator=os.getpid(),**{k:p.pid for k,p in processes.items()}))
@@ -105,6 +115,7 @@ def main():
             resume=dict(status='RESUMED',resumed_epoch=time.time(),paused_epoch=pause['paused_epoch'],
                 elapsed_before_pause_seconds=pause['elapsed_before_pause_seconds'],gpu_uuids=GPUS,
                 authorization=AUTHORIZATION,endpoint_only_tasks=list(interrupted),
+                attempt=attempt.name,process_naming='neutral' if 'JOB_ENTRYPOINT' in os.environ else 'original',
                 code_provenance=read(run/'private/RESUME_CODE_PROVENANCE.json'))
             vf.atomic_json(run/'private/ACTIVE_RESUME.json',resume)
             vf.atomic_json(attempt/'RESUME_STATE.json',resume)
