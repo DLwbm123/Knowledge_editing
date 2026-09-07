@@ -94,13 +94,19 @@ def campaign_inputs(config: dict[str, Any], tasks: list[dict[str, Any]]) -> dict
         paths += [folder / name for name in ("step0800.pt", "e2e_step0800.json", "calibration_step0800.json")]
     for name in ("JUDGE_SIDECAR_PRIVATE.json", "JUDGE_OUTPUT_PRIVATE.jsonl", "JUDGE_EXECUTION_LOCK_PRIVATE.json"):
         paths.append(execution / "private/judge" / name)
+    if config.get("campaign_kind") == "pooling":
+        source = Path(config["verifier_run"])
+        paths += [source / "private/CAMPAIGN_CONFIG.json", source / "private/INPUT_MANIFEST.json", source / "private/TASK_QUEUE.json"]
+        paths += [source / "private/judge" / name for name in ("JUDGE_SIDECAR_PRIVATE.json", "JUDGE_OUTPUT_PRIVATE.jsonl", "JUDGE_EXECUTION_LOCK_PRIVATE.json")]
+        paths += [source / f"private/features/e{index:02d}.pt" for index in sorted({t["event_index"] for t in tasks})]
+        paths += [source / "private/tasks" / t["task_id"] / name for t in tasks for name in ("result_private.json", "M3_heads.pt")]
     # Hash the immutable contracts; large feature/image payloads use availability/size checks.
     files = {}
     for path in sorted(set(paths)):
         if not path.is_file() or not path.stat().st_size:
             raise FileNotFoundError(f"required campaign input missing/empty: {path}")
         files[str(path.resolve())] = {"bytes": path.stat().st_size}
-        if path.suffix == ".json" or path.name == "step0800.pt":
+        if path.suffix == ".json" or path.name in {"step0800.pt", "M3_heads.pt"}:
             files[str(path.resolve())]["sha256"] = sha256_file(path)
     for image in sorted(images):
         if not Path(image).is_file():
@@ -488,9 +494,9 @@ def _original_outputs(execution_result: dict[str, Any]) -> dict[str, dict[str, A
     }
 
 
-def natural_replays(rows, scores, calibration, outputs, generate):
+def natural_replays(rows, scores, calibration, outputs, generate, conditions=CONDITIONS[1:]):
     replays = []
-    for condition in CONDITIONS[1:]:
+    for condition in conditions:
         point = calibration[condition]["PRIMARY_SAFETY_FIRST"]
         candidates = [(row, _decision(scores[row["logical_id"]][condition], point)) for row in rows]
         for desired in (True, False):
@@ -678,12 +684,13 @@ def budget_exhausted(run_root: Path, queue: TaskQueue) -> bool:
     start = json.loads((run_root / "private/CAMPAIGN_START.json").read_text())["epoch"]
     wall = time.time() - start
     completed = [row.get("elapsed_seconds", 0.0) for row in queue.snapshot()["tasks"] if row["status"] == "COMPLETE"]
-    reserve = 1800 + max(completed, default=600) * 1.5
+    config = json.loads((run_root / "private/CAMPAIGN_CONFIG.json").read_text())
+    reserve = config.get("closure_reserve_seconds", 1800) + max(completed, default=600) * 1.5
     # Two authorized devices times the full attempt wall clock conservatively includes loading, waiting and Judge.
     return wall + reserve >= 12 * 3600 or 2 * wall >= 24 * 3600 or (run_root / "STOP").exists() or STOP_REQUESTED
 
 
-def worker(args: argparse.Namespace) -> None:
+def worker(args: argparse.Namespace, task_processor=process_task) -> None:
     start = worker_preflight(args)
     physical, _ = verify_gpu()
     actual = subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True).strip()
@@ -713,7 +720,7 @@ def worker(args: argparse.Namespace) -> None:
                 telemetry.task_id = task["task_id"]
                 started = time.monotonic()
                 try:
-                    value = process_task(runtime, args, task)
+                    value = task_processor(runtime, args, task)
                     result_path = args.run_root / "private/tasks" / task["task_id"] / "result_private.json"
                     queue.update(task["task_id"], "COMPLETE", result_status=value["status"], result_sha256=sha256_file(result_path),
                                  elapsed_seconds=time.monotonic() - started, finished_at=time.time(), host=socket.gethostname())
@@ -836,6 +843,8 @@ def _prior_judge_map(execution_run: Path) -> dict[tuple[str, str, str], bool]:
 
 def _task_results(run_root: Path) -> list[dict[str, Any]]:
     tasks = json.loads((run_root / "private/TASK_QUEUE.json").read_text())["tasks"]
+    config_path = run_root / "private/CAMPAIGN_CONFIG.json"
+    fit_variants = json.loads(config_path.read_text()).get("fit_variants", ["M2", "M3"]) if config_path.exists() else ["M2", "M3"]
     if len(tasks) != 21 or len({task["task_id"] for task in tasks}) != 21:
         raise RuntimeError("task closure requires 21 unique logical IDs")
     results = []
@@ -848,7 +857,7 @@ def _task_results(run_root: Path) -> list[dict[str, Any]]:
         result = json.loads(path.read_text())
         if result["status"] != "COMPLETE" or task_identity(result["task"]) != task_identity(task) or result["attempt_id"] != run_root.name:
             raise RuntimeError(f"result task binding mismatch: {task['task_id']}")
-        for kind in ("M2", "M3"):
+        for kind in fit_variants:
             if result["training"][kind]["curve"][-1]["step"] != 800 or not (path.parent / f"{kind}_heads.pt").is_file():
                 raise RuntimeError(f"incomplete verifier fit: {task['task_id']} {kind}")
         results.append(result)

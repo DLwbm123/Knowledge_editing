@@ -29,7 +29,8 @@ def main():
     vision = "/remote-home/wangbomin/hugging_cache/openai/clip-vit-large-patch14-336"
     judge_python = "/remote-home/wangbomin/evoclinician/venvs/vllm-0.9.2-py312/bin/python"
     judge_model = "/remote-home/wangbomin/.cache/huggingface/hub/models--Qwen--Qwen3-32B-AWQ/snapshots/0499c3ac83fdef8810b907a23894ba91e95eddd8"
-    runner = [sys.executable, str(ROOT / "scripts/medtrace/run_frozen_expert_visual_verifier.py")]
+    pooling = config.get("campaign_kind") == "pooling"
+    runner = [sys.executable, str(ROOT / "scripts/medtrace" / ("run_pooling_ablation.py" if pooling else "run_frozen_expert_visual_verifier.py"))]
     commands, processes, exits, phase_times = {}, {}, {}, {}
     start = None
 
@@ -73,7 +74,7 @@ def main():
         worker = [*runner, "worker", "--run-root", str(run), "--old-run", str(old), "--execution-run", str(execution), "--expected-code-commit", config["code_commit"]]
         launch("worker_gpu2", worker, env2)
         first = json.loads((run / "private/TASK_QUEUE.json").read_text())["tasks"][0]["task_id"]
-        while remaining() > 1800:
+        while remaining() > config.get("closure_reserve_seconds", 1800):
             queue = json.loads((run / "private/TASK_QUEUE.json").read_text())["tasks"]
             task = next(row for row in queue if row["task_id"] == first)
             if task["status"] == "COMPLETE":
@@ -100,9 +101,12 @@ def main():
         completion["raw_closure"] = "COMPLETE"
         judge = run / "private/judge"
         packet, sidecar, output = [judge / name for name in ("JUDGE_PACKET_PRIVATE.jsonl", "JUDGE_SIDECAR_PRIVATE.json", "JUDGE_OUTPUT_PRIVATE.jsonl")]
-        launch("prepare_judge", [*runner, "prepare-judge", "--run-root", str(run), "--execution-run", str(execution), "--packet", str(packet), "--sidecar", str(sidecar)])
+        judge_source = Path(config["verifier_run"]) if pooling else execution
+        launch("prepare_judge", [*runner, "prepare-judge", "--run-root", str(run), "--execution-run", str(judge_source), "--packet", str(packet), "--sidecar", str(sidecar)])
         wait("prepare_judge")
         if packet.stat().st_size:
+            if pooling:
+                raise RuntimeError("pooling unexpectedly produced a new raw tuple; no new Judge authorized by reuse closure")
             launch("judge", [judge_python, str(ROOT / "scripts/medtrace/run_fixed_judge_vllm.py"), "--model-path", judge_model,
                              "--packet", str(packet), "--lock", str(v4 / "private/JUDGE_LOCK_V4.json"), "--output", str(output),
                              "--execution-lock", str(judge / "JUDGE_EXECUTION_LOCK_PRIVATE.json"),
