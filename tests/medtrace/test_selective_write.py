@@ -13,6 +13,45 @@ from methods.medtrace.selective_write import (LowRankExpert, full_vocab_kl, pred
 
 
 class SelectiveWriteTest(unittest.TestCase):
+    def test_endpoint_resume_skips_optimizer_and_excludes_pause(self):
+        from scripts.medtrace import run_selective_write as runmod
+        with tempfile.TemporaryDirectory() as directory:
+            run=Path(directory)
+            task=dict(task_id='SW_fixture',event_index=2,parameterization='P4',condition=CONDITIONS[0],seed=20260906)
+            cp=AsymmetricCPExpert(12,8,4)
+            cp.rho.data.fill_(.7)
+            checkpoint=run/'private/tasks/SW_fixture/attempt_chunk16/step0320.pt'
+            checkpoint.parent.mkdir(parents=True)
+            payload=dict(step=320,task=dict(task),expert=copy.deepcopy(cp.state_dict()))
+            torch.save(payload,checkpoint)
+            runmod.vf.atomic_json(checkpoint.parent/'training_private.json',dict(
+                curve=[dict(step=320)],diagnostics=[dict(step=320)],forward_count=144,backward_count=640))
+            runmod.vf.atomic_json(run/'private/CAMPAIGN_CONFIG.json',{})
+            runmod.vf.atomic_json(run/'private/edits/e02.json',dict(a2='fixture',a2_sha256='binding',event=dict(edit_record={})))
+            runmod.vf.atomic_json(run/'private/CAMPAIGN_START.json',dict(epoch=100))
+            runmod.vf.atomic_json(run/'private/ACTIVE_RESUME.json',dict(resumed_epoch=1000,elapsed_before_pause_seconds=30))
+            with patch.object(runmod.time,'time',return_value=1010):
+                self.assertEqual(runmod.active_elapsed(run),40)
+            for gpu in ('0','1'):
+                with self.assertRaises(ValueError): runmod.gpu_check(gpu)
+            task['resume_checkpoint']=str(checkpoint)
+            cp.rho.data.zero_()
+            with patch.object(runmod,'bind_extra_fit'), patch.object(runmod.vf,'sha256_file',return_value='binding'), \
+                 patch.object(runmod,'shared_initial',return_value={}), \
+                 patch.object(runmod.vf.EditorRecord,'from_dict',return_value=SimpleNamespace(record_id='fixture')), \
+                 patch.object(runmod,'load_cp',return_value=(cp,{})), patch.object(runmod,'TeacherCache'), \
+                 patch.object(runmod,'optimizer_for',side_effect=AssertionError('must not create optimizer')), \
+                 patch.object(runmod,'finish_task',return_value={'status':'RAW_READY'}) as finish:
+                result=runmod.train_task(SimpleNamespace(device='cpu'),SimpleNamespace(run_root=run),task)
+            self.assertEqual(result['status'],'RAW_READY')
+            self.assertTrue(torch.equal(cp.rho,payload['expert']['rho']))
+            self.assertFalse(any(p.requires_grad for p in cp.parameters()))
+            self.assertIsNone(finish.call_args.args[-2])  # Unknown pre-pause duration is not invented.
+            self.assertEqual(runmod.read(checkpoint.parent/'ENDPOINT_RESUME_PRIVATE.json')['optimizer_steps_added'],0)
+            for bad in (dict(payload,step=160),dict(payload,task=dict(task,condition=CONDITIONS[-1]))):
+                torch.save(bad,checkpoint)
+                with self.assertRaises(ValueError): runmod.load_completed_checkpoint(checkpoint,task,cp)
+
     def test_lossless_transfer_and_optimizer(self):
         torch.manual_seed(7)
         cp = AsymmetricCPExpert(12, 8, 4, beta=2.3)

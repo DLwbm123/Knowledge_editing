@@ -24,12 +24,34 @@ from scripts.medtrace.run_longrun_campaign import route_score_one
 
 SEED = 20260906
 A2 = "CP_NATIVE_PLUS_PARAPHRASE_80"
-GPUS = {"0": "GPU-688ed629-7a46-b62c-e3e4-0940e1649b5f", "1": "GPU-5fac6011-5432-229f-bb11-9ce9f104a334"}
+GPUS = {"2": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b", "3": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c"}
+AUTHORIZATION = "User 2026-09-07: 用 gpu2 和 gpu3; supersedes GPU0/1; idle-only"
 STEPS = 320
 
 
 def read(path):
     return json.loads(Path(path).read_text())
+
+
+def active_elapsed(run):
+    resume = run / "private/ACTIVE_RESUME.json"
+    if resume.exists():
+        state = read(resume)
+        return state["elapsed_before_pause_seconds"] + max(0., time.time()-state["resumed_epoch"])
+    return time.time()-read(run / "private/CAMPAIGN_START.json")["epoch"]
+
+
+def load_completed_checkpoint(path, task, expert):
+    value = torch.load(path, map_location="cpu", weights_only=True)
+    keys = ("task_id", "event_index", "parameterization", "condition", "seed")
+    if value.get("step") != STEPS or any(value["task"].get(k) != task.get(k) for k in keys):
+        raise ValueError("endpoint resume requires this exact task's step320 checkpoint")
+    training = read(path.parent / "training_private.json")
+    if training["diagnostics"][-1]["step"] != STEPS or training["curve"][-1]["step"] != STEPS:
+        raise ValueError("endpoint resume requires completed step320 diagnostics")
+    expert.load_state_dict(value["expert"])
+    expert.requires_grad_(False)
+    return training
 
 
 def save(path, payload):
@@ -66,7 +88,7 @@ def prepare(args):
         raise ValueError("frozen hard-evaluable cohort changed")
     config = dict(kind="selective_write_v1", code_commit=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
                   old_run=str(old), verifier_run=str(prior), runtime=read(old / "private/CAMPAIGN_RUNTIME_CONFIG.json"),
-                  gpu_uuids=GPUS, authorization="User 2026-09-07: 可以用 gpu0 和 1; supersedes plan GPU1 prohibition; idle-only",
+                  gpu_uuids=GPUS, authorization=AUTHORIZATION,
                   wall_hours=24, gpu_hours=48, train_seconds=20*3600, seed=SEED, novel_seed=20260910, novel_n=0,
                   source_locks={"frozen_data": vf.sha256_file(old / "private/frozen_data.json")})
     run.mkdir(parents=True); (run / "private").mkdir()
@@ -177,7 +199,7 @@ def prepare(args):
 
 def gpu_check(gpu):
     if gpu not in GPUS:
-        raise ValueError("only newly authorized GPU0/1 are used by this attempt")
+        raise ValueError("only newly authorized GPU2/3 are used by this attempt")
     uuid, used = subprocess.check_output(["nvidia-smi", "-i", gpu, "--query-gpu=uuid,memory.used", "--format=csv,noheader,nounits"], text=True).strip().split(", ")
     if uuid != GPUS[gpu] or int(used) > 1000:
         raise RuntimeError(f"GPU{gpu} busy or UUID mismatch: {uuid}, {used} MiB")
@@ -402,6 +424,18 @@ def train_task(runtime, args, task, chunk=16):
     expert = cp if task["parameterization"] == "P4" else LowRankExpert(cp, vf.derive_seed(record.record_id, SEED))
     if expert is not cp:
         del cp
+    if task.get("resume_checkpoint"):
+        checkpoint = Path(task["resume_checkpoint"])
+        if checkpoint.resolve().parent.parent != (run / "private/tasks" / task["task_id"]).resolve():
+            raise ValueError("resume checkpoint outside task directory")
+        training = load_completed_checkpoint(checkpoint, task, expert)
+        vf.atomic_json(checkpoint.parent / "ENDPOINT_RESUME_PRIVATE.json", dict(
+            phase="ENDPOINT_ONLY", checkpoint=str(checkpoint), optimizer_steps_added=0,
+            gpu=os.environ.get("CUDA_VISIBLE_DEVICES"), epoch=time.time()))
+        print(f"ENDPOINT_ONLY_RESUME {task['task_id']} step=320 optimizer_steps_added=0", flush=True)
+        teacher = TeacherCache(runtime, run, task["event_index"], config)
+        return finish_task(runtime, run, task, data, expert, teacher, chunk, training["diagnostics"],
+            training["forward_count"], training["backward_count"], None, start)
     expert.requires_grad_(True)
     optimizer = optimizer_for(expert, runtime.model)
     protect = Protection(initial["initial"], task["condition"])
@@ -419,7 +453,7 @@ def train_task(runtime, args, task, chunk=16):
     curve, diagnostics, forwards, backwards = [], [], 0, 0
     try:
         for step in range(STEPS+1):
-            if time.time()-read(run / "private/CAMPAIGN_START.json")["epoch"] >= config["train_seconds"]:
+            if active_elapsed(run) >= config["train_seconds"]:
                 raise TimeoutError("20h training/generation boundary reached")
             if step:
                 optimizer.zero_grad(set_to_none=True)
@@ -470,6 +504,12 @@ def train_task(runtime, args, task, chunk=16):
     training_seconds = time.monotonic()-training_start
     expert.requires_grad_(False)
     del optimizer, positive_batches
+    return finish_task(runtime, run, task, data, expert, teacher, chunk, diagnostics,
+        forwards, backwards, training_seconds, start)
+
+
+def finish_task(runtime, run, task, data, expert, teacher, chunk, diagnostics,
+                forwards, backwards, training_seconds, start):
     reference_path = run / f"private/initial/e{task['event_index']:02d}/reference_private.json"
     with reference_path.with_suffix(".lock").open("a+") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
@@ -489,7 +529,10 @@ def train_task(runtime, args, task, chunk=16):
         parameters=sum(p.numel() for p in expert.parameters()), forward_count=forwards, backward_count=backwards,
         teacher_forward_count=teacher.forward_count, training_seconds=training_seconds, elapsed_seconds=time.monotonic()-start,
         frozen_gate_sha256=data["frozen_gate_sha256"], base_guard=guard, a2_sha256=data["a2_sha256"], scientific_gain="NOT_EVALUATED")
-    vf.atomic_json(out.parent / "result_private.json", result)
+    if task.get("resume_checkpoint"):
+        result["resume"] = dict(phase="ENDPOINT_ONLY", optimizer_steps_added=0,
+            original_training_seconds="not recorded before pause; left null", elapsed_scope="current endpoint attempt only")
+    vf.atomic_json(run / "private/tasks" / task["task_id"] / "result_private.json", result)
     return result
 
 
@@ -509,7 +552,7 @@ def worker(args):
                 config_sha256=vf.sha256_file(args.run_root / "private/CAMPAIGN_CONFIG.json"), gpu_uuids=GPUS))
     queue = vf.TaskQueue(args.run_root / "private/TASK_QUEUE.json", args.run_root)
     with vf.Telemetry(args.run_root / "private/GPU_TELEMETRY.jsonl", gpu, f"gpu{gpu}") as telemetry:
-        while time.time()-read(start_path)["epoch"] < config["train_seconds"] and not (args.run_root / "STOP").exists():
+        while active_elapsed(args.run_root) < config["train_seconds"] and not (args.run_root / "STOP").exists():
             task = queue.claim(f"gpu{gpu}")
             if task is None:
                 break

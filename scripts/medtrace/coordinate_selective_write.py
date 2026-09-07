@@ -11,7 +11,7 @@ import time
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT))
-from scripts.medtrace.run_selective_write import GPUS, gpu_check, read, vf
+from scripts.medtrace.run_selective_write import GPUS, AUTHORIZATION, active_elapsed, gpu_check, read, vf
 
 LLAVA = "/remote-home/wangbomin/worktrees/llava-official-30697ca-20260904T090859Z"
 MODEL = "/remote-home/wangbomin/hugging_cache/medical_vlms/llava_med_v1_5_mistral_7b"
@@ -23,7 +23,7 @@ JUDGE_PYTHON = "/remote-home/wangbomin/evoclinician/venvs/vllm-0.9.2-py312/bin/p
 def environment(gpu):
     gpu_check(gpu)
     return dict(os.environ, CUDA_VISIBLE_DEVICES=gpu, OMP_NUM_THREADS="1",
-        M3BENCH_FORMAL_AUTHORIZED_CUDA_VISIBLE_DEVICES=gpu, M3BENCH_FORMAL_ALLOWED_CUDA_VISIBLE_DEVICES="0,1",
+        M3BENCH_FORMAL_AUTHORIZED_CUDA_VISIBLE_DEVICES=gpu, M3BENCH_FORMAL_ALLOWED_CUDA_VISIBLE_DEVICES=','.join(GPUS),
         M3BENCH_FORMAL_EXPECTED_GPU_UUID=GPUS[gpu], M3BENCH_EXPECTED_LLAVA_SOURCE=LLAVA,
         M3BENCH_MODEL_PATH=MODEL, M3BENCH_VISION_PATH=VISION, PYTHONPATH=f"{LLAVA}:{ROOT}")
 
@@ -32,9 +32,32 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run-root',type=Path,required=True)
     parser.add_argument('--public-dir',type=Path,required=True)
+    parser.add_argument('--resume',action='store_true',help='one explicit endpoint-only recovery of USER_PAUSE_STATE')
     args=parser.parse_args()
     run,public=args.run_root,args.public_dir
     config=read(run/'private/CAMPAIGN_CONFIG.json')
+    attempt=run/'resume01' if args.resume else run
+    if args.resume:
+        if attempt.exists() or (run/'private/ACTIVE_RESUME.json').exists():
+            raise FileExistsError('resume01 already exists; inspect before another attempt')
+        pause=read(run/'private/USER_PAUSE_STATE.json')
+        tasks=read(run/'private/TASK_QUEUE.json')['tasks']
+        interrupted={t['task_id']:t for t in pause['interrupted_tasks']}
+        if not (run/'STOP').exists() or not (run/'FIRST_TASK_PASS.json').exists():
+            raise ValueError('missing explicit pause marker or original first-task pass')
+        if any(t['status'] not in {'RAW_READY','PAUSED_BY_USER','PENDING'} for t in tasks):
+            raise ValueError('unexpected queue state; do not recover active or failed tasks implicitly')
+        if {t['task_id'] for t in tasks if t['status']=='PAUSED_BY_USER'} != set(interrupted):
+            raise ValueError('pause ledger and queue disagree')
+        for task in interrupted.values():
+            checkpoint=Path(task['checkpoint'])
+            if checkpoint.resolve() != (run/'private/tasks'/task['task_id']/'attempt_chunk16/step0320.pt').resolve():
+                raise ValueError('unexpected checkpoint path')
+            if not checkpoint.is_file() or (checkpoint.parent.parent/'result_private.json').exists():
+                raise ValueError('missing checkpoint or endpoint already exists')
+        attempt.mkdir()
+    elif config['gpu_uuids'] != GPUS or (run/'STOP').exists():
+        raise ValueError('paused or differently authorized campaign requires explicit --resume')
     commands,processes,exits,resources={},{},{},{}
     started=time.time()
     runner=[sys.executable,str(ROOT/'scripts/medtrace/run_selective_write.py')]
@@ -42,14 +65,14 @@ def main():
 
     def elapsed():
         path=run/'private/CAMPAIGN_START.json'
-        return time.time()-read(path)['epoch'] if path.exists() else time.time()-started
+        return active_elapsed(run) if path.exists() else time.time()-started
 
     def launch(name,command,env):
         commands[name]=command
-        vf.atomic_json(run/'COMMANDS_PRIVATE.json',commands)
-        with (run/f'{name}.log').open('x') as log:
+        vf.atomic_json(attempt/'COMMANDS_PRIVATE.json',commands)
+        with (attempt/f'{name}.log').open('x') as log:
             processes[name]=subprocess.Popen(command,cwd=ROOT,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
-        vf.atomic_json(run/'PIDS.json',{k:p.pid for k,p in processes.items()})
+        vf.atomic_json(attempt/'PIDS.json',dict(coordinator=os.getpid(),**{k:p.pid for k,p in processes.items()}))
 
     def wait(name,limit):
         process=processes[name]
@@ -75,16 +98,32 @@ def main():
                 resources[gpu]=gpu_check(gpu);available.append(gpu)
             except RuntimeError as error:
                 resources[gpu]=dict(unavailable=str(error))
-        vf.atomic_json(public/'GPU_AND_TIMING.json',dict(preflight=resources,authorization=config['authorization'],started_epoch=None))
+        vf.atomic_json(public/'GPU_AND_TIMING.json',dict(preflight=resources,authorization=AUTHORIZATION,started_epoch=None))
         if not available:
-            raise RuntimeError('GPU0/1 both unavailable; no wait automation created')
-        first_gpu=available[0]
-        launch('first_integration',[*runner,'worker','--run-root',str(run),'--first-only'],environment(first_gpu))
-        wait('first_integration',20*3600)
-        first=read(run/'private/TASK_QUEUE.json')['tasks'][0]
-        if first['status']!='RAW_READY':
-            raise RuntimeError('first original task did not reach RAW_READY')
-        vf.atomic_json(run/'FIRST_TASK_PASS.json',dict(task_id=first['task_id'],epoch=time.time(),semantic_gate=False))
+            raise RuntimeError('GPU2/3 both unavailable; no wait automation created')
+        if args.resume:
+            resume=dict(status='RESUMED',resumed_epoch=time.time(),paused_epoch=pause['paused_epoch'],
+                elapsed_before_pause_seconds=pause['elapsed_before_pause_seconds'],gpu_uuids=GPUS,
+                authorization=AUTHORIZATION,endpoint_only_tasks=list(interrupted),
+                code_provenance=read(run/'private/RESUME_CODE_PROVENANCE.json'))
+            vf.atomic_json(run/'private/ACTIVE_RESUME.json',resume)
+            vf.atomic_json(attempt/'RESUME_STATE.json',resume)
+            queue=vf.TaskQueue(run/'private/TASK_QUEUE.json',run)
+            for task_id,entry in interrupted.items():
+                queue.update(task_id,'PENDING',resume_checkpoint=entry['checkpoint'],resume_phase='ENDPOINT_ONLY')
+            (run/'STOP').rename(attempt/'STOP_USER_PAUSE_ARCHIVED.json')
+            vf.atomic_json(public/'USER_RESUME_STATUS.json',resume)
+            vf.atomic_json(public/'RUN_COMPLETION.json',dict(status='RUNNING',judge='NOT_RUN',
+                counts={'RAW_READY':sum(t['status']=='RAW_READY' for t in tasks),'PENDING':sum(t['status']!='RAW_READY' for t in tasks)},
+                expected=70,scientific_gain='NOT_EVALUATED',authorization=AUTHORIZATION))
+        else:
+            first_gpu=available[0]
+            launch('first_integration',[*runner,'worker','--run-root',str(run),'--first-only'],environment(first_gpu))
+            wait('first_integration',20*3600)
+            first=read(run/'private/TASK_QUEUE.json')['tasks'][0]
+            if first['status']!='RAW_READY':
+                raise RuntimeError('first original task did not reach RAW_READY')
+            vf.atomic_json(run/'FIRST_TASK_PASS.json',dict(task_id=first['task_id'],epoch=time.time(),semantic_gate=False))
         for gpu in available:
             try:
                 env=environment(gpu)
@@ -92,6 +131,8 @@ def main():
                 resources[gpu]['continuation_unavailable']=str(error)
                 continue
             launch(f'worker_gpu{gpu}',[*runner,'worker','--run-root',str(run)],env)
+        if not any(name.startswith('worker_') for name in processes):
+            raise RuntimeError('no continuation worker launched; pending tasks preserved')
         worker_errors=[]
         for name in tuple(processes):
             if not name.startswith('worker_'):
@@ -133,7 +174,7 @@ def main():
                 except subprocess.TimeoutExpired:
                     os.killpg(process.pid,signal.SIGKILL);process.wait()
             exits[name]=process.returncode
-        vf.atomic_json(run/'PROCESS_EXIT_CODES.json',exits)
+        vf.atomic_json(attempt/'PROCESS_EXIT_CODES.json',exits)
         queue=vf.TaskQueue(run/'private/TASK_QUEUE.json',run)
         for task in queue.snapshot()['tasks']:
             if task['status']=='RUNNING':
@@ -143,10 +184,10 @@ def main():
                       process_exit_codes=exits,publication='PENDING_LOCAL_PUBLICATION')
         vf.atomic_json(public/'RUN_COMPLETION.json',status)
         vf.atomic_json(run/'RUN_COMPLETION.json',status)
-        vf.atomic_json(public/'GPU_AND_TIMING.json',dict(preflight=resources,authorization=config['authorization'],
+        vf.atomic_json(public/'GPU_AND_TIMING.json',dict(preflight=resources,authorization=AUTHORIZATION,
             wall_seconds=elapsed() if (run/'private/CAMPAIGN_START.json').exists() else None,
             gpu_hours_upper_bound=2*elapsed()/3600 if (run/'private/CAMPAIGN_START.json').exists() else 0,
-            epoch_end=time.time(),process_exit_codes=exits,gpu2_3_used=False))
+            epoch_end=time.time(),process_exit_codes=exits,gpu2_3_used=bool(processes),timing_scope='active time excluding user pause'))
     if status['status']=='INCOMPLETE':
         raise SystemExit(1)
 
