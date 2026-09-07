@@ -14,4 +14,6 @@ Training/cache implementation is locked to 0c72cfe (the actual training file is 
 
 The run is `20260907_selective_write_v1_r01` on the existing `my-gpu` host. An earlier CPU-only preparation rejection is retained separately. The live coordinator records only its own worker PIDs and exit codes. No recurring automation was created, no GPU2/3 job was shared or terminated, and no old results were overwritten.
 
+Scheduling amendment 5106c14: after `prepare` and before `coordinate_selective_write.py`, run `finalize_selective_write.py pair-pending --run-root RUN --public-dir REPORT`. For this already-started attempt it was applied only to PENDING priorities; active jobs were preserved. QUEUE_SCHEDULING_AMENDMENT.json is the explicit execution-order overlay on the unchanged original task/input manifest. The training/cache implementation remains 0c72cfe; the amended finalizer source belongs to 5106c14.
+
 New-edit confirmation N=0 and current full-LiveEdit compatibility remain explicit limitations. Complete stage-1 results, when available, must still be synchronized and publicly published; this snapshot does not claim that future publication has occurred.
