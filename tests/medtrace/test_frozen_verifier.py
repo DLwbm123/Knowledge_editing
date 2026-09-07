@@ -5,13 +5,15 @@ from types import SimpleNamespace
 
 from methods.medtrace import AsymmetricCPExpert
 from methods.medtrace.frozen_verifier import (
+    LinearApplicabilityVerifier,
     calibrate_decisions,
     conjunction_decision,
     mean_decision,
     train_verifier,
     verifier_features,
 )
-from scripts.medtrace.run_frozen_expert_visual_verifier import _hierarchical_by_edit, _training_data, matched_panel_rows
+from scripts.medtrace.run_frozen_expert_visual_verifier import _hierarchical_by_edit, _score_rows, _training_data, matched_panel_rows
+from scripts.medtrace.run_longrun_campaign import REPRESENTATIONS, score_with_frozen_prototypes
 
 
 class FrozenVerifierTests(unittest.TestCase):
@@ -48,6 +50,22 @@ class FrozenVerifierTests(unittest.TestCase):
         visual = torch.tensor([0.1, 0.6])
         self.assertEqual(mean_decision(prompt, visual, 0.45).tolist(), [True, True])
         self.assertEqual(conjunction_decision(prompt, visual, 0.5, 0.5).tolist(), [False, False])
+
+    def test_m0_control_uses_exact_legacy_score_path(self):
+        torch.manual_seed(7)
+        expert = AsymmetricCPExpert(12, 8, 4)
+        prompt, visual = torch.randn(12), torch.randn(5, 12)
+        features = {"row": verifier_features(expert, prompt, visual)}
+        prototypes = {
+            "prompt_prototype": torch.nn.functional.normalize(torch.randn(4), dim=0),
+            "visual_prototype": torch.nn.functional.normalize(torch.randn(4), dim=0),
+        }
+        checkpoint = {"representation": REPRESENTATIONS[2], "prototypes": prototypes}
+        cache = {"values": {"row": {"prompt": prompt, "visual": visual}}}
+        verifiers = {"M2": LinearApplicabilityVerifier(4), "M3": LinearApplicabilityVerifier(12)}
+        actual = _score_rows(expert, checkpoint, cache, features, verifiers)["row"]["M0_C1_R2_MEAN_CONTROL"][0]
+        expected = score_with_frozen_prototypes(expert, prompt[None], [visual], REPRESENTATIONS[2], prototypes)[0].item()
+        self.assertAlmostEqual(actual, expected, places=6)
 
     def test_calibration_is_deterministic_and_coverage90_means_four_of_four(self):
         positive = [(0.9, 0.9), (0.8, 0.8), (0.7, 0.7), (0.6, 0.6)]

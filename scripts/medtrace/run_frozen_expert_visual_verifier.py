@@ -43,6 +43,7 @@ from scripts.medtrace.run_longrun_campaign import (  # noqa: E402
     append_jsonl,
     atomic_text,
     normalize_rows,
+    response_parts,
     state_hash,
 )
 from scripts.medtrace.run_realmodel_core import LAYER, load_real_runtime  # noqa: E402
@@ -239,14 +240,23 @@ def _score_rows(
     features: dict[str, Any],
     verifiers: dict[str, LinearApplicabilityVerifier],
 ) -> dict[str, dict[str, list[float]]]:
-    prompt_prototype = normalize_rows(checkpoint["prototypes"]["prompt_prototype"].to("cuda:0"))
-    visual_prototype = normalize_rows(checkpoint["prototypes"]["visual_prototype"].to("cuda:0"))
+    device = expert.rho.device
+    prompt_prototype = checkpoint["prototypes"]["prompt_prototype"].to(device)
+    visual_prototype = checkpoint["prototypes"]["visual_prototype"].to(device)
     result = {}
     with torch.no_grad():
         for logical_id, value in cache["values"].items():
             feature = features[logical_id]
-            prompt_score = float((feature.cp_prompt @ prompt_prototype).item())
-            visual_score = float((feature.cp_visual @ visual_prototype).item())
+            prompt_response, visual_response = response_parts(
+                expert,
+                value["prompt"].to(device)[None],
+                [value["visual"].to(device)],
+                checkpoint["representation"],
+            )
+            if visual_response is None:
+                raise RuntimeError("frozen M0/M1 control requires visual CP responses")
+            prompt_score = float((normalize_rows(prompt_response)[0] @ prompt_prototype).item())
+            visual_score = float((normalize_rows(visual_response)[0] @ visual_prototype).item())
             m2q, m2v = verifiers["M2"].logits(feature.cp_prompt[None], feature.cp_visual[None])
             m3q, m3v = verifiers["M3"].logits(feature.pre_cp_prompt[None], feature.pre_cp_visual[None])
             result[logical_id] = {
