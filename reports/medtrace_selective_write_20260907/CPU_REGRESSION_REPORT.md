@@ -1,0 +1,13 @@
+# CPU and first-task integration evidence
+
+Remote existing Python 3.12 / Torch 2.6.0+cu124; tests run with `CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=1`. No package or environment changes.
+
+`python -m unittest discover -s tests/medtrace -p test_selective_write.py -v`: **5 tests passed**, 4.345 seconds, source commit 502a912. Coverage: lossless CP transfer with non-unit beta, zero extra output columns and factor-normalization parity; optimizer expert-only/FP32 contract; image/prompt/padding exclusion plus first-answer/EOS shifted masks; full-vocabulary teacher identity/perturbation and live student gradients; true OFF and request cleanup; fit-only group-balanced deterministic sampling; detached dual state and calibration-only global selection; failed result files cannot imply completion; complete-answer one-shot Judge packet with exact-tuple deduplication.
+
+The seven real-activation CPU transfer checks all passed: maximum absolute error 8.046627e-7, maximum relative L2 error 3.528082e-7. This is numerical agreement on the inspected pre-CP prompt/visual activations, not bitwise equality or proof for every input.
+
+First-task live integration: original e01 P4 W1 lambda=0.1. A2/L16 step0 natural-generation token/text agreement passed for native, an approved historical fit paraphrase, hard-image and broad inputs. The Base teacher fit cache contains 36 rows. Initial group KL was H=0.4331743091, U=0.02232136545; scales and budgets were frozen before optimization. At diagnostic step 80, H=0.1550055016 and U=0.004024925729. These are **fit diagnostics only**, not endpoint, semantic, new-edit or method-effectiveness conclusions.
+
+Data-provenance correction before GPU execution: e01's four A2 paraphrases differ from its four later scope-fit paraphrases. Both retain existing approval; A2 questions do not overlap scope calibration/evaluation or original probes. Positive CE continues the original A2 paraphrases. Extra A2 fit positives are reported separately, with their fixed M0 decisions generated once from the original C1 Q/prototypes/threshold, never from the write-trained Q. The initial CPU preparation rejection is retained under a distinct prestart run root; no GPU task or historical artifact was erased.
+
+First full 320-step task, endpoint replays, Judge and the remaining queue are still required; CPU tests alone are not experiment completion.

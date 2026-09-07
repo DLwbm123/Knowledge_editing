@@ -1,0 +1,12 @@
+{
+  "counts": {
+    "PENDING": 69,
+    "RUNNING": 1
+  },
+  "evaluation": "NOT_COMPLETE",
+  "expected": 70,
+  "judge": "NOT_RUN",
+  "novel_n": 0,
+  "scientific_gain": "NOT_EVALUATED",
+  "status": "INCOMPLETE"
+}

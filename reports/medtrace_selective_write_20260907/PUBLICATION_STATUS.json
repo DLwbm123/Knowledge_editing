@@ -1,0 +1,13 @@
+{
+  "status": "PREPARING_IN_PROGRESS_SNAPSHOT",
+  "research_repository": "https://github.com/DLwbm123/Knowledge_editing",
+  "research_branch": "medtrace-selective-write-20260907",
+  "public_repository": "https://github.com/DLwbm123/Knowledge_editing-public",
+  "training_implementation_commit": "0c72cfef615390d1bf37de43998690dda3a7efd3",
+  "coordinator_commit": "7f2397d",
+  "judge_closure_commit": "502a912",
+  "experiment_complete": false,
+  "allowed_scope": ["source dependency snapshot", "frozen protocol", "aggregate CPU checks", "fit source counts", "status and audit reports"],
+  "withheld": ["QA and references", "patient images", "raw answers and tokens", "teacher distributions", "activations", "expert and backbone weights", "Judge mapping", "complete private logs"],
+  "final_results_publication": "PENDING_EXPERIMENT_AND_JUDGE_COMPLETION"
+}

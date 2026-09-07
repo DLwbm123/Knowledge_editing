@@ -1,0 +1,86 @@
+[
+  {
+    "actual_activation_max_abs": 7.152557373046875e-07,
+    "actual_activation_relative_l2": 2.5497527644802176e-07,
+    "beta": 1.0,
+    "checkpoint_binding": "PASS",
+    "cp_scale": 0.5,
+    "edit": 1,
+    "l16_parameters": 294912,
+    "natural_generation": "NOT_RUN",
+    "p4_parameters": 1476,
+    "transfer_cpu": true
+  },
+  {
+    "actual_activation_max_abs": 4.5262277126312256e-07,
+    "actual_activation_relative_l2": 2.962408984785725e-07,
+    "beta": 1.0,
+    "checkpoint_binding": "PASS",
+    "cp_scale": 0.5,
+    "edit": 2,
+    "l16_parameters": 294912,
+    "natural_generation": "NOT_RUN",
+    "p4_parameters": 1476,
+    "transfer_cpu": true
+  },
+  {
+    "actual_activation_max_abs": 3.5762786865234375e-07,
+    "actual_activation_relative_l2": 2.3795432468887157e-07,
+    "beta": 1.0,
+    "checkpoint_binding": "PASS",
+    "cp_scale": 0.5,
+    "edit": 3,
+    "l16_parameters": 294912,
+    "natural_generation": "NOT_RUN",
+    "p4_parameters": 1476,
+    "transfer_cpu": true
+  },
+  {
+    "actual_activation_max_abs": 7.152557373046875e-07,
+    "actual_activation_relative_l2": 3.5280820043226413e-07,
+    "beta": 1.0,
+    "checkpoint_binding": "PASS",
+    "cp_scale": 0.5,
+    "edit": 7,
+    "l16_parameters": 294912,
+    "natural_generation": "NOT_RUN",
+    "p4_parameters": 1476,
+    "transfer_cpu": true
+  },
+  {
+    "actual_activation_max_abs": 3.5762786865234375e-07,
+    "actual_activation_relative_l2": 2.1490751578312484e-07,
+    "beta": 1.0,
+    "checkpoint_binding": "PASS",
+    "cp_scale": 0.5,
+    "edit": 13,
+    "l16_parameters": 294912,
+    "natural_generation": "NOT_RUN",
+    "p4_parameters": 1476,
+    "transfer_cpu": true
+  },
+  {
+    "actual_activation_max_abs": 8.046627044677734e-07,
+    "actual_activation_relative_l2": 3.2649339232193597e-07,
+    "beta": 1.0,
+    "checkpoint_binding": "PASS",
+    "cp_scale": 0.5,
+    "edit": 15,
+    "l16_parameters": 294912,
+    "natural_generation": "NOT_RUN",
+    "p4_parameters": 1476,
+    "transfer_cpu": true
+  },
+  {
+    "actual_activation_max_abs": 4.76837158203125e-07,
+    "actual_activation_relative_l2": 2.1176566633585026e-07,
+    "beta": 1.0,
+    "checkpoint_binding": "PASS",
+    "cp_scale": 0.5,
+    "edit": 16,
+    "l16_parameters": 294912,
+    "natural_generation": "NOT_RUN",
+    "p4_parameters": 1476,
+    "transfer_cpu": true
+  }
+]

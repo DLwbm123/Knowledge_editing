@@ -1,0 +1,128 @@
+[
+  {
+    "edit": 1,
+    "eqkeys": 20,
+    "group": "H",
+    "relation": "same_question_different_image_conflicting_source_answer",
+    "role": "fit",
+    "rows": 20,
+    "source_images": 4
+  },
+  {
+    "edit": 1,
+    "eqkeys": 16,
+    "group": "U",
+    "relation": "broad_unrelated_source_qa",
+    "role": "fit",
+    "rows": 16,
+    "source_images": 16
+  },
+  {
+    "edit": 2,
+    "eqkeys": 20,
+    "group": "H",
+    "relation": "same_question_different_image_conflicting_source_answer",
+    "role": "fit",
+    "rows": 20,
+    "source_images": 4
+  },
+  {
+    "edit": 2,
+    "eqkeys": 16,
+    "group": "U",
+    "relation": "broad_unrelated_source_qa",
+    "role": "fit",
+    "rows": 16,
+    "source_images": 16
+  },
+  {
+    "edit": 3,
+    "eqkeys": 20,
+    "group": "H",
+    "relation": "same_question_different_image_conflicting_source_answer",
+    "role": "fit",
+    "rows": 20,
+    "source_images": 4
+  },
+  {
+    "edit": 3,
+    "eqkeys": 16,
+    "group": "U",
+    "relation": "broad_unrelated_source_qa",
+    "role": "fit",
+    "rows": 16,
+    "source_images": 16
+  },
+  {
+    "edit": 7,
+    "eqkeys": 10,
+    "group": "H",
+    "relation": "same_question_different_image_conflicting_source_answer",
+    "role": "fit",
+    "rows": 10,
+    "source_images": 2
+  },
+  {
+    "edit": 7,
+    "eqkeys": 18,
+    "group": "U",
+    "relation": "broad_unrelated_source_qa",
+    "role": "fit",
+    "rows": 18,
+    "source_images": 18
+  },
+  {
+    "edit": 13,
+    "eqkeys": 10,
+    "group": "H",
+    "relation": "same_question_different_image_conflicting_source_answer",
+    "role": "fit",
+    "rows": 10,
+    "source_images": 2
+  },
+  {
+    "edit": 13,
+    "eqkeys": 18,
+    "group": "U",
+    "relation": "broad_unrelated_source_qa",
+    "role": "fit",
+    "rows": 18,
+    "source_images": 18
+  },
+  {
+    "edit": 15,
+    "eqkeys": 20,
+    "group": "H",
+    "relation": "same_question_different_image_conflicting_source_answer",
+    "role": "fit",
+    "rows": 20,
+    "source_images": 4
+  },
+  {
+    "edit": 15,
+    "eqkeys": 16,
+    "group": "U",
+    "relation": "broad_unrelated_source_qa",
+    "role": "fit",
+    "rows": 16,
+    "source_images": 16
+  },
+  {
+    "edit": 16,
+    "eqkeys": 20,
+    "group": "H",
+    "relation": "same_question_different_image_conflicting_source_answer",
+    "role": "fit",
+    "rows": 20,
+    "source_images": 4
+  },
+  {
+    "edit": 16,
+    "eqkeys": 16,
+    "group": "U",
+    "relation": "broad_unrelated_source_qa",
+    "role": "fit",
+    "rows": 16,
+    "source_images": 16
+  }
+]

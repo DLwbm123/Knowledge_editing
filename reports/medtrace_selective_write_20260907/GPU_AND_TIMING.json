@@ -1,0 +1,18 @@
+{
+  "authorization": "User 2026-09-07: \u53ef\u4ee5\u7528 gpu0 \u548c 1; supersedes plan GPU1 prohibition; idle-only",
+  "preflight": {
+    "0": {
+      "checked_epoch": 1788769792.135277,
+      "gpu": "0",
+      "used_mib": 1,
+      "uuid": "GPU-688ed629-7a46-b62c-e3e4-0940e1649b5f"
+    },
+    "1": {
+      "checked_epoch": 1788769792.2038321,
+      "gpu": "1",
+      "used_mib": 1,
+      "uuid": "GPU-5fac6011-5432-229f-bb11-9ce9f104a334"
+    }
+  },
+  "started_epoch": null
+}
