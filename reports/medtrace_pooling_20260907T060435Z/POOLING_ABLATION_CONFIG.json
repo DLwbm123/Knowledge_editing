@@ -1,0 +1,56 @@
+{
+  "base_commit": "2f142769a26971b12f6e089653e4065d697fbdf6",
+  "closure_reserve_seconds": 7200,
+  "code_commit": "f19ecb7b7127eaf838448b65abe293794d638593",
+  "cohort": {
+    "hard_evaluable_edits": 7,
+    "independent_fact_claim": false,
+    "repeated_seed_runs": 3
+  },
+  "conditions": [
+    "G0",
+    "G1",
+    "G2"
+  ],
+  "confirmation": "only after full development retention; at most 16 authorized unseen edits, complete C1 recipe, one fixed seed",
+  "coverage90_discrete_requirement": "4/4 calibration positives",
+  "devices": {
+    "gpu1_forbidden": true,
+    "physical": [
+      2,
+      3
+    ]
+  },
+  "executor": "C1_R2_FIXED_Q_LONG_RECOVERY@additional_step800",
+  "fits": 63,
+  "frozen_question_head": "original M3 per edit/seed",
+  "historical_scientific_gain": false,
+  "operating_points": [
+    "PRIMARY_SAFETY_FIRST",
+    "SECONDARY_COVERAGE90"
+  ],
+  "pooling": {
+    "G0": "CP-guided matched refit",
+    "G1": "uniform RMS visual-token mean",
+    "G2": "pre-CP cosine query-conditioned softmax tau=0.1"
+  },
+  "private_artifacts_withheld": true,
+  "schema_version": "medtrace-frozen-verifier-public-config-v1",
+  "seeds": [
+    20260906,
+    20260907,
+    20260908
+  ],
+  "selection_point": "PRIMARY_SAFETY_FIRST",
+  "source_public_commit": "3ce3d95e393eba8a6eda6dff0d6e7ad8ef9a9f1a",
+  "thresholds": "same frozen calibrate_decisions; both thresholds independently recalibrated per condition/panel/point",
+  "trainable": "image head only",
+  "verifier": {
+    "gradient_clip": 1.0,
+    "l2": 0.001,
+    "lr": 0.01,
+    "optimizer": "Adam",
+    "steps": 800,
+    "weight_decay": 0
+  }
+}

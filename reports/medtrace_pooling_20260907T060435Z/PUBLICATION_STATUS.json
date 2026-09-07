@@ -1,0 +1,12 @@
+{
+  "scope": "PRESTART_CODE_AND_DIAGNOSTIC_REVIEW_PACKAGE",
+  "status": "PENDING_PUSH_VERIFICATION",
+  "experiment_status": "NOT_STARTED_GPU_OCCUPANCY_GUARD",
+  "experiment_complete": false,
+  "new_fits_completed": 0,
+  "new_fits_expected": 63,
+  "new_scientific_gain": "not_evaluated",
+  "historical_scientific_gain": false,
+  "raw_coordinator_completion_preserved": true,
+  "gpu_sharing_authorized_by_this_publication": false
+}

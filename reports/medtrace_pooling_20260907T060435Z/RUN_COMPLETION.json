@@ -1,0 +1,22 @@
+{
+  "attempt_id": "20260907T060435Z_cp_independent_pooling",
+  "end_epoch": 1788762573.6980622,
+  "error": "RuntimeError: GPU2 unavailable or UUID mismatch; no other process was stopped",
+  "evaluation": "NOT_RUN",
+  "gpu1_used": false,
+  "initialization": "FAIL",
+  "judge": "NOT_RUN",
+  "phase_wait_seconds": {},
+  "process_exit_codes": {},
+  "publication": "RETRY_REQUIRED",
+  "raw_closure": "PARTIAL",
+  "research_execution_commit": "f19ecb7b7127eaf838448b65abe293794d638593",
+  "scientific_gain": "not_evaluated",
+  "tasks": {
+    "completed": 0,
+    "expected": 21,
+    "failed": 0,
+    "unfinished": 21
+  },
+  "wall_seconds": null
+}

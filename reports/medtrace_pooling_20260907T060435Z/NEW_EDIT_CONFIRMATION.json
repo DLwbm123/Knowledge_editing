@@ -1,0 +1,7 @@
+{
+  "status": "NOT_RUN",
+  "n": 0,
+  "reason": "Main pooling experiment has not started; no development retention result or selected algorithm exists.",
+  "automatic_execution_path": "NOT_YET_CONNECTED",
+  "historical_scientific_gain": false
+}
