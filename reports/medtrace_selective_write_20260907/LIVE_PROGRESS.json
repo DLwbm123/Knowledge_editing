@@ -1,8 +1,8 @@
 {
   "counts": {
+    "PAUSED_BY_USER": 2,
     "PENDING": 56,
-    "RAW_READY": 12,
-    "RUNNING": 2
+    "RAW_READY": 12
   },
   "expected": 70,
   "publication_scope": "IN_PROGRESS_SNAPSHOT",

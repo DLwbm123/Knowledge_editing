@@ -23,10 +23,11 @@
     "source_deployment": "explicit scp of runner coordinator and CPU regression tests"
   },
   "counts": {
+    "PAUSED_BY_USER": 2,
     "PENDING": 56,
-    "RAW_READY": 12,
-    "RUNNING": 2
+    "RAW_READY": 12
   },
+  "elapsed_before_latest_pause_seconds": 6038.835870981216,
   "elapsed_before_pause_seconds": 5805.069608926773,
   "endpoint_only_tasks": [
     "SW_e02_P4_W0_TASK_ONLY",
@@ -37,15 +38,19 @@
     "3": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c"
   },
   "judge": "NOT_RUN",
-  "optimizer_steps_added_for_resumed_tasks": 0,
-  "original_start_preserved": true,
-  "paused_epoch": 1788775754.2942855,
-  "processes": {
+  "latest_pause_epoch": 1788776527.9739292,
+  "old_processes": {
     "coordinator": 914110,
     "worker_gpu2": 914120,
     "worker_gpu3": 914122
   },
+  "optimizer_steps_added_for_resumed_tasks": 0,
+  "original_start_preserved": true,
+  "paused_epoch": 1788775754.2942855,
+  "pending_attempt": "resume02",
+  "process_naming": "IMPLEMENTED_TESTED",
+  "restart": "NOT_STARTED",
   "resumed_epoch": 1788776294.2078335,
-  "status": "RESUMED",
+  "status": "PAUSED_RESOURCE_BUSY",
   "verified_epoch": 1788776427.7551813
 }

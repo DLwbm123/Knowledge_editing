@@ -1,16 +1,15 @@
 {
-  "authorization": "User 2026-09-07: \u7528 gpu2 \u548c gpu3; supersedes GPU0/1; idle-only",
   "counts": {
+    "PAUSED_BY_USER": 2,
     "PENDING": 56,
-    "RAW_READY": 12,
-    "RUNNING": 2
+    "RAW_READY": 12
   },
   "evaluation": "NOT_COMPLETE",
   "expected": 70,
   "judge": "NOT_RUN",
-  "novel_n": 0,
-  "publication": "IN_PROGRESS_SNAPSHOT",
+  "reason": "GPU2/3 acquired non-project allocations after explicit stop; idle-only preflight refused relaunch",
+  "restart": "NOT_STARTED",
   "scientific_gain": "NOT_EVALUATED",
-  "snapshot_epoch": 1788776427.7601779,
-  "status": "RUNNING"
+  "snapshot_epoch": 1788776952.6750681,
+  "status": "PAUSED_RESOURCE_BUSY"
 }

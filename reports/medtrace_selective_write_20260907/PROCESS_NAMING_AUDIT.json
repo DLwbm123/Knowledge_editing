@@ -1,0 +1,31 @@
+{
+  "checked_epoch": 1788776952.6664062,
+  "code_commit": "8d3a3444b2382a03973e134ba5bafe0229d7acff",
+  "counts": {
+    "PAUSED_BY_USER": 2,
+    "PENDING": 56,
+    "RAW_READY": 12
+  },
+  "cpu_tests": "8 passed; 5.536 seconds",
+  "gpu_observation": [
+    "2, 7853, 100",
+    "3, 4893, 100"
+  ],
+  "gpu_process_restart": false,
+  "naming_scope": "process list display only; actual paths remain visible via environment/cwd/open files",
+  "old_project_processes_stopped": {
+    "coordinator": 914110,
+    "worker_gpu2": 914120,
+    "worker_gpu3": 914122
+  },
+  "original_results_checkpoints_preserved": true,
+  "real_cpu_process_checks": {
+    "cmdline_no_username_or_method": true,
+    "comm": "run/job",
+    "judge_existing_environment_probe": "PASS",
+    "same_resolved_python_environment": true
+  },
+  "reason": "GPU2/3 acquired non-project allocations after explicit stop; idle-only preflight refused relaunch",
+  "status": "IMPLEMENTED_TESTED_RESTART_BLOCKED",
+  "visible_command_template": "/tmp/job.<id>/run/bin/python3.12 /tmp/job.<id>/main.py run"
+}

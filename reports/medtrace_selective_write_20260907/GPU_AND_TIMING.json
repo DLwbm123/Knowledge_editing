@@ -1,26 +1,12 @@
 {
-  "active_seconds": 5938.630033969879,
+  "active_seconds_before_pause": 6038.835870981216,
   "authorization": "User 2026-09-07: \u7528 gpu2 \u548c gpu3; supersedes GPU0/1; idle-only",
-  "gpu2_3_used": true,
-  "preflight": {
-    "2": {
-      "checked_epoch": 1788776294.1267242,
-      "gpu": "2",
-      "used_mib": 1,
-      "uuid": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b"
-    },
-    "3": {
-      "checked_epoch": 1788776294.1972897,
-      "gpu": "3",
-      "used_mib": 1,
-      "uuid": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c"
-    }
-  },
-  "processes": {
-    "coordinator": 914110,
-    "worker_gpu2": 914120,
-    "worker_gpu3": 914122
-  },
-  "started_epoch": null,
-  "timing_scope": "active time excluding user pause"
+  "current_project_gpu_workers": 0,
+  "gpu2_3_used_before_pause": true,
+  "gpu_observation": [
+    "2, 7853, 100",
+    "3, 4893, 100"
+  ],
+  "snapshot_epoch": 1788776952.6842005,
+  "status": "PAUSED_RESOURCE_BUSY"
 }

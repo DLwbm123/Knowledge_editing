@@ -1,5 +1,7 @@
 # GPT Pro review: selective-write V1 in progress
 
+Latest operational amendment: **PAUSED_RESOURCE_BUSY; neutral-name relaunch NOT STARTED**. User requested stop/restart with neutral process names. All three project processes were stopped. The coordinator/worker/Judge launch path now supports `main`/`run`/`job` and neutral temporary entrypoint/runtime aliases; eight CPU tests and the existing Judge-environment probe pass. However, GPU2/3 acquired other allocations before relaunch, so the idle-only preflight refused to start resume02. Current queue: 12 RAW_READY, 2 PAUSED_BY_USER, 56 PENDING. Original source/data paths and scientific provenance remain unchanged; this is not an anonymity boundary. See PROCESS_NAMING_AUDIT.json and RESUME_AFTER_USER_PAUSE.md; earlier running PIDs and progress below are historical.
+
 Current answer to all four scientific questions:
 
 - **Does ordinary KL help?** Not yet established. The first task's fit drift is decreasing; the W0 comparison, endpoint semantic preservation and calibration-selected W1 are pending.
