@@ -25,7 +25,7 @@
 - 当前实验实现：`f19ecb7b7127eaf838448b65abe293794d638593`。
 - 独立研究分支：`medtrace-cp-independent-pooling-20260907T060435Z`。
 - 历史公开交付：`3ce3d95e393eba8a6eda6dff0d6e7ad8ef9a9f1a`，`reports/medtrace_visual_verifier_recovery_20260907T045800Z/`。
-- 公开源码快照：[`experiments/medtrace_pooling_20260907T060435Z`](../../experiments/medtrace_pooling_20260907T060435Z/)。其源码来自研究工作树，不复制研究 Git 历史。
+- 公开源码快照：[`experiments/medtrace_pooling_20260907T060435Z`](https://github.com/DLwbm123/Knowledge_editing-public/tree/d4005f02008d945dcf913f90a1448b3f3ef3fe36/experiments/medtrace_pooling_20260907T060435Z)。其源码来自研究工作树，不复制研究 Git 历史。
 
 主要文件：`methods/medtrace/visual_pooling.py`、`scripts/medtrace/run_pooling_ablation.py`、`scripts/medtrace/summarize_pooling_ablation.py`。沿用并小幅扩展原 coordinator、start binding、atomic queue、worker 和自然回放函数；旧调用默认行为不变。
 
