@@ -192,16 +192,40 @@ def process_task(runtime, args, task):
             scores[panel] = {lid: {kind: [prior["scores"][panel][lid][vf.CONDITIONS[3]][0], verifiers[kind].image(f[kind]).item()] for kind in GROUPS} for lid, f in values.items()}
     calibration = {panel: vf._calibrate_panel(cache, scores[panel], caches["original"], scores["original"], GROUPS) for panel, cache in caches.items()}
     rows = sorted((item["row"] for item in prior["outputs"]["matched"].values()), key=lambda r: r["logical_id"])
-    def generate(row, desired):
+    frozen = read(args.old_run / "private/frozen_data.json")
+    record = vf.EditorRecord.from_dict(frozen["dev"][task["event_index"]-1]["edit_record"])
+    replay_latency = []
+    def generate(row, desired, kind=None):
+        began = time.monotonic()
+        if kind is not None:
+            batch = runtime.build_question_batch(record, question=row["question"], image_path=Path(row["image_path"]))
+            activation = runtime.extract_layer_input_features(batch, module_path=vf.LAYER)
+            prompt = activation[batch.key_token_index].to("cuda:0")
+            visual = activation[batch.image_token_start:batch.image_token_end].to("cuda:0")
+            with torch.no_grad():
+                actual_scores = [question_check(l2_normalize(expert.normalize_activation(prompt))).item(),
+                                 verifiers[kind].image(pooled_feature(expert,prompt,visual,kind)).item()]
+            expected_scores = scores["matched"][row["logical_id"]][kind]
+            if max(abs(a-b) for a,b in zip(actual_scores,expected_scores,strict=True)) > 1e-5:
+                raise RuntimeError("live target-free activation/cache score mismatch")
+            if vf._decision(actual_scores,calibration["matched"][kind][vf.POINTS[0]]) != desired:
+                raise RuntimeError("live natural gate decision mismatch")
         if not desired:
-            return vf.scope_generate(runtime, row, None)
-        hook = vf.MedTraceLayerHook(runtime.get_module(vf.LAYER), expert); hook.attach()
-        try:
-            return vf.scope_generate(runtime, row, hook)
-        finally:
-            hook.detach()
+            output = vf.scope_generate(runtime, row, None)
+        else:
+            hook = vf.MedTraceLayerHook(runtime.get_module(vf.LAYER), expert); hook.attach()
+            try:
+                output = vf.scope_generate(runtime, row, hook)
+            finally:
+                hook.detach()
+        replay_latency.append(dict(condition=kind or "INDEPENDENT_FIXTURE",decision="ON" if desired else "OFF",
+                                   e2e_seconds=time.monotonic()-began,generated_tokens=output["generated_token_count"],
+                                   includes_live_feature_extraction_and_gate=kind is not None))
+        return output
     replay_started = time.monotonic()
-    replays = vf.natural_replays(rows, scores["matched"], calibration["matched"], prior["outputs"]["matched"], generate, GROUPS)
+    replays = []
+    for kind in GROUPS:
+        replays += vf.natural_replays(rows, scores["matched"], calibration["matched"], prior["outputs"]["matched"], lambda row,on: generate(row,on,kind), (kind,))
     # A forced branch fixture is not a natural request and does not alter thresholds.
     for desired in (True, False):
         if any(r["status"] == f"NO_NATURAL_{'ON' if desired else 'OFF'}_IN_THIS_TASK" for r in replays):
@@ -222,7 +246,7 @@ def process_task(runtime, args, task):
                                  "feature_definition": "expert-OFF target-free layer21 down_proj raw activations; original exact tokens/preprocess/runtime locks"},
                   training=training, calibration=calibration, scores=scores, outputs=prior["outputs"],
                   row_metadata={panel: {lid: v["row"] for lid, v in cache["values"].items()} for panel, cache in caches.items()},
-                  replays=replays, base_guard=guard,
+                  replays=replays, replay_latency=replay_latency, base_guard=guard,
                   timing={"feature_seconds": feature_seconds, "training_seconds": training_seconds, "replay_seconds": time.monotonic()-replay_started,
                           "pooling_mean_seconds_per_row": {k: mean(v) for k, v in pooling_cost.items()}, "total_seconds": time.monotonic()-started})
     vf.atomic_json(task_dir / "result_private.json", result)
