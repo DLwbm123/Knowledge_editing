@@ -1,5 +1,9 @@
 import copy
 import unittest
+import tempfile
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import torch
 
@@ -105,6 +109,32 @@ class SelectiveWriteTest(unittest.TestCase):
         cal[0]['role']='evaluation'
         with self.assertRaises(ValueError):
             select_global_lambda(cal)
+
+    def test_judge_uses_complete_answers_and_failed_tasks_stay_failed(self):
+        from scripts.medtrace import finalize_selective_write as close
+        from scripts.medtrace.run_selective_write import vf
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            run, gate = root/'run', root/'v4/cpu_gate'
+            vf.atomic_json(run/'private/CAMPAIGN_CONFIG.json',dict(runtime=dict(cpu_gate=str(gate))))
+            vf.atomic_json(gate.parent/'private/JUDGE_LOCK_V4.json',dict(config_sha256='protocol',judge_snapshot_sha='snapshot'))
+            vf.atomic_json(run/'private/edits/e01.json',dict(event=dict(edit_record=dict(gold_answer='reference'))))
+            vf.atomic_json(run/'private/TASK_QUEUE.json',dict(tasks=[dict(task_id='failed',status='FAILED')]))
+            # A stray result file must not convert a failed task to completed.
+            vf.atomic_json(run/'private/tasks/failed/result_private.json',dict(status='RAW_READY',step=320))
+            self.assertEqual(close.results(run),[])
+            answer = 'first sentence. ' + 'complete remaining answer '*400
+            result = dict(task=dict(task_id='fixture',event_index=1),outputs=dict(x=dict(
+                row=dict(question='question',reference='reference'),
+                base=dict(raw_answer=answer),forced=dict(raw_answer=answer),fixed=dict(raw_answer=answer))))
+            with patch.object(close,'results',return_value=[result]):
+                close.prepare_judge(SimpleNamespace(run_root=run))
+            packet=vf.read_jsonl(run/'private/judge/JUDGE_PACKET_PRIVATE.jsonl')
+            self.assertEqual(len(packet),1)
+            self.assertEqual(packet[0]['raw_base_answer'],answer)
+            self.assertEqual(set(packet[0]),{'opaque_query_id','question','gold_answer','raw_base_answer','adjudication_pass'})
+            with self.assertRaises(FileExistsError), patch.object(close,'results',return_value=[result]):
+                close.prepare_judge(SimpleNamespace(run_root=run))
 
 
 if __name__ == '__main__':
