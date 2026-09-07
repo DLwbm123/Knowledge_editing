@@ -1,108 +1,108 @@
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260906, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260907, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "scope_status": "BROAD_ONLY", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C2_R2_SHARED_Q_JOINT", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
-{"additional_steps": 800, "condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "scope_status": "HARD_EVALUABLE", "seed": 20260908, "status": "PENDING"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "seed": 20260906, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "seed": 20260907, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 1, "opaque_edit": "01223e258bbc7a1f", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 2, "opaque_edit": "1534fc99d84ef734", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 3, "opaque_edit": "1b0d2271e842e01a", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 4, "opaque_edit": "029f61ab6aaeeef1", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 5, "opaque_edit": "1607639d73eb56a8", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 7, "opaque_edit": "13d861159cbf9477", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 8, "opaque_edit": "06e9147a95404227", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 9, "opaque_edit": "0b2d75291d40cb7c", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 12, "opaque_edit": "319cba8ffa622b0e", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 13, "opaque_edit": "1379df4696783d47", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 15, "opaque_edit": "11999d89b31d5f06", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C1_R2_FIXED_Q_LONG_RECOVERY", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C2_R2_SHARED_Q_JOINT", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}
+{"condition": "C3_R2_SHARED_Q_EXECUTION_ANCHOR", "event_index": 16, "opaque_edit": "30c09c9279241ba5", "phase": "P0", "seed": 20260908, "status": "COMPLETE"}

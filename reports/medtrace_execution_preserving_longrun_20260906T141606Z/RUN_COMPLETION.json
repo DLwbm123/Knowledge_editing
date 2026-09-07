@@ -1,0 +1,20 @@
+{
+  "execution_retention": "EXECUTION_RETENTION_NOT_IMPROVED",
+  "generation": "GENERATION_COMPLETE",
+  "gpu1_used": false,
+  "gpu_hours": 20.951287214444893,
+  "judge": "JUDGE_COMPLETE",
+  "p0_matched_triples_complete": 36,
+  "p0_trajectories_complete": 108,
+  "p1_tasks_complete": 108,
+  "p2": {
+    "all_p0_p1_complete": true,
+    "elapsed_hours": 6.406651623381508,
+    "fit_ce_trigger": true,
+    "fit_exact_coverage_trigger": true,
+    "scheduled": true
+  },
+  "publication": "RETRY_REQUIRED",
+  "routing_execution_pareto": "ROUTING_EXECUTION_PARETO_NOT_IMPROVED",
+  "training": "TRAINING_COMPLETE"
+}
