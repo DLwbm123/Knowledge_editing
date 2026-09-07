@@ -1,0 +1,11 @@
+{
+  "counts": {
+    "PENDING": 69,
+    "RUNNING": 1
+  },
+  "expected": 70,
+  "publication_scope": "IN_PROGRESS_SNAPSHOT",
+  "raw_ready": 0,
+  "scientific_gain": "NOT_EVALUATED",
+  "trained_320": 1
+}
