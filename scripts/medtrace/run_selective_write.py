@@ -20,7 +20,7 @@ sys.path.insert(0, str(ROOT))
 from methods.medtrace.selective_write import (CONDITIONS, RELATIONS, LowRankExpert, Protection,
     optimizer_for, predictor_mask, full_vocab_kl, fit_groups, balanced_schedule, group_mean)
 from scripts.medtrace import run_frozen_expert_visual_verifier as vf
-from scripts.medtrace.run_longrun_campaign import scope_rows
+from scripts.medtrace.run_longrun_campaign import route_score_one
 
 SEED = 20260906
 A2 = "CP_NATIVE_PLUS_PARAPHRASE_80"
@@ -127,8 +127,12 @@ def prepare(args):
         if not paras or any(p["review_status"] != "APPROVED_EQUIVALENT" for p in paras):
             raise ValueError("unapproved A2 fit paraphrases")
         fit_q = {p["question"] for p in scope["positives"]["fit"]}
-        if not {p["question"] for p in paras} <= fit_q:
-            raise ValueError("A2 fit paraphrase roles differ")
+        if {p["question"] for p in paras} & {p["question"] for role in ("calibration","evaluation") for p in scope["positives"][role]}:
+            raise ValueError("A2 fit paraphrase overlaps a held-out role")
+        extra_fit = [p for p in paras if p["question"] not in fit_q]
+        for row in rows:
+            if row["role"] == "fit" and row["label"] == "positive":
+                row["fit_positive_source"] = "A2_NATIVE_OR_PARAPHRASE" if row["question"] in {event["edit_record"]["question"], *(p["question"] for p in paras)} else "HISTORICAL_SCOPE_FIT_ONLY"
         negative_roles = {}
         for row in rows:
             if row["label"] == "negative":
@@ -136,7 +140,7 @@ def prepare(args):
                 if prior_role != row["role"]:
                     raise ValueError("negative EqKey crosses roles")
         vf.atomic_json(run / f"private/edits/e{i:02d}.json", dict(event=event, a2=str(path), a2_sha256=digest,
-            rows=rows, fit_paraphrases=paras, frozen_gate=frozen_gate, frozen_gate_sha256=vf.sha256_json(frozen_gate),
+            rows=rows, fit_paraphrases=paras, extra_fit=extra_fit, frozen_gate=frozen_gate, frozen_gate_sha256=vf.sha256_json(frozen_gate),
             router_provenance=dict(source=str(prior), checkpoint=history["executor_lock"], calibration=history["calibration"]),
             transfer_cpu=bool(transfer_ok), cache_locks={"original": original["locks"], "matched": matched["locks"]}))
         del original, matched, cp, lr
@@ -178,6 +182,48 @@ def gpu_check(gpu):
     if uuid != GPUS[gpu] or int(used) > 1000:
         raise RuntimeError(f"GPU{gpu} busy or UUID mismatch: {uuid}, {used} MiB")
     return dict(gpu=gpu, uuid=uuid, used_mib=int(used), checked_epoch=time.time())
+
+
+def bind_extra_fit(runtime, run, task, data, config):
+    """Preserve original A2 fit positives absent from later scope-fit, using frozen old Q only."""
+    if not data["extra_fit"]:
+        return
+    directory = run / f"private/initial/e{task['event_index']:02d}"
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / "A2_FIT_EXTENSION_PRIVATE.json"
+    with path.with_suffix(".lock").open("a+") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if not path.exists():
+            source = read(Path(config["verifier_run"]) / "private/CAMPAIGN_CONFIG.json")["execution_run"]
+            ck = Path(source) / f"private/tasks/P0_s{SEED}_e{task['event_index']:02d}/C1_R2_FIXED_Q_LONG_RECOVERY/step0800.pt"
+            if vf.sha256_file(ck) != data["router_provenance"]["checkpoint"]["checkpoint_sha256"]:
+                raise ValueError("original M0 router checkpoint mismatch")
+            saved = torch.load(ck, map_location=runtime.device, weights_only=True)
+            router = vf.AsymmetricCPExpert(14336,4096,4).to(runtime.device)
+            router.load_state_dict(saved["expert"]); router.requires_grad_(False)
+            record = vf.EditorRecord.from_dict(data["event"]["edit_record"])
+            native = next(r for r in data["rows"] if r["role"] == "native")
+            extension, decisions = [], {}
+            for n, para in enumerate(data["extra_fit"]):
+                batch = runtime.build_question_batch(record, question=para["question"])
+                activation = runtime.extract_layer_input_features(batch, module_path=vf.LAYER)
+                attention = batch.attention_mask if batch.attention_mask is not None else torch.ones(batch.inputs_embeds.shape[:2],dtype=torch.long)
+                eqkey = vf.sha256_json(dict(image_tensor_sha256=batch.image_sha256,
+                    target_free_prompt_tokens=batch.raw_input_ids[0].tolist(), attention_mask=attention[0].tolist(),
+                    assistant_boundary_index=batch.key_token_index, image_token_span=[batch.image_token_start,batch.image_token_end],
+                    **data["cache_locks"]["matched"]))
+                row = dict(native, logical_id=f"a2-fit-{n}", role="fit", question=para["question"], eqkey=eqkey,
+                           reference=record.target, fit_positive_source="A2_NATIVE_OR_PARAPHRASE", panel="original")
+                with torch.no_grad():
+                    score = route_score_one(router,saved,activation[batch.key_token_index],activation[batch.image_token_start:batch.image_token_end])
+                point = data["router_provenance"]["calibration"]["original"][vf.CONDITIONS[0]]["CONTINUITY_SAFETY_FIRST"]
+                decisions[row["logical_id"]] = vf._decision([score],point)
+                extension.append(row)
+            vf.atomic_json(path, dict(rows=extension, decisions=decisions, router_checkpoint_sha256=data["router_provenance"]["checkpoint"]["checkpoint_sha256"]))
+        extension = read(path)
+    data["rows"] += extension["rows"]
+    data["frozen_gate"].update(extension["decisions"])
+    data["frozen_gate_sha256"] = vf.sha256_json(data["frozen_gate"])
 
 
 def teacher_batch(runtime, row, tokens):
@@ -344,6 +390,7 @@ def train_task(runtime, args, task, chunk=16):
     run = args.run_root
     config = read(run / "private/CAMPAIGN_CONFIG.json")
     data = read(run / f"private/edits/e{task['event_index']:02d}.json")
+    bind_extra_fit(runtime, run, task, data, config)
     if vf.sha256_file(Path(data["a2"])) != data["a2_sha256"]:
         raise ValueError("A2 changed since preparation")
     start = time.monotonic()
