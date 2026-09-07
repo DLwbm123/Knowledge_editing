@@ -530,7 +530,7 @@ def process_task(runtime: Any, args: argparse.Namespace, task: dict[str, Any]) -
                 cached = torch.load(source_path, map_location="cpu", weights_only=False)
                 if cached["locks"] != locks:
                     raise RuntimeError("reuse feature binding mismatch")
-                shutil.copy2(source_path, feature_path)
+                shutil.copyfile(source_path, feature_path)
     feature_started = time.monotonic()
     matched_cache = matched_feature_cache(
         runtime, event, scope, args.run_root / f"private/features/e{task['event_index']:02d}.pt", locks,
@@ -621,7 +621,7 @@ def process_task(runtime: Any, args: argparse.Namespace, task: dict[str, Any]) -
                 source_path = Path(reuse["path"]) / f"private/base_matched/e{task['event_index']:02d}.json"
                 if json.loads(source_path.read_text())["binding"] != base_binding:
                     raise RuntimeError("reuse base binding mismatch")
-                shutil.copy2(source_path, base_path)
+                shutil.copyfile(source_path, base_path)
     base_outputs = _load_or_generate_base(
         runtime, matched_evaluation, args.run_root / f"private/base_matched/e{task['event_index']:02d}.json", base_binding,
     )

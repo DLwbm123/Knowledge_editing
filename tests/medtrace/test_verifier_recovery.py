@@ -45,7 +45,7 @@ class RecoveryTests(unittest.TestCase):
         judge = self.execution / "private/judge"; judge.mkdir()
         for name in ("JUDGE_SIDECAR_PRIVATE.json", "JUDGE_OUTPUT_PRIVATE.jsonl", "JUDGE_EXECUTION_LOCK_PRIVATE.json"):
             (judge / name).write_text('{}')
-        self.args = runner.parser().parse_args(["prepare", "--run-root", str(self.run), "--old-run", str(self.old), "--execution-run", str(self.execution), "--public-dir", str(self.public), "--base-commit", "3aa09dc7196e25e10e90c3965a3f0e3fba678da2"])
+        self.args = runner.parser().parse_args(["prepare", "--run-root", str(self.run), "--old-run", str(self.old), "--execution-run", str(self.execution), "--public-dir", str(self.public), "--base-commit", "HEAD"])
         self.args.func(self.args)
         config = json.loads((self.run / "private/CAMPAIGN_CONFIG.json").read_text())
         self.worker = argparse.Namespace(run_root=self.run, old_run=self.old, execution_run=self.execution, expected_code_commit=config["code_commit"], preflight_only=True, max_tasks=0)
