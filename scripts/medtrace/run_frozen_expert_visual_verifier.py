@@ -4,14 +4,18 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import csv
+import datetime
 import fcntl
 import hashlib
 import json
 import math
 import os
 import random
+import shutil
 import signal
+import socket
 import subprocess
 import sys
 import time
@@ -62,6 +66,141 @@ STOP_REQUESTED = False
 HARD_RELATION = "same_question_different_image_conflicting_source_answer"
 BROAD_RELATION = "broad_unrelated_source_qa"
 MATCHED_PANEL = "MATCHED_QUESTION_IMAGE_PANEL_V1"
+
+
+def task_identity(task: dict[str, Any]) -> dict[str, Any]:
+    return {key: task[key] for key in ("task_id", "seed", "event_index", "record_id", "priority", "replay_designated")}
+
+
+def campaign_inputs(config: dict[str, Any], tasks: list[dict[str, Any]]) -> dict[str, Any]:
+    old, execution = Path(config["old_run"]), Path(config["execution_run"])
+    paths = [old / "private/frozen_data.json", old / "private/CAMPAIGN_RUNTIME_CONFIG.json"]
+    runtime = json.loads(paths[1].read_text())
+    paths += [Path(runtime[key]) for key in ("base_predictions", "runtime_lock")]
+    if not Path(runtime["cpu_gate"]).is_dir():
+        raise FileNotFoundError(runtime["cpu_gate"])
+    frozen = json.loads(paths[0].read_text())
+    images = set()
+    for event_index in sorted({task["event_index"] for task in tasks}):
+        event = frozen["dev"][event_index - 1]
+        scope = frozen["scopes"][event["edit_record"]["record_id"]]
+        matched_panel_rows(scope, event)
+        images.add(scope["primary"]["image_path"])
+        for values in scope["negative_roles"].values():
+            images.update(value["image_path"] for value in values)
+        paths.append(old / f"private/features/e{event_index:02d}.pt")
+    for task in tasks:
+        folder = execution / "private/tasks" / f"P0_s{task['seed']}_e{task['event_index']:02d}" / "C1_R2_FIXED_Q_LONG_RECOVERY"
+        paths += [folder / name for name in ("step0800.pt", "e2e_step0800.json", "calibration_step0800.json")]
+    for name in ("JUDGE_SIDECAR_PRIVATE.json", "JUDGE_OUTPUT_PRIVATE.jsonl", "JUDGE_EXECUTION_LOCK_PRIVATE.json"):
+        paths.append(execution / "private/judge" / name)
+    # Hash the immutable contracts; large feature/image payloads use availability/size checks.
+    files = {}
+    for path in sorted(set(paths)):
+        if not path.is_file() or not path.stat().st_size:
+            raise FileNotFoundError(f"required campaign input missing/empty: {path}")
+        files[str(path.resolve())] = {"bytes": path.stat().st_size}
+        if path.suffix == ".json" or path.name == "step0800.pt":
+            files[str(path.resolve())]["sha256"] = sha256_file(path)
+    for image in sorted(images):
+        if not Path(image).is_file():
+            raise FileNotFoundError(f"required campaign image missing: {image}")
+    return {"files": files, "images": sorted(images), "tasks": [task_identity(task) for task in tasks]}
+
+
+def validate_start(run_root: Path) -> dict[str, Any]:
+    private = run_root.resolve() / "private"
+    try:
+        start = json.loads((private / "CAMPAIGN_START.json").read_text())
+        config = json.loads((private / "CAMPAIGN_CONFIG.json").read_text())
+        manifest = json.loads((private / "INPUT_MANIFEST.json").read_text())
+        tasks = json.loads((private / "TASK_QUEUE.json").read_text())["tasks"]
+        expected = {"schema_version": "medtrace-verifier-start-v2", "run_id": run_root.resolve().name,
+                    "attempt_id": config["attempt_id"], "run_root": str(run_root.resolve()),
+                    "config_sha256": sha256_file(private / "CAMPAIGN_CONFIG.json"),
+                    "manifest_sha256": sha256_file(private / "INPUT_MANIFEST.json"),
+                    "code_commit": config["code_commit"], "code_sha256": config["code_sha256"],
+                    "gpu_uuids": config["gpu_uuids"], "wall_hours": 12, "gpu_hours": 24,
+                    "parent_attempt": config["parent_attempt"]}
+        for key, value in expected.items():
+            if start.get(key) != value:
+                raise ValueError(f"binding mismatch: {key}")
+        epoch = start["epoch"]
+        if isinstance(epoch, bool) or not isinstance(epoch, (int, float)) or not math.isfinite(epoch) or epoch <= 0 or epoch > time.time() + 5:
+            raise ValueError("invalid epoch")
+        if datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc).isoformat() != start["utc"]:
+            raise ValueError("UTC/epoch mismatch")
+        if len(tasks) != 21 or len({task["task_id"] for task in tasks}) != 21 or [task_identity(task) for task in tasks] != manifest["tasks"]:
+            raise ValueError("logical task manifest mismatch")
+        return start
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        raise RuntimeError(f"campaign preflight failed at {private / 'CAMPAIGN_START.json'}: {error}") from error
+
+
+def start_campaign(args: argparse.Namespace) -> None:
+    private = args.run_root.resolve() / "private"
+    with (private / "CAMPAIGN_START.lock").open("a+") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if (private / "CAMPAIGN_START.json").exists():
+            validate_start(args.run_root)
+            return
+        config = json.loads((private / "CAMPAIGN_CONFIG.json").read_text())
+        tasks = json.loads((private / "TASK_QUEUE.json").read_text())["tasks"]
+        if any(task["status"] != "PENDING" for task in tasks):
+            raise RuntimeError("cannot invent an epoch for an already-started queue")
+        if campaign_inputs(config, tasks) != json.loads((private / "INPUT_MANIFEST.json").read_text()):
+            raise RuntimeError("campaign input manifest changed before start")
+        epoch = time.time()
+        atomic_json(private / "CAMPAIGN_START.json", {
+            "schema_version": "medtrace-verifier-start-v2", "run_id": args.run_root.resolve().name,
+            "attempt_id": config["attempt_id"], "run_root": str(args.run_root.resolve()),
+            "epoch": epoch, "utc": datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc).isoformat(),
+            "code_commit": config["code_commit"], "code_sha256": config["code_sha256"],
+            "config_sha256": sha256_file(private / "CAMPAIGN_CONFIG.json"),
+            "manifest_sha256": sha256_file(private / "INPUT_MANIFEST.json"),
+            "gpu_uuids": config["gpu_uuids"], "wall_hours": 12, "gpu_hours": 24,
+            "parent_attempt": config["parent_attempt"],
+        })
+        validate_start(args.run_root)
+
+
+def worker_preflight(args: argparse.Namespace) -> dict[str, Any]:
+    start = validate_start(args.run_root)
+    config = json.loads((args.run_root / "private/CAMPAIGN_CONFIG.json").read_text())
+    for name in ("old_run", "execution_run"):
+        if str(getattr(args, name).resolve()) != config[name]:
+            raise RuntimeError(f"worker {name} differs from campaign binding")
+    if args.expected_code_commit != start["code_commit"]:
+        raise RuntimeError("worker expected commit differs from campaign binding")
+    for name, digest in start["code_sha256"].items():
+        if sha256_file(ROOT / name) != digest:
+            raise RuntimeError(f"worker source changed: {name}")
+    tasks = json.loads((args.run_root / "private/TASK_QUEUE.json").read_text())["tasks"]
+    if campaign_inputs(config, tasks) != json.loads((args.run_root / "private/INPUT_MANIFEST.json").read_text()):
+        raise RuntimeError("worker input manifest mismatch")
+    return start
+
+
+def validate_reuse_source(source: Path, old_run: Path, execution_run: Path) -> dict[str, Any]:
+    config = json.loads((source / "private/CAMPAIGN_CONFIG.json").read_text())
+    if Path(config["old_run"]).resolve() != old_run or Path(config["execution_run"]).resolve() != execution_run:
+        raise RuntimeError("reuse source input paths mismatch")
+    commit = config["code_commit"]
+    unchanged = ("matched_panel_rows", "matched_feature_cache", "_training_data", "_load_or_generate_base", "_feature_map", "_original_outputs")
+    def functions_at(text):
+        return {node.name: ast.dump(node, include_attributes=False) for node in ast.parse(text).body if isinstance(node, ast.FunctionDef)}
+    old_runner = subprocess.check_output(["git", "-C", str(ROOT), "show", f"{commit}:scripts/medtrace/run_frozen_expert_visual_verifier.py"], text=True)
+    before, after = functions_at(old_runner), functions_at(Path(__file__).read_text())
+    if any(before[name] != after[name] for name in unchanged):
+        raise RuntimeError("reuse computational function changed")
+    for name in ("methods/medtrace/frozen_verifier.py", "methods/medtrace/core.py", "scripts/medtrace/run_scope_pilot.py"):
+        old = subprocess.check_output(["git", "-C", str(ROOT), "show", f"{commit}:{name}"])
+        if hashlib.sha256(old).hexdigest() != sha256_file(ROOT / name):
+            raise RuntimeError(f"reuse dependency changed: {name}")
+    return {"path": str(source), "code_commit": commit, "compatible_functions": list(unchanged),
+            "scores_and_calibration_reused": False, "first_task_fully_recomputed": True,
+            "config_sha256": sha256_file(source / "private/CAMPAIGN_CONFIG.json"),
+            "queue_sha256": sha256_file(source / "private/TASK_QUEUE.json")}
 
 
 def verify_gpu() -> tuple[str, str]:
@@ -349,6 +488,27 @@ def _original_outputs(execution_result: dict[str, Any]) -> dict[str, dict[str, A
     }
 
 
+def natural_replays(rows, scores, calibration, outputs, generate):
+    replays = []
+    for condition in CONDITIONS[1:]:
+        point = calibration[condition]["PRIMARY_SAFETY_FIRST"]
+        candidates = [(row, _decision(scores[row["logical_id"]][condition], point)) for row in rows]
+        for desired in (True, False):
+            decision = "ON" if desired else "OFF"
+            selected = next((row for row, on in candidates if on is desired), None)
+            if selected is None:
+                replays.append({"condition": condition, "decision": decision, "exact_replay": None,
+                                "status": f"NO_NATURAL_{decision}_IN_THIS_TASK"})
+                continue
+            actual = generate(selected, desired)
+            expected = outputs[selected["logical_id"]]["forced" if desired else "base"]
+            if actual["raw_token_ids"] != expected["raw_token_ids"] or actual["raw_answer"] != expected["raw_answer"]:
+                raise RuntimeError("derived gate path and actual replay differ")
+            replays.append({"condition": condition, "decision": decision, "logical_id": selected["logical_id"],
+                            "exact_replay": True, "status": "VERIFIED"})
+    return replays
+
+
 def process_task(runtime: Any, args: argparse.Namespace, task: dict[str, Any]) -> dict[str, Any]:
     started = time.monotonic()
     frozen = json.loads((args.old_run / "private/frozen_data.json").read_text())
@@ -357,7 +517,20 @@ def process_task(runtime: Any, args: argparse.Namespace, task: dict[str, Any]) -
     if scope["status"] != "HARD_EVALUABLE":
         raise RuntimeError("main verifier queue contains a non-hard edit")
     old_cache = torch.load(args.old_run / f"private/features/e{task['event_index']:02d}.pt", map_location="cpu", weights_only=False)
-    locks = _cache_locks(old_cache, args.expected_code_commit)
+    config = json.loads((args.run_root / "private/CAMPAIGN_CONFIG.json").read_text())
+    reuse = config.get("reuse_source")
+    locks = _cache_locks(old_cache, reuse["code_commit"] if reuse else args.expected_code_commit)
+    feature_path = args.run_root / f"private/features/e{task['event_index']:02d}.pt"
+    if reuse and not task.get("replay_designated"):
+        feature_path.parent.mkdir(parents=True, exist_ok=True)
+        with feature_path.with_suffix(".lock").open("a+") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            if not feature_path.exists():
+                source_path = Path(reuse["path"]) / f"private/features/e{task['event_index']:02d}.pt"
+                cached = torch.load(source_path, map_location="cpu", weights_only=False)
+                if cached["locks"] != locks:
+                    raise RuntimeError("reuse feature binding mismatch")
+                shutil.copy2(source_path, feature_path)
     feature_started = time.monotonic()
     matched_cache = matched_feature_cache(
         runtime, event, scope, args.run_root / f"private/features/e{task['event_index']:02d}.pt", locks,
@@ -384,6 +557,13 @@ def process_task(runtime: Any, args: argparse.Namespace, task: dict[str, Any]) -
         "p_rho_sha256": state_hash({name: expert_before[name] for name in ("u_out", "v_out", "rho")}),
         "layer": LAYER, "rank": 4, "seed": task["seed"], "event_index": task["event_index"],
     }
+    reusable = None
+    reuse_dir = Path(reuse["path"]) / "private/tasks" / task["task_id"] if reuse else None
+    if reuse_dir and not task.get("replay_designated") and (reuse_dir / "result_private.json").is_file():
+        candidate = json.loads((reuse_dir / "result_private.json").read_text())
+        if candidate["status"] != "COMPLETE" or task_identity(candidate["task"]) != task_identity(task) or candidate["executor_lock"] != expert_lock or candidate["matched_feature_locks"] != locks or not candidate["base_guard"]["unchanged"]:
+            raise RuntimeError("reuse task/executor/runtime binding mismatch")
+        reusable = candidate
     original_features = _feature_map(expert, old_cache)
     matched_features = _feature_map(expert, matched_cache)
     verifiers, training_report = {}, {}
@@ -391,7 +571,15 @@ def process_task(runtime: Any, args: argparse.Namespace, task: dict[str, Any]) -
     for kind in ("M2", "M3"):
         seed_everything(derive_seed(task["record_id"], base=task["seed"]) + (2 if kind == "M2" else 3))
         data = _training_data(matched_cache, old_cache, matched_features, original_features, kind)
-        verifier, curve = train_verifier(**data)
+        if reusable:
+            saved = torch.load(reuse_dir / f"{kind}_heads.pt", map_location="cpu", weights_only=False)
+            curve = saved["curve"]
+            if curve != reusable["training"][kind]["curve"] or curve[-1]["step"] != 800:
+                raise RuntimeError("reuse verifier training binding mismatch")
+            verifier = LinearApplicabilityVerifier(data["question_features"].shape[-1]).to(data["question_features"].device)
+            verifier.load_state_dict(saved["state"])
+        else:
+            verifier, curve = train_verifier(**data)
         verifiers[kind] = verifier
         training_report[kind] = _head_report(verifier, curve, task_dir / f"{kind}_heads.pt") | {
             "question_examples": int(data["question_labels"].numel()),
@@ -400,6 +588,7 @@ def process_task(runtime: Any, args: argparse.Namespace, task: dict[str, Any]) -
             "image_positive": int(data["image_labels"].sum().item()),
             "matched_pair_count": len(data["matched_pairs"]),
             "input_width": int(data["question_features"].shape[-1]),
+            "fit_source": "VALIDATED_REUSE" if reusable else "NEW_800_STEP_FIT",
         }
     training_elapsed = time.monotonic() - training_started
     if any(not torch.equal(expert_before[name], value.detach().cpu()) for name, value in expert.state_dict().items()):
@@ -422,54 +611,64 @@ def process_task(runtime: Any, args: argparse.Namespace, task: dict[str, Any]) -
         key=lambda row: row["logical_id"],
     )
     base_binding = {"event_index": task["event_index"], "matched_feature_locks": locks, "row_ids": [row["logical_id"] for row in matched_evaluation]}
+    generation_started = time.monotonic()
+    base_path = args.run_root / f"private/base_matched/e{task['event_index']:02d}.json"
+    if reuse and not task.get("replay_designated"):
+        base_path.parent.mkdir(parents=True, exist_ok=True)
+        with base_path.with_suffix(".lock").open("a+") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            if not base_path.exists():
+                source_path = Path(reuse["path"]) / f"private/base_matched/e{task['event_index']:02d}.json"
+                if json.loads(source_path.read_text())["binding"] != base_binding:
+                    raise RuntimeError("reuse base binding mismatch")
+                shutil.copy2(source_path, base_path)
     base_outputs = _load_or_generate_base(
         runtime, matched_evaluation, args.run_root / f"private/base_matched/e{task['event_index']:02d}.json", base_binding,
     )
-    hook = MedTraceLayerHook(runtime.get_module(LAYER), expert); hook.attach()
-    try:
-        forced_outputs = {row["logical_id"]: scope_generate(runtime, row, hook) for row in matched_evaluation}
-    finally:
-        hook.detach()
+    if reusable:
+        previous = reusable["outputs"]["matched"]
+        if set(previous) != {row["logical_id"] for row in matched_evaluation} or any(previous[row["logical_id"]]["row"] != row or any(previous[row["logical_id"]]["base"][key] != base_outputs[row["logical_id"]][key] for key in ("raw_answer", "raw_token_ids")) for row in matched_evaluation):
+            raise RuntimeError("reuse generation row/base binding mismatch")
+        forced_outputs = {key: value["forced"] for key, value in previous.items()}
+    else:
+        hook = MedTraceLayerHook(runtime.get_module(LAYER), expert); hook.attach()
+        try:
+            forced_outputs = {row["logical_id"]: scope_generate(runtime, row, hook) for row in matched_evaluation}
+        finally:
+            hook.detach()
     matched_outputs = {
-        row["logical_id"]: {"row": row, "base": base_outputs[row["logical_id"]], "forced": forced_outputs[row["logical_id"]], "source": "NEW_FROZEN_TWO_PATH_OUTPUTS"}
+        row["logical_id"]: {"row": row, "base": base_outputs[row["logical_id"]], "forced": forced_outputs[row["logical_id"]], "source": "VALIDATED_REUSED_TWO_PATH_OUTPUTS" if reusable else "NEW_FROZEN_TWO_PATH_OUTPUTS"}
         for row in matched_evaluation
     }
 
-    replays = []
-    if task.get("replay_designated"):
-        for condition in CONDITIONS[1:]:
-            point = matched_calibration[condition]["PRIMARY_SAFETY_FIRST"]
-            candidates = [(row, _decision(matched_scores[row["logical_id"]][condition], point)) for row in matched_evaluation]
-            for desired in (True, False):
-                selected = next((row for row, on in candidates if on is desired), None)
-                if selected is None:
-                    raise RuntimeError(f"{condition} lacks a designated {'ON' if desired else 'OFF'} replay")
-                if desired:
-                    replay_hook = MedTraceLayerHook(runtime.get_module(LAYER), expert); replay_hook.attach()
-                    try:
-                        actual = scope_generate(runtime, selected, replay_hook)
-                    finally:
-                        replay_hook.detach()
-                    expected = matched_outputs[selected["logical_id"]]["forced"]
-                else:
-                    actual = scope_generate(runtime, selected, None)
-                    expected = matched_outputs[selected["logical_id"]]["base"]
-                exact = actual["raw_token_ids"] == expected["raw_token_ids"] and actual["raw_answer"] == expected["raw_answer"]
-                if not exact:
-                    raise RuntimeError("derived gate path and actual replay differ")
-                replays.append({"condition": condition, "decision": "ON" if desired else "OFF", "logical_id": selected["logical_id"], "exact_replay": True})
+    generation_elapsed = time.monotonic() - generation_started
+    replay_started = time.monotonic()
+    def generate_replay(selected, desired):
+        if not desired:
+            return scope_generate(runtime, selected, None)
+        replay_hook = MedTraceLayerHook(runtime.get_module(LAYER), expert); replay_hook.attach()
+        try:
+            return scope_generate(runtime, selected, replay_hook)
+        finally:
+            replay_hook.detach()
+    # One natural example per available branch/task also closes coverage on later tasks.
+    replays = natural_replays(matched_evaluation, matched_scores, matched_calibration, matched_outputs, generate_replay)
     guard = runtime.base_guard.verify() if runtime.base_guard else None
     if not guard or not guard["unchanged"]:
         raise RuntimeError("frozen-verifier base guard failed")
     result = {
         "schema_version": "medtrace-frozen-expert-visual-verifier-task-private-v1", "status": "COMPLETE",
         "task": task, "executor_lock": expert_lock, "matched_feature_locks": locks,
+        "attempt_id": args.run_root.name, "execution_code_commit": args.expected_code_commit,
+        "reuse": {"source": reuse, "task_result_sha256": sha256_file(reuse_dir / "result_private.json") if reusable else None},
         "training": training_report,
         "calibration": {"original": original_calibration, "matched": matched_calibration},
         "scores": {"original": original_scores, "matched": matched_scores},
         "outputs": {"original": original_outputs, "matched": matched_outputs},
         "replays": replays, "base_guard": guard,
-        "timing": {"feature_seconds": feature_elapsed, "training_seconds": training_elapsed, "score_seconds": score_elapsed, "total_seconds": time.monotonic() - started},
+        "timing": {"feature_seconds": feature_elapsed, "training_seconds": training_elapsed, "score_seconds": score_elapsed,
+                   "generation_seconds": generation_elapsed, "replay_seconds": time.monotonic() - replay_started,
+                   "total_seconds": time.monotonic() - started},
     }
     atomic_json(task_dir / "result_private.json", result)
     return result
@@ -478,18 +677,28 @@ def process_task(runtime: Any, args: argparse.Namespace, task: dict[str, Any]) -
 def budget_exhausted(run_root: Path, queue: TaskQueue) -> bool:
     start = json.loads((run_root / "private/CAMPAIGN_START.json").read_text())["epoch"]
     wall = time.time() - start
-    used = sum(row.get("elapsed_seconds", 0.0) for row in queue.snapshot()["tasks"] if row["status"] in {"COMPLETE", "FAILED"})
-    return wall >= 12 * 3600 or used >= 24 * 3600 or (run_root / "STOP").exists() or STOP_REQUESTED
+    completed = [row.get("elapsed_seconds", 0.0) for row in queue.snapshot()["tasks"] if row["status"] == "COMPLETE"]
+    reserve = 1800 + max(completed, default=600) * 1.5
+    # Two authorized devices times the full attempt wall clock conservatively includes loading, waiting and Judge.
+    return wall + reserve >= 12 * 3600 or 2 * wall >= 24 * 3600 or (run_root / "STOP").exists() or STOP_REQUESTED
 
 
 def worker(args: argparse.Namespace) -> None:
+    start = worker_preflight(args)
     physical, _ = verify_gpu()
     actual = subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True).strip()
     if actual != args.expected_code_commit:
         raise RuntimeError("frozen-verifier worker code commit mismatch")
     queue = TaskQueue(args.run_root / "private/TASK_QUEUE.json", args.run_root)
+    if budget_exhausted(args.run_root, queue):
+        raise RuntimeError("insufficient campaign budget before model loading")
+    if getattr(args, "preflight_only", False):
+        return
     runtime_config = json.loads((args.old_run / "private/CAMPAIGN_RUNTIME_CONFIG.json").read_text())
+    load_started = time.time()
     runtime = load_real_runtime(argparse.Namespace(cpu_gate=Path(runtime_config["cpu_gate"])))
+    append_jsonl(args.run_root / "private/WORKER_LIFECYCLE.jsonl", {"event": "loaded", "pid": os.getpid(), "host": socket.gethostname(),
+                 "gpu": physical, "attempt_id": start["attempt_id"], "epoch": start["epoch"], "at": time.time(), "load_seconds": time.time() - load_started})
     completed_here = 0
     try:
         with Telemetry(args.run_root / "private/GPU_TELEMETRY.jsonl", physical, f"gpu{physical}") as telemetry:
@@ -505,7 +714,9 @@ def worker(args: argparse.Namespace) -> None:
                 started = time.monotonic()
                 try:
                     value = process_task(runtime, args, task)
-                    queue.update(task["task_id"], "COMPLETE", result_status=value["status"], elapsed_seconds=time.monotonic() - started, finished_at=time.time())
+                    result_path = args.run_root / "private/tasks" / task["task_id"] / "result_private.json"
+                    queue.update(task["task_id"], "COMPLETE", result_status=value["status"], result_sha256=sha256_file(result_path),
+                                 elapsed_seconds=time.monotonic() - started, finished_at=time.time(), host=socket.gethostname())
                     completed_here += 1
                 except torch.OutOfMemoryError as error:
                     torch.cuda.empty_cache()
@@ -514,15 +725,22 @@ def worker(args: argparse.Namespace) -> None:
                 except Exception as error:
                     queue.update(task["task_id"], "FAILED", last_error=f"{type(error).__name__}: {error}", elapsed_seconds=time.monotonic() - started)
                     append_jsonl(args.run_root / "private/WORKER_ERRORS.jsonl", {"task_id": task["task_id"], "worker": f"gpu{physical}", "error": f"{type(error).__name__}: {error}", "at": time.time()})
+                    if any(word in str(error).lower() for word in ("changed frozen", "base guard", "replay differ", "mismatch", "collision", "role drift", "continuity score", "supervision")):
+                        atomic_text(args.run_root / "STOP", f"contract error in {task['task_id']}: {error}\n")
+                        raise
                 finally:
                     telemetry.task_id = None; torch.cuda.empty_cache()
                 if args.max_tasks and completed_here >= args.max_tasks:
                     break
     finally:
         del runtime; torch.cuda.empty_cache()
+        append_jsonl(args.run_root / "private/WORKER_LIFECYCLE.jsonl", {"event": "exit", "pid": os.getpid(), "gpu": physical,
+                     "at": time.time(), "resident_seconds": time.time() - load_started})
 
 
 def prepare(args: argparse.Namespace) -> None:
+    for name in ("run_root", "old_run", "execution_run", "public_dir"):
+        setattr(args, name, getattr(args, name).resolve())
     if args.run_root.exists() or args.public_dir.exists():
         raise FileExistsError("frozen-verifier run or report directory already exists")
     actual = subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True).strip()
@@ -550,15 +768,32 @@ def prepare(args: argparse.Namespace) -> None:
                 "priority": seed_index * 100 + cohort_index, "status": "PENDING", "attempts": 0,
                 "replay_designated": seed == SEEDS[0] and event_index == first_event,
             })
-    args.run_root.mkdir(parents=True); (args.run_root / "private").mkdir()
-    atomic_json(args.run_root / "private/TASK_QUEUE.json", {"schema_version": "medtrace-frozen-verifier-queue-v1", "tasks": tasks})
-    atomic_json(args.run_root / "private/CAMPAIGN_CONFIG.json", {
-        "schema_version": "medtrace-frozen-verifier-config-v1", "base_commit": args.base_commit,
-        "code_commit": actual, "old_run": str(args.old_run), "execution_run": str(args.execution_run),
+    parent = getattr(args, "parent_attempt", None)
+    parent_record = None
+    if parent:
+        parent = parent.resolve()
+        parent_record = {"path": str(parent), "epoch": "UNKNOWN", "files": {}}
+        for name in ("private/CAMPAIGN_CONFIG.json", "private/TASK_QUEUE.json", "orchestrate.sh", "EXIT_CODES", "worker_gpu2.log", "worker_gpu3.log"):
+            parent_record["files"][name] = sha256_file(parent / name)
+        if (parent / "private/CAMPAIGN_START.json").exists():
+            parent_record["epoch"] = json.loads((parent / "private/CAMPAIGN_START.json").read_text())["epoch"]
+    code_names = subprocess.check_output(["git", "-C", str(ROOT), "ls-files", "scripts/medtrace/*.py", "methods/medtrace/*.py"], text=True).splitlines()
+    config = {
+        "schema_version": "medtrace-frozen-verifier-config-v2", "base_commit": args.base_commit,
+        "code_commit": actual, "code_sha256": {name: sha256_file(ROOT / name) for name in code_names},
+        "attempt_id": args.run_root.name, "parent_attempt": parent_record,
+        "old_run": str(args.old_run), "execution_run": str(args.execution_run),
         "conditions": list(CONDITIONS), "seeds": list(SEEDS), "hard_edits": 7, "tasks": 21,
         "wall_hours": 12, "gpu_hours": 24, "gpu_uuids": {key: GPU_UUIDS[key] for key in ("2", "3")},
         "gpu1_forbidden": True, "matched_panel": MATCHED_PANEL,
-    })
+    }
+    if getattr(args, "reuse_run", None):
+        config["reuse_source"] = validate_reuse_source(args.reuse_run.resolve(), args.old_run, args.execution_run)
+    manifest = campaign_inputs(config, tasks)
+    args.run_root.mkdir(parents=True); (args.run_root / "private").mkdir()
+    atomic_json(args.run_root / "private/TASK_QUEUE.json", {"schema_version": "medtrace-frozen-verifier-queue-v1", "tasks": tasks})
+    atomic_json(args.run_root / "private/CAMPAIGN_CONFIG.json", config)
+    atomic_json(args.run_root / "private/INPUT_MANIFEST.json", manifest)
     args.public_dir.mkdir(parents=True)
     atomic_json(args.public_dir / "EXPERIMENT_CONFIG.json", {
         "schema_version": "medtrace-frozen-verifier-public-config-v1", "base_commit": args.base_commit,
@@ -600,7 +835,24 @@ def _prior_judge_map(execution_run: Path) -> dict[tuple[str, str, str], bool]:
 
 
 def _task_results(run_root: Path) -> list[dict[str, Any]]:
-    return [json.loads(path.read_text()) for path in sorted((run_root / "private/tasks").glob("VERIFY_*/result_private.json"))]
+    tasks = json.loads((run_root / "private/TASK_QUEUE.json").read_text())["tasks"]
+    if len(tasks) != 21 or len({task["task_id"] for task in tasks}) != 21:
+        raise RuntimeError("task closure requires 21 unique logical IDs")
+    results = []
+    for task in tasks:
+        if task["status"] != "COMPLETE":
+            continue
+        path = run_root / "private/tasks" / task["task_id"] / "result_private.json"
+        if task.get("result_sha256") != sha256_file(path):
+            raise RuntimeError(f"result manifest mismatch: {task['task_id']}")
+        result = json.loads(path.read_text())
+        if result["status"] != "COMPLETE" or task_identity(result["task"]) != task_identity(task) or result["attempt_id"] != run_root.name:
+            raise RuntimeError(f"result task binding mismatch: {task['task_id']}")
+        for kind in ("M2", "M3"):
+            if result["training"][kind]["curve"][-1]["step"] != 800 or not (path.parent / f"{kind}_heads.pt").is_file():
+                raise RuntimeError(f"incomplete verifier fit: {task['task_id']} {kind}")
+        results.append(result)
+    return results
 
 
 def prepare_judge(args: argparse.Namespace) -> None:
@@ -609,6 +861,20 @@ def prepare_judge(args: argparse.Namespace) -> None:
     results = _task_results(args.run_root)
     if len(results) != 21:
         raise RuntimeError(f"expected 21 complete verifier tasks, got {len(results)}")
+    exits = json.loads((args.run_root / "PROCESS_EXIT_CODES.json").read_text())
+    if not exits or any(value != 0 for value in exits.values()):
+        raise RuntimeError("worker exit codes do not permit complete closure")
+    config = json.loads((args.run_root / "private/CAMPAIGN_CONFIG.json").read_text())
+    runtime = json.loads((Path(config["old_run"]) / "private/CAMPAIGN_RUNTIME_CONFIG.json").read_text())
+    protocol_path = Path(runtime["cpu_gate"]).parent / "private/JUDGE_LOCK_V4.json"
+    protocol = json.loads(protocol_path.read_text())
+    execution_path = args.execution_run / "private/judge/JUDGE_EXECUTION_LOCK_PRIVATE.json"
+    execution = json.loads(execution_path.read_text())
+    if execution["legacy_semantic_protocol_sha256"] != protocol["config_sha256"] or execution["model"]["snapshot"] != protocol["judge_snapshot_sha"]:
+        raise RuntimeError("prior Judge semantic/execution lock mismatch")
+    for row in read_jsonl(args.execution_run / "private/judge/JUDGE_OUTPUT_PRIVATE.jsonl"):
+        if row.get("legacy_semantic_protocol_sha256") != protocol["config_sha256"] or row.get("judge_snapshot_sha") != protocol["judge_snapshot_sha"] or not row.get("parse_valid") or type(row.get("is_correct")) is not bool:
+            raise RuntimeError("prior Judge verdict protocol mismatch")
     prior = _prior_judge_map(args.execution_run)
     tuples, packet, uses = {}, {}, []
     for result in results:
@@ -628,6 +894,8 @@ def prepare_judge(args: argparse.Namespace) -> None:
     atomic_json(args.sidecar, {
         "schema_version": "medtrace-frozen-verifier-judge-sidecar-private-v1", "tuples": tuples, "uses": uses,
         "reused_count": sum(value["reused_verdict"] is not None for value in tuples.values()), "new_count": len(packet),
+        "reuse_validation": {"semantic_protocol_sha256": protocol["config_sha256"], "execution_lock_sha256": sha256_file(execution_path),
+                             "tuple_key": ["question", "reference", "complete_raw_answer"], "old_verdicts_unchanged": True},
     })
 
 
@@ -706,6 +974,9 @@ def finalize(args: argparse.Namespace) -> None:
     if len(results) != 21:
         raise RuntimeError(f"expected 21 task results, got {len(results)}")
     verdicts = _verdicts(args.sidecar, args.judge_output)
+    exits = json.loads((args.run_root / "PROCESS_EXIT_CODES.json").read_text())
+    if not exits or any(value != 0 for value in exits.values()):
+        raise RuntimeError("process exit codes do not permit complete closure")
     detailed = []
     for result in results:
         task = result["task"]
@@ -732,6 +1003,7 @@ def finalize(args: argparse.Namespace) -> None:
                             "gated_exact": forced_exact if on else base_exact,
                             "base_semantic": base_semantic, "forced_semantic": forced_semantic,
                             "gated_semantic": forced_semantic if on else base_semantic,
+                            "joint_on_semantic": on and forced_semantic,
                             "gated_raw_source": "forced" if on else "base",
                             "scores": result["scores"][panel][logical_id][condition],
                         })
@@ -761,13 +1033,13 @@ def finalize(args: argparse.Namespace) -> None:
         negative = [row for row in [*values, *original] if row["category"] in negative_categories and row["base_semantic"]]
         signal_rows[condition] = {
             "hard_edit_macro_fpr": _macro(hard, "on"), "hard_pooled": _metric(hard),
-            "evaluation_positive_joint": _macro(positive, "gated_semantic"), "evaluation_positive_pooled": _metric(positive),
-            "t1g_joint": _macro(t1g, "gated_semantic"), "t2g_joint": _macro(t2g, "gated_semantic"),
+            "evaluation_positive_joint": _macro(positive, "joint_on_semantic"), "evaluation_positive_pooled": _metric(positive),
+            "t1g_joint": _macro(t1g, "joint_on_semantic"), "t2g_joint": _macro(t2g, "joint_on_semantic"),
             "base_correct_negative_damage_rate": (sum(not row["gated_semantic"] for row in negative) / len(negative)) if negative else None,
             "base_correct_negative_damage_num": sum(not row["gated_semantic"] for row in negative), "base_correct_negative_den": len(negative),
             "hard_by_edit": _hierarchical_by_edit(hard, "on"),
-            "positive_by_edit": _hierarchical_by_edit(positive, "gated_semantic"),
-            "t1g_by_edit": _hierarchical_by_edit(t1g, "gated_semantic"), "t2g_by_edit": _hierarchical_by_edit(t2g, "gated_semantic"),
+            "positive_by_edit": _hierarchical_by_edit(positive, "joint_on_semantic"),
+            "t1g_by_edit": _hierarchical_by_edit(t1g, "joint_on_semantic"), "t2g_by_edit": _hierarchical_by_edit(t2g, "joint_on_semantic"),
         }
     control = signal_rows[CONDITIONS[0]]
     passing = []
@@ -786,6 +1058,13 @@ def finalize(args: argparse.Namespace) -> None:
         if all(checks.values()): passing.append(condition)
     selected = passing[0] if passing else None
     router_effect = "ROUTER_DEVELOPMENT_SIGNAL_MET" if selected else "ROUTER_DEVELOPMENT_SIGNAL_NOT_MET"
+    atomic_json(args.public_dir / "PAIRED_SIGNAL_SUMMARY.json", signal_rows)
+    aggregate = []
+    for panel, condition, point, category in sorted({(row["panel"], row["condition"], row["operating_point"], row["category"]) for row in detailed}):
+        rows = [row for row in detailed if (row["panel"], row["condition"], row["operating_point"], row["category"]) == (panel, condition, point, category)]
+        aggregate.append({"panel": panel, "condition": condition, "operating_point": point, "category": category,
+                          "micro": _metric(rows), "macro": {key: _macro(rows, key) for key in ("on", "base_semantic", "forced_semantic", "gated_semantic", "joint_on_semantic")}})
+    atomic_json(args.public_dir / "RESULTS_MACRO_MICRO.json", aggregate)
 
     # Fit/calibration/evaluation separability uses frozen calibration thresholds only.
     separability = []
@@ -909,7 +1188,8 @@ def finalize(args: argparse.Namespace) -> None:
         "schema_version": "medtrace-frozen-verifier-judge-closure-public-v1", "status": "JUDGE_COMPLETE",
         "unique_tuples": len(sidecar["tuples"]), "reused_exact_tuples": sidecar["reused_count"], "new_judge_tuples": sidecar["new_count"],
         "all_parse_valid": True, "two_path_outputs": "DERIVED_FROM_FROZEN_TWO_PATH_OUTPUTS",
-        "actual_replays": sum(len(result["replays"]) for result in results), "private_mapping_withheld": True,
+        "actual_replays": sum(row["exact_replay"] is True for result in results for row in result["replays"]), "private_mapping_withheld": True,
+        "replay_coverage": [{"task_id": result["task"]["task_id"], **{key: row[key] for key in ("condition", "decision", "status", "exact_replay")}} for result in results for row in result["replays"]],
     })
     queue = json.loads((args.run_root / "private/TASK_QUEUE.json").read_text())["tasks"]
     gpu_seconds = sum(task.get("elapsed_seconds", 0.0) for task in queue if task["status"] in {"COMPLETE", "FAILED"})
@@ -940,12 +1220,16 @@ def parser() -> argparse.ArgumentParser:
     for name in ("run-root", "old-run", "execution-run", "public-dir"):
         prepare_parser.add_argument(f"--{name}", type=Path, required=True)
     prepare_parser.add_argument("--base-commit", required=True); prepare_parser.set_defaults(func=prepare)
+    prepare_parser.add_argument("--parent-attempt", type=Path)
+    prepare_parser.add_argument("--reuse-run", type=Path)
+    start = sub.add_parser("start"); start.add_argument("--run-root", type=Path, required=True); start.set_defaults(func=start_campaign)
     recover_parser = sub.add_parser("recover"); recover_parser.add_argument("--run-root", type=Path, required=True); recover_parser.set_defaults(func=recover)
     worker_parser = sub.add_parser("worker")
     for name in ("run-root", "old-run", "execution-run"):
         worker_parser.add_argument(f"--{name}", type=Path, required=True)
     worker_parser.add_argument("--expected-code-commit", required=True); worker_parser.set_defaults(func=worker)
     worker_parser.add_argument("--max-tasks", type=int, default=0)
+    worker_parser.add_argument("--preflight-only", action="store_true")
     judge = sub.add_parser("prepare-judge")
     for name in ("run-root", "execution-run", "packet", "sidecar"):
         judge.add_argument(f"--{name}", type=Path, required=True)
