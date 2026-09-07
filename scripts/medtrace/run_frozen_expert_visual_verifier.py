@@ -480,6 +480,7 @@ def worker(args: argparse.Namespace) -> None:
     queue = TaskQueue(args.run_root / "private/TASK_QUEUE.json", args.run_root)
     runtime_config = json.loads((args.old_run / "private/CAMPAIGN_RUNTIME_CONFIG.json").read_text())
     runtime = load_real_runtime(argparse.Namespace(cpu_gate=Path(runtime_config["cpu_gate"])))
+    completed_here = 0
     try:
         with Telemetry(args.run_root / "private/GPU_TELEMETRY.jsonl", physical, f"gpu{physical}") as telemetry:
             while True:
@@ -495,6 +496,7 @@ def worker(args: argparse.Namespace) -> None:
                 try:
                     value = process_task(runtime, args, task)
                     queue.update(task["task_id"], "COMPLETE", result_status=value["status"], elapsed_seconds=time.monotonic() - started, finished_at=time.time())
+                    completed_here += 1
                 except torch.OutOfMemoryError as error:
                     torch.cuda.empty_cache()
                     status = "PENDING" if task["attempts"] < 2 else "FAILED"
@@ -504,6 +506,8 @@ def worker(args: argparse.Namespace) -> None:
                     append_jsonl(args.run_root / "private/WORKER_ERRORS.jsonl", {"task_id": task["task_id"], "worker": f"gpu{physical}", "error": f"{type(error).__name__}: {error}", "at": time.time()})
                 finally:
                     telemetry.task_id = None; torch.cuda.empty_cache()
+                if args.max_tasks and completed_here >= args.max_tasks:
+                    break
     finally:
         del runtime; torch.cuda.empty_cache()
 
@@ -931,6 +935,7 @@ def parser() -> argparse.ArgumentParser:
     for name in ("run-root", "old-run", "execution-run"):
         worker_parser.add_argument(f"--{name}", type=Path, required=True)
     worker_parser.add_argument("--expected-code-commit", required=True); worker_parser.set_defaults(func=worker)
+    worker_parser.add_argument("--max-tasks", type=int, default=0)
     judge = sub.add_parser("prepare-judge")
     for name in ("run-root", "execution-run", "packet", "sidecar"):
         judge.add_argument(f"--{name}", type=Path, required=True)
