@@ -1,0 +1,16 @@
+{
+  "schema_version": "medtrace-verifier-reuse-check-public-v1",
+  "source_attempt": "20260907T021904Z",
+  "current_attempt": "20260907T045800Z_visual_verifier_retry01",
+  "reused_tasks": 18,
+  "reused_800_step_verifier_fits": 36,
+  "new_800_step_verifier_fits": 6,
+  "fits_closed": 42,
+  "first_original_task_computed_anew": true,
+  "M0_M1_scores_or_calibration_reused": false,
+  "recomputed_M2_M3_scalar_scores_compared": 10372,
+  "maximum_absolute_score_difference": 0.0,
+  "tolerance": 0.00001,
+  "status": "PASS",
+  "meaning": "The restored heads reproduce their source task scores on every original and matched input. This complements source-function, data-lock, executor-state, task-identity, training-curve and real token-replay checks; it is not a claim of bytewise identity for all files."
+}

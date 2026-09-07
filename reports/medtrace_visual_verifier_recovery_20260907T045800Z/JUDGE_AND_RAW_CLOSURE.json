@@ -1,0 +1,895 @@
+{
+  "actual_replays": 125,
+  "all_parse_valid": true,
+  "new_judge_tuples": 275,
+  "private_mapping_withheld": true,
+  "replay_coverage": [
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e01"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e01"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e01"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e01"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e01"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e01"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e02"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e02"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e02"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e02"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e02"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e02"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e03"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e03"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e03"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e03"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e03"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e03"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e07"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e07"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e07"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e07"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e07"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e07"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e13"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e13"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e13"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e13"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e13"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e13"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e15"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e15"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e15"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e15"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e15"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e15"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e16"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e16"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e16"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e16"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e16"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260906_e16"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e01"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e01"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e01"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e01"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e01"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e01"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e02"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e02"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e02"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e02"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e02"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e02"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e03"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e03"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e03"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e03"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e03"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e03"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e07"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e07"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e07"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e07"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e07"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e07"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e13"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e13"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e13"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e13"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e13"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e13"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e15"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e15"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e15"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e15"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e15"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e15"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e16"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e16"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e16"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e16"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e16"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260907_e16"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e01"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e01"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e01"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e01"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e01"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e01"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e02"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e02"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e02"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e02"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e02"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e02"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e03"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e03"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e03"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e03"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e03"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e03"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e07"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e07"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e07"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e07"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e07"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e07"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e13"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": null,
+      "status": "NO_NATURAL_OFF_IN_THIS_TASK",
+      "task_id": "VERIFY_s20260908_e13"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e13"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e13"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e13"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e13"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e15"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e15"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e15"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e15"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e15"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e15"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e16"
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e16"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e16"
+    },
+    {
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e16"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "ON",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e16"
+    },
+    {
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "decision": "OFF",
+      "exact_replay": true,
+      "status": "VERIFIED",
+      "task_id": "VERIFY_s20260908_e16"
+    }
+  ],
+  "reused_exact_tuples": 759,
+  "schema_version": "medtrace-frozen-verifier-judge-closure-public-v1",
+  "status": "JUDGE_COMPLETE",
+  "two_path_outputs": "DERIVED_FROM_FROZEN_TWO_PATH_OUTPUTS",
+  "unique_tuples": 1034
+}

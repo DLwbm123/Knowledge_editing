@@ -1,0 +1,16 @@
+{
+  "DATA_SCOPE": "MATCHED_PANEL_COMPLETE",
+  "EXECUTION": "EXECUTION_FROZEN_SHARED",
+  "PUBLICATION": "COMPLETE",
+  "ROUTER_EFFECT": "ROUTER_DEVELOPMENT_SIGNAL_NOT_MET",
+  "gpu1_used": false,
+  "successful_task_elapsed_hours": 0.19980150338336697,
+  "conservative_gpu_hour_upper_bound": 0.6964380611313714,
+  "accounting_note": "The legacy finalizer called successful task elapsed hours gpu_hours. This release corrects that label; it is not full-load or total GPU compute. Loading, residency, Judge and waiting are reported in GPU_AND_TIMING.json.",
+  "gpu_limit_hours": 24,
+  "schema_version": "medtrace-frozen-verifier-completion-public-v2",
+  "selected_simplest_condition": null,
+  "task_complete": 21,
+  "task_expected": 21,
+  "wall_limit_hours": 12
+}

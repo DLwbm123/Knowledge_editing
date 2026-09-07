@@ -1,0 +1,48 @@
+{
+  "attempt_id": "20260907T045800Z_visual_verifier_retry01",
+  "end_epoch": 1788758287.6807113,
+  "evaluation": "COMPLETE",
+  "gpu1_used": false,
+  "gpu_workers_exited": true,
+  "historical_failed_attempts": 7,
+  "initialization": "PASS",
+  "initialization_epoch": 1788757034.0921993,
+  "initialized_utc": "2026-09-07T04:57:14.092199+00:00",
+  "judge": "COMPLETE",
+  "parent_attempt_id": "20260907T032521Z",
+  "parent_epoch": "UNKNOWN",
+  "phase_wait_seconds": {
+    "finalize": 326.1537082880968,
+    "judge": 333.8773406839464,
+    "prepare_judge": 4.972613048972562,
+    "worker_gpu2": 441.83411365095526,
+    "worker_gpu3": 0.0005071340128779411
+  },
+  "process_exit_codes": {
+    "finalize": 0,
+    "judge": 0,
+    "prepare_judge": 0,
+    "worker_gpu2": 0,
+    "worker_gpu3": 0
+  },
+  "publication": "COMPLETE",
+  "publication_content_commit": "dedfa6a093840ee8283d6f472291bee5cba7b696",
+  "publication_remote_branch_verified": "main",
+  "publication_anonymous_review_http_status": 200,
+  "raw_closure": "COMPLETE",
+  "research_execution_commit": "dca40caeae1b800aa3ce01a9620c936b8c064346",
+  "scientific_gain": false,
+  "tasks": {
+    "completed": 21,
+    "expected": 21,
+    "failed": 0,
+    "unfinished": 0
+  },
+  "verifier_fits": {
+    "NEW_800_STEP_FIT": 6,
+    "VALIDATED_REUSE": 36,
+    "closed": 42,
+    "expected": 42
+  },
+  "wall_seconds": 1253.5885100364685
+}

@@ -1,0 +1,53 @@
+{
+  "conservative_gpu_hour_upper_bound": 0.6964380611313714,
+  "coordinator_wait_seconds": {
+    "finalize": 326.1537082880968,
+    "judge": 333.8773406839464,
+    "prepare_judge": 4.972613048972562,
+    "worker_gpu2": 441.83411365095526,
+    "worker_gpu3": 0.0005071340128779411
+  },
+  "devices": {
+    "2": {
+      "model_load_seconds": 9.600771427154541,
+      "peak_sample_memory_mib": 15293,
+      "sample_count": 10,
+      "sample_mean_utilization_percent": 12.7,
+      "uuid": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b",
+      "worker_resident_seconds_including_load": 581.700884103775
+    },
+    "3": {
+      "model_load_seconds": 13.225821018218994,
+      "peak_sample_memory_mib": 15097,
+      "sample_count": 6,
+      "sample_mean_utilization_percent": 8.333333333333334,
+      "uuid": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c",
+      "worker_resident_seconds_including_load": 430.9842324256897
+    }
+  },
+  "feature_cache_bytes": 14478201717,
+  "gpu1_used": false,
+  "head_checkpoint_bytes": 2511600,
+  "judge_model_loading_seconds_from_log": 191.039744,
+  "judge_engine_profile_cache_warmup_seconds_from_log": 9.76,
+  "judge_phase_including_cpu_preflight_loading_inference_and_exit_seconds": 333.8773406839464,
+  "new_fit_task_training_seconds": 139.2032005119836,
+  "reused_fit_task_load_seconds": 1.6956773621495813,
+  "start_utc": "2026-09-07T04:57:14.092199+00:00",
+  "successful_task_seconds": {
+    "feature_seconds": 235.412664239062,
+    "generation_seconds": 57.87236179737374,
+    "replay_seconds": 105.57038377795834,
+    "score_seconds": 24.190345471492037,
+    "total_seconds": 710.7828762076097,
+    "training_seconds": 140.89887787413318
+  },
+  "timing_notes": [
+    "Worker residency includes loading/waiting and is not full-load compute time.",
+    "Telemetry utilization is sampled every 60 seconds; it is not an integral of GPU compute.",
+    "Training_seconds includes loading reused heads. New-fit and reused-fit totals are separated below.",
+    "Judge wait includes its CPU preflight, loading and inference; the existing Judge exposes no per-phase clock, so these are not invented.",
+    "Task phase timers omit some checkpoint/cache I/O; total_seconds includes it."
+  ],
+  "wall_seconds": 1253.5885100364685
+}

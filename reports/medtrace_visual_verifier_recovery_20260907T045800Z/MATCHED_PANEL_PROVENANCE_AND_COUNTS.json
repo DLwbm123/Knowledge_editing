@@ -1,0 +1,158 @@
+{
+  "edits": [
+    {
+      "event_index": 1,
+      "excluded_pair_count": 0,
+      "native_source_shared_across_roles": true,
+      "opaque_edit": "01223e258bbc7a1f",
+      "question_token_identity_checked": true,
+      "role_counts": {
+        "calibration": {
+          "hard_negative": 16,
+          "positive": 4
+        },
+        "evaluation": {
+          "hard_negative": 20,
+          "positive": 4
+        },
+        "fit": {
+          "hard_negative": 20,
+          "positive": 5
+        }
+      }
+    },
+    {
+      "event_index": 2,
+      "excluded_pair_count": 0,
+      "native_source_shared_across_roles": true,
+      "opaque_edit": "1534fc99d84ef734",
+      "question_token_identity_checked": true,
+      "role_counts": {
+        "calibration": {
+          "hard_negative": 16,
+          "positive": 4
+        },
+        "evaluation": {
+          "hard_negative": 20,
+          "positive": 4
+        },
+        "fit": {
+          "hard_negative": 20,
+          "positive": 5
+        }
+      }
+    },
+    {
+      "event_index": 3,
+      "excluded_pair_count": 0,
+      "native_source_shared_across_roles": true,
+      "opaque_edit": "1b0d2271e842e01a",
+      "question_token_identity_checked": true,
+      "role_counts": {
+        "calibration": {
+          "hard_negative": 16,
+          "positive": 4
+        },
+        "evaluation": {
+          "hard_negative": 20,
+          "positive": 4
+        },
+        "fit": {
+          "hard_negative": 20,
+          "positive": 5
+        }
+      }
+    },
+    {
+      "event_index": 7,
+      "excluded_pair_count": 0,
+      "native_source_shared_across_roles": true,
+      "opaque_edit": "13d861159cbf9477",
+      "question_token_identity_checked": true,
+      "role_counts": {
+        "calibration": {
+          "hard_negative": 8,
+          "positive": 4
+        },
+        "evaluation": {
+          "hard_negative": 8,
+          "positive": 4
+        },
+        "fit": {
+          "hard_negative": 10,
+          "positive": 5
+        }
+      }
+    },
+    {
+      "event_index": 13,
+      "excluded_pair_count": 0,
+      "native_source_shared_across_roles": true,
+      "opaque_edit": "1379df4696783d47",
+      "question_token_identity_checked": true,
+      "role_counts": {
+        "calibration": {
+          "hard_negative": 8,
+          "positive": 4
+        },
+        "evaluation": {
+          "hard_negative": 4,
+          "positive": 4
+        },
+        "fit": {
+          "hard_negative": 10,
+          "positive": 5
+        }
+      }
+    },
+    {
+      "event_index": 15,
+      "excluded_pair_count": 0,
+      "native_source_shared_across_roles": true,
+      "opaque_edit": "11999d89b31d5f06",
+      "question_token_identity_checked": true,
+      "role_counts": {
+        "calibration": {
+          "hard_negative": 16,
+          "positive": 4
+        },
+        "evaluation": {
+          "hard_negative": 20,
+          "positive": 4
+        },
+        "fit": {
+          "hard_negative": 20,
+          "positive": 5
+        }
+      }
+    },
+    {
+      "event_index": 16,
+      "excluded_pair_count": 0,
+      "native_source_shared_across_roles": true,
+      "opaque_edit": "30c09c9279241ba5",
+      "question_token_identity_checked": true,
+      "role_counts": {
+        "calibration": {
+          "hard_negative": 16,
+          "positive": 4
+        },
+        "evaluation": {
+          "hard_negative": 20,
+          "positive": 4
+        },
+        "fit": {
+          "hard_negative": 20,
+          "positive": 5
+        }
+      }
+    }
+  ],
+  "hard_facts": 7,
+  "panel": "MATCHED_QUESTION_IMAGE_PANEL_V1",
+  "private_inputs_withheld": true,
+  "schema_version": "medtrace-matched-panel-public-v1",
+  "seed_is_independent_fact": false,
+  "seed_repetitions": 3,
+  "source_questions_and_images_reused_without_gold_changes": true
+}

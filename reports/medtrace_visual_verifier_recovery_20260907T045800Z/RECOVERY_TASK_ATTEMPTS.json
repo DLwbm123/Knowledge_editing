@@ -1,0 +1,49 @@
+{
+  "failed_attempts_preserved": 7,
+  "final_failed_tasks": 0,
+  "retries": [
+    {
+      "prior_attempt": 1,
+      "reason": "NFS_COPY_METADATA_EIO",
+      "retry_limit": 1,
+      "task_id": "VERIFY_s20260906_e02"
+    },
+    {
+      "prior_attempt": 1,
+      "reason": "NFS_COPY_METADATA_EIO",
+      "retry_limit": 1,
+      "task_id": "VERIFY_s20260906_e03"
+    },
+    {
+      "prior_attempt": 1,
+      "reason": "NFS_COPY_METADATA_EIO",
+      "retry_limit": 1,
+      "task_id": "VERIFY_s20260906_e07"
+    },
+    {
+      "prior_attempt": 1,
+      "reason": "NFS_COPY_METADATA_EIO",
+      "retry_limit": 1,
+      "task_id": "VERIFY_s20260906_e13"
+    },
+    {
+      "prior_attempt": 1,
+      "reason": "NFS_COPY_METADATA_EIO",
+      "retry_limit": 1,
+      "task_id": "VERIFY_s20260906_e15"
+    },
+    {
+      "prior_attempt": 1,
+      "reason": "NFS_COPY_METADATA_EIO",
+      "retry_limit": 1,
+      "task_id": "VERIFY_s20260906_e16"
+    },
+    {
+      "prior_attempt": 1,
+      "reason": "NFS_COPY_METADATA_EIO",
+      "retry_limit": 1,
+      "task_id": "VERIFY_s20260907_e02"
+    }
+  ],
+  "score_or_performance_retries": 0
+}

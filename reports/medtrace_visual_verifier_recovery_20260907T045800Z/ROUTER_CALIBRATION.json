@@ -1,0 +1,4628 @@
+{
+  "coverage90_discrete_requirement": "4/4",
+  "raw_scores_withheld": true,
+  "rows": [
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.09763836860656738
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.09763836860656738
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.5910846590995789,
+        -0.7188025712966919
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.5910846590995789,
+        -0.7188025712966919
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.75,
+      "seed": 20260906,
+      "thresholds": [
+        1.5029199123382568,
+        -2.955843687057495
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.5,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -0.8305631875991821,
+        -3.569528579711914
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -0.7286685705184937,
+        -1.1903222799301147
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -0.7286685705184937,
+        -1.1903222799301147
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.0905241072177887
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.0905241072177887
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.5910846590995789,
+        -0.7188025712966919
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.5910846590995789,
+        -0.7188025712966919
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 0.75,
+      "seed": 20260906,
+      "thresholds": [
+        1.1887660026550293,
+        -2.780778169631958
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 1.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -0.8305631875991821,
+        -3.598870038986206
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -0.7286685705184937,
+        -1.1903222799301147
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -0.7286685705184937,
+        -1.1903222799301147
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9046244025230408
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9046244025230408
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9868619441986084,
+        0.8151766657829285
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9868619441986084,
+        0.8151766657829285
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        3.233442544937134,
+        1.4107688665390015
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        3.233442544937134,
+        1.4107688665390015
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        2.476163864135742,
+        2.4710006713867188
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        2.476163864135742,
+        2.4710006713867188
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9053342342376709
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9053342342376709
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.6004891991615295,
+        0.8123648762702942
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.6004891991615295,
+        0.8123648762702942
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -0.8529866337776184,
+        1.422446608543396
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -0.8529866337776184,
+        1.422446608543396
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -0.9002259969711304,
+        2.4811670780181885
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -0.9002259969711304,
+        2.4811670780181885
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.1712360978126526
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.1712360978126526
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9917492866516113,
+        -0.22185193002223969
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9917492866516113,
+        -0.22185193002223969
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        3.354830265045166,
+        1.0749049186706543
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        3.354830265045166,
+        1.0749049186706543
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -2.206711769104004,
+        -0.894035816192627
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -2.206711769104004,
+        -0.894035816192627
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.17182713747024536
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.17182713747024536
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.40406036376953125,
+        -0.22185193002223969
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.40406036376953125,
+        -0.22185193002223969
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -2.1907947063446045,
+        1.0749049186706543
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -2.1907947063446045,
+        1.0749049186706543
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -2.206711769104004,
+        -0.894035816192627
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -2.206711769104004,
+        -0.894035816192627
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9970512986183167
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9970512986183167
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9986786842346191,
+        0.9954239130020142
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9986786842346191,
+        0.9954239130020142
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        3.569387674331665,
+        0.540387749671936
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        3.569387674331665,
+        0.540387749671936
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        2.462656021118164,
+        1.5262000560760498
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        2.462656021118164,
+        1.5262000560760498
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9974654912948608
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9974654912948608
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -0.3706187307834625,
+        0.995336651802063
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -0.3706187307834625,
+        0.995336651802063
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -3.4649930000305176,
+        0.5382558107376099
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -3.4649930000305176,
+        0.5382558107376099
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -2.32397723197937,
+        1.5216710567474365
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -2.32397723197937,
+        1.5216710567474365
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9962064623832703
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9962064623832703
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9995895624160767,
+        0.9928233623504639
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9995895624160767,
+        0.9928233623504639
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        3.352226972579956,
+        0.7695285677909851
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        3.352226972579956,
+        0.7695285677909851
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        3.070040702819824,
+        -0.887291431427002
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        3.070040702819824,
+        -0.887291431427002
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9918549656867981
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9918549656867981
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.6768457889556885,
+        0.9837437868118286
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.6768457889556885,
+        0.9837437868118286
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.09308081865310669,
+        0.41327327489852905
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.09308081865310669,
+        0.41327327489852905
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -1.2716476917266846,
+        -0.887291431427002
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -1.2716476917266846,
+        -0.887291431427002
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.41786880046129227
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.41786880046129227
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9927963018417358,
+        -0.15795175731182098
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9927963018417358,
+        -0.15795175731182098
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        3.420750141143799,
+        -0.6366870403289795
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        3.420750141143799,
+        -0.6366870403289795
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        2.52239990234375,
+        -1.8909809589385986
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        2.52239990234375,
+        -1.8909809589385986
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.41781100630760193
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.41781100630760193
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.021172557026147842,
+        -0.16195076704025269
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.021172557026147842,
+        -0.16195076704025269
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -2.5883066654205322,
+        -0.6505138874053955
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -2.5883066654205322,
+        -0.6505138874053955
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -2.548539638519287,
+        -1.8941013813018799
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -2.548539638519287,
+        -1.8941013813018799
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.7072924822568893
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.7072924822568893
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9971097707748413,
+        0.41587814688682556
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9971097707748413,
+        0.41587814688682556
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        3.800248622894287,
+        0.4864386320114136
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        3.800248622894287,
+        0.4864386320114136
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        2.777430295944214,
+        -1.3559731245040894
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        2.777430295944214,
+        -1.3559731245040894
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.470736026763916
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.470736026763916
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9961801171302795,
+        -0.058474186807870865
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        0.9961801171302795,
+        -0.058474186807870865
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        3.8142614364624023,
+        -1.3406856060028076
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        3.8142614364624023,
+        -1.3406856060028076
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -2.1767234802246094,
+        -1.8542835712432861
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260906,
+      "thresholds": [
+        -2.1767234802246094,
+        -1.8542835712432861
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.75,
+      "seed": 20260907,
+      "thresholds": [
+        0.01961350440979004
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.125,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.012064158916473389
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9410256147384644,
+        -0.9352466464042664
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9410256147384644,
+        -0.9352466464042664
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        1.1141164302825928,
+        -3.603837728500366
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        1.1141164302825928,
+        -3.603837728500366
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -0.7286685705184937,
+        -1.8954434394836426
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -0.7286685705184937,
+        -1.8954434394836426
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 0.75,
+      "seed": 20260907,
+      "thresholds": [
+        0.013318866491317749
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 0.75,
+      "seed": 20260907,
+      "thresholds": [
+        0.013318866491317749
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9410256147384644,
+        -0.9352466464042664
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9410256147384644,
+        -0.9352466464042664
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 0.75,
+      "seed": 20260907,
+      "thresholds": [
+        1.1405301094055176,
+        -3.490938425064087
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.25,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.8954970836639404,
+        -3.603837728500366
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -0.7286685705184937,
+        -1.8954434394836426
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -0.7286685705184937,
+        -1.8954434394836426
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.6700319051742554
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.6700319051742554
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9988247752189636,
+        0.34248673915863037
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9988247752189636,
+        0.34248673915863037
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        3.049887180328369,
+        2.649197816848755
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        3.049887180328369,
+        2.649197816848755
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        2.476163864135742,
+        0.8134947419166565
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        2.476163864135742,
+        0.8134947419166565
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.7251291871070862
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.7251291871070862
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9948262572288513,
+        0.4563572406768799
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9948262572288513,
+        0.4563572406768799
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        3.056607484817505,
+        2.9004509449005127
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        3.056607484817505,
+        2.9004509449005127
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -0.9002259969711304,
+        0.965828537940979
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -0.9002259969711304,
+        0.965828537940979
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.021100431680679325
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.875,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -0.005771994590759277
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.25,
+      "seed": 20260907,
+      "thresholds": [
+        0.9653531312942505,
+        -0.9558438062667847
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.75,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.948325514793396,
+        -0.9558438062667847
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.25,
+      "seed": 20260907,
+      "thresholds": [
+        0.9741402268409729,
+        -0.8658379316329956
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.375,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.5137078166007996,
+        -0.8658379316329956
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -2.206711769104004,
+        0.692626953125
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -2.206711769104004,
+        0.692626953125
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.25,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -0.0044540464878082275
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 0.5,
+      "seed": 20260907,
+      "thresholds": [
+        -9.176135063171387e-05
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9246828556060791,
+        -0.9571360945701599
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9246828556060791,
+        -0.9571360945701599
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 0.25,
+      "seed": 20260907,
+      "thresholds": [
+        0.8271624445915222,
+        -0.951495885848999
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.25,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.5253511071205139,
+        -0.951495885848999
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -2.206711769104004,
+        0.692626953125
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -2.206711769104004,
+        0.692626953125
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.25,
+      "seed": 20260907,
+      "thresholds": [
+        0.7868386507034302
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.5,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.6700866222381592
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.75,
+      "seed": 20260907,
+      "thresholds": [
+        0.9321274161338806,
+        0.5663241744041443
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.375,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.7807133197784424,
+        0.4697422981262207
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        2.690819263458252,
+        3.247408390045166
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        2.690819263458252,
+        3.247408390045166
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        2.462656021118164,
+        4.1799726486206055
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        2.462656021118164,
+        4.1799726486206055
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.5,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 0.75,
+      "seed": 20260907,
+      "thresholds": [
+        0.7288538217544556
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 0.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.8558964729309083
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 0.25,
+      "seed": 20260907,
+      "thresholds": [
+        0.9647253751754761,
+        0.5787084698677063
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.5,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -0.8268176913261414,
+        0.4952240288257599
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -2.5850071907043457,
+        3.272186756134033
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -2.5850071907043457,
+        3.272186756134033
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -2.32397723197937,
+        4.211075782775879
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -2.32397723197937,
+        4.211075782775879
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.25,
+      "seed": 20260907,
+      "thresholds": [
+        0.3770487457513809
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.75,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.0574161559343338
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.25,
+      "seed": 20260907,
+      "thresholds": [
+        0.2901936173439026,
+        0.40644681453704834
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.75,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.16679084300994873,
+        -0.07583898305892944
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        2.6596574783325195,
+        0.0072290897369384766
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        2.6596574783325195,
+        0.0072290897369384766
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        3.070040702819824,
+        -0.8757510185241699
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        3.070040702819824,
+        -0.8757510185241699
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -0.06301972270011902
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -0.06301972270011902
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.13841690123081207,
+        -0.11984705924987793
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.13841690123081207,
+        -0.11984705924987793
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        2.2722558975219727,
+        -0.3125687837600708
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        2.2722558975219727,
+        -0.3125687837600708
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -1.2716476917266846,
+        -0.6005872488021851
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -1.2716476917266846,
+        -0.6005872488021851
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.5,
+      "seed": 20260907,
+      "thresholds": [
+        0.9987284541130066
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.25,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9976402819156647
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.5,
+      "seed": 20260907,
+      "thresholds": [
+        0.998795747756958,
+        0.9995055794715881
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.25,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9966712594032288,
+        0.993350088596344
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        3.369800567626953,
+        0.33689165115356445
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        3.369800567626953,
+        0.33689165115356445
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        2.52239990234375,
+        1.0289108753204346
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        2.52239990234375,
+        1.0289108753204346
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9974968433380127
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9974968433380127
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9959343075752258,
+        0.9959073066711426
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9959343075752258,
+        0.9959073066711426
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        3.3533458709716797,
+        0.19363617897033691
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        3.3533458709716797,
+        0.19363617897033691
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -2.548539638519287,
+        1.0289108753204346
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -2.548539638519287,
+        1.0289108753204346
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.8935860395431519
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.8935860395431519
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9957242012023926,
+        0.789418637752533
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9957242012023926,
+        0.789418637752533
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        2.5471270084381104,
+        3.1644060611724854
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        2.5471270084381104,
+        3.1644060611724854
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        2.777430295944214,
+        0.08941495418548584
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        2.777430295944214,
+        0.08941495418548584
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.8924559354782104
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.8924559354782104
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9955062866210938,
+        0.7894054651260376
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        0.9955062866210938,
+        0.7894054651260376
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -1.1718435287475586,
+        3.164377450942993
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -1.1718435287475586,
+        3.164377450942993
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -2.1767234802246094,
+        0.0897088348865509
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260907,
+      "thresholds": [
+        -2.1767234802246094,
+        0.0897088348865509
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.25,
+      "seed": 20260908,
+      "thresholds": [
+        0.9987798631191254
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.25,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.9811376333236694
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.75,
+      "seed": 20260908,
+      "thresholds": [
+        0.9909607172012329,
+        0.9989043474197388
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.25,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.9788006544113159,
+        0.9627195596694946
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.75,
+      "seed": 20260908,
+      "thresholds": [
+        3.523585319519043,
+        1.3161799907684326
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0625,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        3.1572318077087402,
+        1.3161799907684326
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.75,
+      "seed": 20260908,
+      "thresholds": [
+        -0.7286685705184937,
+        1.1867084503173828
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.125,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -0.7286685705184937,
+        0.80364990234375
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 0.75,
+      "seed": 20260908,
+      "thresholds": [
+        0.9880702495574951
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 0.75,
+      "seed": 20260908,
+      "thresholds": [
+        0.9880702495574951
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.6059331893920898,
+        0.9774261713027954
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.6059331893920898,
+        0.9774261713027954
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -0.2265436351299286,
+        1.1219942569732666
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -0.2265436351299286,
+        1.1219942569732666
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -0.7286685705184937,
+        0.3936316967010498
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 1,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -0.7286685705184937,
+        0.3936316967010498
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.18504557013511658
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.18504557013511658
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.5793920755386353,
+        -0.6278221607208252
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.5793920755386353,
+        -0.6278221607208252
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        3.369682788848877,
+        -3.2630538940429688
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        3.369682788848877,
+        -3.2630538940429688
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        2.476163864135742,
+        -0.8660621643066406
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        2.476163864135742,
+        -0.8660621643066406
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.18824848532676697
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.18824848532676697
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.9929238557815552,
+        -0.6229099035263062
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.9929238557815552,
+        -0.6229099035263062
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -1.5776193141937256,
+        -3.243607759475708
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -1.5776193141937256,
+        -3.243607759475708
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -0.9002259969711304,
+        -0.8660621643066406
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 2,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -0.9002259969711304,
+        -0.8660621643066406
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.75,
+      "seed": 20260908,
+      "thresholds": [
+        0.055271267890930176
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.4375,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.005381345748901367
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.75,
+      "seed": 20260908,
+      "thresholds": [
+        0.9218333959579468,
+        -0.6820530891418457
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.1875,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.9191095232963562,
+        -0.904578685760498
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 0.75,
+      "seed": 20260908,
+      "thresholds": [
+        3.282651424407959,
+        -0.8441659212112427
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.25,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        3.1397688388824463,
+        -1.8442360162734985
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -2.206711769104004,
+        -0.18171226978302002
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -2.206711769104004,
+        -0.18171226978302002
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 0.75,
+      "seed": 20260908,
+      "thresholds": [
+        0.02460530400276184
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 0.75,
+      "seed": 20260908,
+      "thresholds": [
+        0.02460530400276184
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -0.5350064039230347,
+        -0.9118871092796326
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -0.5350064039230347,
+        -0.9118871092796326
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 0.75,
+      "seed": 20260908,
+      "thresholds": [
+        3.1787586212158203,
+        -1.2812367677688599
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.25,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -3.194394111633301,
+        -1.8442360162734985
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -2.206711769104004,
+        -0.18171226978302002
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 3,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -2.206711769104004,
+        -0.18171226978302002
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.004242151975631714
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.004242151975631714
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.9728107452392578,
+        -0.025939881801605225
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.9728107452392578,
+        -0.025939881801605225
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        3.8319108486175537,
+        -0.26541584730148315
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        3.8319108486175537,
+        -0.26541584730148315
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        2.462656021118164,
+        0.6861863136291504
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        2.462656021118164,
+        0.6861863136291504
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.005019634962081909
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.005019634962081909
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -0.14935576915740967,
+        -0.025939881801605225
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -0.14935576915740967,
+        -0.025939881801605225
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -3.2025625705718994,
+        -0.26541584730148315
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -3.2025625705718994,
+        -0.26541584730148315
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -2.32397723197937,
+        0.6861863136291504
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 7,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -2.32397723197937,
+        0.6861863136291504
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.2533622682094574
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.2533622682094574
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.9491399526596069,
+        0.029870837926864624
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.9491399526596069,
+        0.029870837926864624
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        2.535651206970215,
+        -0.0070966631174087524
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        2.535651206970215,
+        -0.0070966631174087524
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        3.070040702819824,
+        0.9509837031364441
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        3.070040702819824,
+        0.9509837031364441
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.2533622682094574
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.2533622682094574
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.9964511394500732,
+        0.029870837926864624
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.9964511394500732,
+        0.029870837926864624
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        2.5135083198547363,
+        -0.0070966631174087524
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        2.5135083198547363,
+        -0.0070966631174087524
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -1.2716476917266846,
+        0.9509837031364441
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 13,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -1.2716476917266846,
+        0.9509837031364441
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.8052076697349548
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.8052076697349548
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.9955822229385376,
+        0.9006797671318054
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.9955822229385376,
+        0.9006797671318054
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        2.9331471920013428,
+        1.2623838186264038
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        2.9331471920013428,
+        1.2623838186264038
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        2.52239990234375,
+        -1.1229400634765625
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        2.52239990234375,
+        -1.1229400634765625
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.7978217005729675
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.7978217005729675
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.4848468005657196,
+        0.9006797671318054
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.4848468005657196,
+        0.9006797671318054
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -1.380149245262146,
+        1.2623838186264038
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -1.380149245262146,
+        1.2623838186264038
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -2.548539638519287,
+        -1.1229400634765625
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 15,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -2.548539638519287,
+        -1.1229400634765625
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.18124300241470337
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.18124300241470337
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.9959465265274048,
+        -0.5827367305755615
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.9959465265274048,
+        -0.5827367305755615
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        2.5901918411254883,
+        -1.1794421672821045
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        2.5901918411254883,
+        -1.1794421672821045
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        2.777430295944214,
+        -0.656208336353302
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "matched",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        2.777430295944214,
+        -0.656208336353302
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_COVERAGE_CONSTRAINED",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.0862957239151001
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "CONTINUITY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.0862957239151001
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.9961719512939453,
+        -0.5827367305755615
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        0.9961719512939453,
+        -0.5827367305755615
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -1.5769000053405762,
+        -1.1794421672821045
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M2_C1_CP_RESPONSE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -1.5769000053405762,
+        -1.1794421672821045
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -2.1767234802246094,
+        -0.656208336353302
+      ]
+    },
+    {
+      "broad_fpr": 0.0,
+      "condition": "M3_C1_PRE_CP_FEATURE_VERIFIER",
+      "event_index": 16,
+      "hard_fpr": 0.0,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "panel": "original",
+      "positive_tpr": 1.0,
+      "seed": 20260908,
+      "thresholds": [
+        -2.1767234802246094,
+        -0.656208336353302
+      ]
+    }
+  ],
+  "schema_version": "medtrace-frozen-verifier-calibration-public-v1",
+  "selection_source": "calibration_only"
+}

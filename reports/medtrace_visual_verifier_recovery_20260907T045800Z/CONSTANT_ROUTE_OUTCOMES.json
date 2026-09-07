@@ -1,0 +1,51 @@
+{
+  "all_outcomes_retained": true,
+  "engineering_fixture_rows_in_metrics": 0,
+  "rows": [
+    {
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 3,
+      "n": 24,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "outcome": "ALL_OFF",
+      "panel": "matched",
+      "seed": 20260907
+    },
+    {
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 13,
+      "n": 8,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "outcome": "ALL_ON",
+      "panel": "matched",
+      "seed": 20260908
+    },
+    {
+      "condition": "M0_C1_R2_MEAN_CONTROL",
+      "event_index": 13,
+      "n": 8,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "outcome": "ALL_ON",
+      "panel": "matched",
+      "seed": 20260908
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 13,
+      "n": 8,
+      "operating_point": "PRIMARY_SAFETY_FIRST",
+      "outcome": "ALL_ON",
+      "panel": "matched",
+      "seed": 20260908
+    },
+    {
+      "condition": "M1_C1_CP_CONJUNCTION_CONTROL",
+      "event_index": 13,
+      "n": 8,
+      "operating_point": "SECONDARY_COVERAGE90",
+      "outcome": "ALL_ON",
+      "panel": "matched",
+      "seed": 20260908
+    }
+  ]
+}

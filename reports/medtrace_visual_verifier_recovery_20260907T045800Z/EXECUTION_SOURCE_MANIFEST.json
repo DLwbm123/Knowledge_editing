@@ -1,0 +1,42 @@
+{
+  "schema_version": "medtrace-verifier-recovery-source-public-v1",
+  "research_repository": "https://github.com/DLwbm123/Knowledge_editing",
+  "research_branch": "medtrace-visual-verifier-recovery-20260907",
+  "verified_failed_execution_commit": "3aa09dc7196e25e10e90c3965a3f0e3fba678da2",
+  "research_recovery_base_commit": "3aa09dc7196e25e10e90c3965a3f0e3fba678da2",
+  "research_model_execution_commit": "dca40caeae1b800aa3ce01a9620c936b8c064346",
+  "executed_runner_sha256": "a891e5f3db82a6a3cfc3ad47f91eea943b6eed0123607772c5c8fda37f757855",
+  "research_distributed_hardening_commit": "cf144ea6368abef982d3d4cd3c2efc29fb2a610e",
+  "post_execution_source_changes": "Replace two shutil.copy2 calls with copyfile for NFS; add aggregate recovery report generator; make CPU fixture base reference portable. No scientific score, fit, threshold, sample, generation or model change.",
+  "attempt_id": "20260907T045800Z_visual_verifier_retry01",
+  "parent_failed_attempt": "20260907T032521Z",
+  "parent_epoch": "UNKNOWN",
+  "actual_start_utc": "2026-09-07T04:57:14.092199+00:00",
+  "actual_start_epoch": 1788757034.0921993,
+  "private_campaign_config_sha256": "eefcc84bda524d3c992a4c5616a1691efa291b737ffb5f79471cfe785f4a8e1f",
+  "private_input_manifest_sha256": "81d9f0e2e430abc67f4efbc6a1bd48be516b56ba05b28986118a36af10e85c4d",
+  "compatible_cache_source_attempt": "20260907T021904Z",
+  "compatible_cache_source_commit": "6ad90540f8196daee006f56fa4fa33897bb077a5",
+  "cache_identity_policy": "Preserve original cache locks and EqKeys; separately record this execution commit. Superseded M0/M1 scores, calibration and whole task results are not reused.",
+  "publication_repository": "https://github.com/DLwbm123/Knowledge_editing-public",
+  "publication_branch": "main",
+  "publication_base_commit": "787217abdda75e2951a27285119c8fe5485df3ec",
+  "publication_commit": "dedfa6a093840ee8283d6f472291bee5cba7b696",
+  "publication_identity_note": "This identifies the verified code-and-results release. A later status-only commit records successful remote and anonymous-access verification.",
+  "research_history_copied_to_publication_repository": false,
+  "distributed_file_sha256": {
+    "scripts/medtrace/run_frozen_expert_visual_verifier.py": "be17d3749381509111f12a34b7753cfd468ffe8f72f60d539a704ddcf2355bef",
+    "scripts/medtrace/run_verifier_recovery.py": "9f7ad2274ea198af29960bd17393caf71cfaf0c27020e0c283d47a13dc2a29fd",
+    "scripts/medtrace/summarize_verifier_recovery.py": "e31e7cfbf9b9a944fc2aaec32b3d7ec1ab76f5b493cb9e26af9f05c3a23aa5c9",
+    "methods/medtrace/frozen_verifier.py": "296d10c18c16cd48b7f24166107402aa3318848f1b14dc6c24245340d9c86334",
+    "tests/medtrace/test_frozen_verifier.py": "2764ab33449e28ca7c58b09ef64edbf047cf6c0e767bf9fef6bf1ba3c17a5ea5",
+    "tests/medtrace/test_verifier_recovery.py": "1d6fe64f75c86c24a4a0b8d0d0e0b908d73dbd9c09d073bd61b3e616d8daf873"
+  },
+  "verification": {
+    "original_and_recovery_focused_tests": 15,
+    "public_snapshot_tests_passed": 15,
+    "gpu_hidden_during_cpu_tests": true,
+    "environment_upgraded": false
+  },
+  "withheld": ["QA and raw answers", "medical images", "tokens", "feature caches", "model weights and checkpoints", "private Judge mapping", "full private logs"]
+}

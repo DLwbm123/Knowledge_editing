@@ -1,0 +1,43 @@
+{
+  "base_commit": "3aa09dc7196e25e10e90c3965a3f0e3fba678da2",
+  "code_commit": "dca40caeae1b800aa3ce01a9620c936b8c064346",
+  "cohort": {
+    "hard_evaluable_edits": 7,
+    "independent_fact_claim": false,
+    "repeated_seed_runs": 3
+  },
+  "conditions": [
+    "M0_C1_R2_MEAN_CONTROL",
+    "M1_C1_CP_CONJUNCTION_CONTROL",
+    "M2_C1_CP_RESPONSE_VERIFIER",
+    "M3_C1_PRE_CP_FEATURE_VERIFIER"
+  ],
+  "coverage90_discrete_requirement": "4/4 calibration positives",
+  "devices": {
+    "gpu1_forbidden": true,
+    "physical": [
+      2,
+      3
+    ]
+  },
+  "executor": "C1_R2_FIXED_Q_LONG_RECOVERY@additional_step800",
+  "operating_points": [
+    "PRIMARY_SAFETY_FIRST",
+    "SECONDARY_COVERAGE90"
+  ],
+  "private_artifacts_withheld": true,
+  "schema_version": "medtrace-frozen-verifier-public-config-v1",
+  "seeds": [
+    20260906,
+    20260907,
+    20260908
+  ],
+  "verifier": {
+    "gradient_clip": 1.0,
+    "l2": 0.001,
+    "lr": 0.01,
+    "optimizer": "Adam",
+    "steps": 800,
+    "weight_decay": 0
+  }
+}

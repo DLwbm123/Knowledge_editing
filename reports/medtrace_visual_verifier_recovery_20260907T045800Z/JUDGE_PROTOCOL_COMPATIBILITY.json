@@ -1,0 +1,32 @@
+{
+  "schema_version": "medtrace-judge-execution-comparison-public-v1",
+  "status": "PASS",
+  "old_and_new_equal": {
+    "model_identity": true,
+    "tokenizer_files_template_and_render_function": true,
+    "runtime_versions_device_quantization_and_backend": true,
+    "semantic_protocol": true,
+    "generation_candidates_seed_temperature_budget_context_and_sampling_parameters": true
+  },
+  "semantic_protocol_sha256": "77260a1a994f72d72155a43367d3fc4fe5779502735b1e24a0b96684d081d4bd",
+  "old_execution_content_sha256": "6e4b246d04f15ea2783bf7ac5e00de86a712b2e554fda5708d663da4965e9a11",
+  "new_execution_content_sha256": "f829c76031b34a6dc869ea975b5876b18b1c317db27ed0d19c059604062f45f3",
+  "execution_hash_note": "Full execution hashes differ because request packets, token traces and engine instance identifiers differ; the comparable execution fields above were checked separately.",
+  "new_tuple_coverage": 275,
+  "reused_complete_tuples": 759,
+  "maximum_prompt_tokens": 289,
+  "output_token_budget": 24,
+  "selected_model_context": 2048,
+  "no_truncation": true,
+  "environment": {
+    "vllm": "0.9.2",
+    "torch": "2.7.0",
+    "transformers": "4.53.2",
+    "cuda": "12.6",
+    "dtype": "torch.float16",
+    "quantization": "AWQ 4-bit group_size=128 zero_point=true",
+    "guided_decoding": "xgrammar 0.1.19",
+    "physical_gpu": 2
+  },
+  "private_packets_and_token_traces_withheld": true
+}
