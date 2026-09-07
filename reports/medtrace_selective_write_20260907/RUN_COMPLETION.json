@@ -1,7 +1,8 @@
 {
   "counts": {
-    "PENDING": 69,
-    "RUNNING": 1
+    "PENDING": 67,
+    "RAW_READY": 1,
+    "RUNNING": 2
   },
   "evaluation": "NOT_COMPLETE",
   "expected": 70,

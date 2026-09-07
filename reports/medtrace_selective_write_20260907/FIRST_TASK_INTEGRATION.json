@@ -1,0 +1,23 @@
+{
+  "task_id": "SW_e01_P4_W1_KL_0.1",
+  "status": "RAW_READY",
+  "optimizer_steps": 320,
+  "parameter_count": 1476,
+  "training_seconds_including_fit_diagnostics": 188.88990324898623,
+  "complete_task_seconds": 1169.8057251260616,
+  "endpoint_inputs": 140,
+  "disabled_base_parity_all": true,
+  "fixed_router_branch_replay": "PASS",
+  "base_guard_unchanged": true,
+  "H_fit_kl": 0.0680382588878274,
+  "U_fit_kl": 0.0013064975701126968,
+  "student_training_diagnostic_forwards": 1424,
+  "student_backwards": 1280,
+  "new_teacher_distribution_forwards_in_task_cache_instance": 115,
+  "shared_initial_teacher_forwards_separate": 36,
+  "judge": "NOT_RUN",
+  "scientific_gain": "NOT_EVALUATED",
+  "continuation_gpus": [0, 1],
+  "whole_queue_eta": null,
+  "eta_reason": "Only one completed original task; at least two real throughput groups required."
+}
