@@ -25,7 +25,7 @@ from scripts.medtrace.run_longrun_campaign import route_score_one
 SEED = 20260906
 A2 = "CP_NATIVE_PLUS_PARAPHRASE_80"
 GPUS = {"2": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b", "3": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c"}
-AUTHORIZATION = "User 2026-09-07: 用 gpu2 和 gpu3; supersedes GPU0/1; idle-only"
+AUTHORIZATION = "User 2026-09-07: GPU2/3; sharing authorized when enough free VRAM; no unrelated process termination"
 STEPS = 320
 
 
@@ -197,13 +197,17 @@ def prepare(args):
     summarize(args)
 
 
-def gpu_check(gpu):
+def gpu_check(gpu, *, judge=False):
     if gpu not in GPUS:
         raise ValueError("only newly authorized GPU2/3 are used by this attempt")
-    uuid, used = subprocess.check_output(["nvidia-smi", "-i", gpu, "--query-gpu=uuid,memory.used", "--format=csv,noheader,nounits"], text=True).strip().split(", ")
-    if uuid != GPUS[gpu] or int(used) > 1000:
-        raise RuntimeError(f"GPU{gpu} busy or UUID mismatch: {uuid}, {used} MiB")
-    return dict(gpu=gpu, uuid=uuid, used_mib=int(used), checked_epoch=time.time())
+    uuid, used, free, total = subprocess.check_output(["nvidia-smi", "-i", gpu,
+        "--query-gpu=uuid,memory.used,memory.free,memory.total", "--format=csv,noheader,nounits"], text=True).strip().split(", ")
+    # Worker observed reserved peak ~15.5 GiB; Judge retains its existing 0.8 allocation.
+    required = math.ceil(.8*int(total))+2048 if judge else 20*1024
+    if uuid != GPUS[gpu] or int(free) < required:
+        raise RuntimeError(f"GPU{gpu} UUID mismatch or insufficient free VRAM: {uuid}, free={free}, required={required} MiB")
+    return dict(gpu=gpu, uuid=uuid, used_mib=int(used), free_mib=int(free), required_free_mib=required,
+                sharing_authorized=True, checked_epoch=time.time())
 
 
 def bind_extra_fit(runtime, run, task, data, config):

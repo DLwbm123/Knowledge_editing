@@ -17,6 +17,19 @@ from methods.medtrace.selective_write import (LowRankExpert, full_vocab_kl, pred
 
 
 class SelectiveWriteTest(unittest.TestCase):
+    def test_gpu_sharing_checks_free_memory_and_keeps_uuid_guard(self):
+        from scripts.medtrace import run_selective_write as runner
+        def response(free, uuid=runner.GPUS['2']):
+            return f'{uuid}, 8192, {free}, 40960'
+        with patch.object(runner.subprocess,'check_output',return_value=response(30000)):
+            self.assertTrue(runner.gpu_check('2')['sharing_authorized'])
+            with self.assertRaises(RuntimeError): runner.gpu_check('2',judge=True)
+        for free,uuid in ((20479,runner.GPUS['2']),(38000,'wrong-uuid')):
+            with patch.object(runner.subprocess,'check_output',return_value=response(free,uuid)):
+                with self.assertRaises(RuntimeError): runner.gpu_check('2')
+        with patch.object(runner.subprocess,'check_output',return_value=response(34816)):
+            self.assertEqual(runner.gpu_check('2',judge=True)['required_free_mib'],34816)
+
     def test_neutral_entrypoint_preserves_runtime_and_hides_command_arguments(self):
         from scripts.medtrace.neutral_entrypoint import neutral_command
         from scripts.medtrace import neutral_entrypoint

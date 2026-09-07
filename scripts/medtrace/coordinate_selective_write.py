@@ -21,8 +21,8 @@ JUDGE = "/remote-home/wangbomin/.cache/huggingface/hub/models--Qwen--Qwen3-32B-A
 JUDGE_PYTHON = "/remote-home/wangbomin/evoclinician/venvs/vllm-0.9.2-py312/bin/python"
 
 
-def environment(gpu):
-    gpu_check(gpu)
+def environment(gpu, *, judge=False):
+    gpu_check(gpu, judge=judge)
     return dict(os.environ, CUDA_VISIBLE_DEVICES=gpu, OMP_NUM_THREADS="1",
         M3BENCH_FORMAL_AUTHORIZED_CUDA_VISIBLE_DEVICES=gpu, M3BENCH_FORMAL_ALLOWED_CUDA_VISIBLE_DEVICES=','.join(GPUS),
         M3BENCH_FORMAL_EXPECTED_GPU_UUID=GPUS[gpu], M3BENCH_EXPECTED_LLAVA_SOURCE=LLAVA,
@@ -161,10 +161,10 @@ def main():
         if packet.stat().st_size:
             judge_env=None
             for gpu in GPUS:
-                try: judge_env=environment(gpu);break
+                try: judge_env=environment(gpu,judge=True);break
                 except RuntimeError: continue
             if judge_env is None:
-                raise RuntimeError('no idle authorized GPU for Judge; no co-hosting')
+                raise RuntimeError('no authorized GPU with enough free VRAM for Judge')
             lock=Path(config['runtime']['cpu_gate']).parent/'private/JUDGE_LOCK_V4.json'
             launch('judge',[JUDGE_PYTHON,str(ROOT/'scripts/medtrace/run_fixed_judge_vllm.py'),
                 '--model-path',JUDGE,'--packet',str(packet),'--lock',str(lock),
