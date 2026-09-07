@@ -30,7 +30,7 @@ class SelectiveWriteTest(unittest.TestCase):
             self.assertNotIn('medtrace',' '.join(command))
             child=json.loads(subprocess.check_output(command,env=env,text=True))
             self.assertEqual(child['argument'],'wangbomin/medtrace')
-            self.assertEqual(child['prefix'],sys.prefix)
+            self.assertEqual(Path(child['prefix']).resolve(),Path(sys.prefix).resolve())
             if sys.platform=='linux':
                 self.assertEqual(child['comm'],'run')
                 self.assertNotIn('wangbomin',child['cmdline'])
