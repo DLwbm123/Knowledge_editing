@@ -14,7 +14,7 @@
     "fit_exact_coverage_trigger": true,
     "scheduled": true
   },
-  "publication": "RETRY_REQUIRED",
+  "publication": "PUBLICATION_COMPLETE",
   "routing_execution_pareto": "ROUTING_EXECUTION_PARETO_NOT_IMPROVED",
   "training": "TRAINING_COMPLETE"
 }
