@@ -1,6 +1,8 @@
 # User-requested pause and explicit GPU2/3 resume
 
-Current status: **PAUSED_RESOURCE_BUSY; neutral-name relaunch NOT STARTED**. Following the second explicit stop for process renaming, all project processes are stopped. GPU2/3 acquired other allocations before the relaunch and the idle-only guard refused to start resume02. Current queue is 12 RAW_READY, 2 PAUSED_BY_USER, 56 PENDING. Eight CPU tests and the existing Judge-runtime alias probe pass; code and the neutral launcher are ready. The original STOP marker remains; no automatic restart is scheduled.
+Current status: the user explicitly authorized sharing GPU2/3 when enough free VRAM remains. Resume02 has been launched using the existing neutral entrypoint after both devices passed the new 20 GiB free-memory check. Nine CPU tests pass, source 5981c54. No scientific setting changed. Current live evidence is in USER_RESUME_STATUS.json and PROCESS_NAMING_AUDIT.json; no recurring monitor or restart is installed.
+
+Historical blocker: after the second explicit stop for process renaming, other jobs occupied GPU2/3, so the then-active idle-only guard initially refused relaunch. The newer explicit sharing authorization supersedes that restriction. The same 12 RAW_READY results and two step320 checkpoints were retained throughout.
 
 Historical first resume: GPU2/3 ran implementation c4397a7. Both workers loaded their saved step320 experts and logged ENDPOINT_ONLY_RESUME with zero added optimizer steps. Its snapshot was 12 RAW_READY, 2 RUNNING, 56 PENDING; no Judge result existed.
 

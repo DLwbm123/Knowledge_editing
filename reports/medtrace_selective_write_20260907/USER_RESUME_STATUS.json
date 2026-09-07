@@ -1,6 +1,8 @@
 {
-  "authorization": "User 2026-09-07: \u7528 gpu2 \u548c gpu3; supersedes GPU0/1; idle-only",
+  "attempt": "resume02",
+  "authorization": "User 2026-09-07: GPU2/3; sharing authorized when enough free VRAM; no unrelated process termination",
   "code_provenance": {
+    "authorization": "User 2026-09-07: GPU2/3; sharing authorized when enough free VRAM; no unrelated process termination",
     "checkpoint_preflight": [
       {
         "checkpoint_load": "PASS",
@@ -15,20 +17,23 @@
         "task_id": "SW_e02_L16_W0_TASK_ONLY"
       }
     ],
-    "cpu_tests": "7 passed; 3.872 seconds",
+    "cpu_tests": "9 passed; 8.197 seconds",
     "finalizer_source_commit": "5106c14",
+    "judge_required_free": "ceil(0.8*total MiB)+2048 MiB",
+    "judge_runtime_alias_probe": "PASS",
+    "neutral_entrypoint_commit": "5ef3a16b335feabab04f6bea0fbd7208bf6f9060",
     "original_training_cache_binding": "0c72cfef615390d1bf37de43998690dda3a7efd3",
     "remote_base_commit": "502a912aa2771aed230793abcedb5d00ebcbf610",
-    "resume_code_commit": "c4397a730b0bb49c22e8fd7471e68fb91082e5cf",
-    "source_deployment": "explicit scp of runner coordinator and CPU regression tests"
+    "resume_code_commit": "5981c5499da3a1958dfa3c028053f556aaaa8706",
+    "source_deployment": "explicit scp of runner, coordinator and tests; neutral entrypoint unchanged",
+    "worker_required_free_mib": 20480
   },
   "counts": {
-    "PAUSED_BY_USER": 2,
     "PENDING": 56,
-    "RAW_READY": 12
+    "RAW_READY": 12,
+    "RUNNING": 2
   },
-  "elapsed_before_latest_pause_seconds": 6038.835870981216,
-  "elapsed_before_pause_seconds": 5805.069608926773,
+  "elapsed_before_pause_seconds": 6038.835870981216,
   "endpoint_only_tasks": [
     "SW_e02_P4_W0_TASK_ONLY",
     "SW_e02_L16_W0_TASK_ONLY"
@@ -38,19 +43,15 @@
     "3": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c"
   },
   "judge": "NOT_RUN",
-  "latest_pause_epoch": 1788776527.9739292,
-  "old_processes": {
-    "coordinator": 914110,
-    "worker_gpu2": 914120,
-    "worker_gpu3": 914122
-  },
   "optimizer_steps_added_for_resumed_tasks": 0,
-  "original_start_preserved": true,
-  "paused_epoch": 1788775754.2942855,
-  "pending_attempt": "resume02",
-  "process_naming": "IMPLEMENTED_TESTED",
-  "restart": "NOT_STARTED",
-  "resumed_epoch": 1788776294.2078335,
-  "status": "PAUSED_RESOURCE_BUSY",
-  "verified_epoch": 1788776427.7551813
+  "paused_epoch": 1788776527.9739292,
+  "process_naming": "neutral",
+  "processes": {
+    "coordinator": 916100,
+    "worker_gpu2": 916125,
+    "worker_gpu3": 916127
+  },
+  "resumed_epoch": 1788777296.3937483,
+  "status": "RUNNING_VERIFIED",
+  "verified_epoch": 1788777388.8286326
 }

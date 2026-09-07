@@ -1,6 +1,6 @@
 # GPT Pro review: selective-write V1 in progress
 
-Latest operational amendment: **PAUSED_RESOURCE_BUSY; neutral-name relaunch NOT STARTED**. User requested stop/restart with neutral process names. All three project processes were stopped. The coordinator/worker/Judge launch path now supports `main`/`run`/`job` and neutral temporary entrypoint/runtime aliases; eight CPU tests and the existing Judge-environment probe pass. However, GPU2/3 acquired other allocations before relaunch, so the idle-only preflight refused to start resume02. Current queue: 12 RAW_READY, 2 PAUSED_BY_USER, 56 PENDING. Original source/data paths and scientific provenance remain unchanged; this is not an anonymity boundary. See PROCESS_NAMING_AUDIT.json and RESUME_AFTER_USER_PAUSE.md; earlier running PIDs and progress below are historical.
+Latest operational amendment: the user explicitly authorized sharing GPU2/3 whenever sufficient free VRAM remains, superseding the idle-only restriction. Source 5981c54 applies a 20 GiB worker threshold and a separate Judge threshold matching its existing 0.8 allocation plus 2 GiB headroom. Nine CPU tests pass. The neutral `main`/`run`/`job` entrypoint is retained; resume02 was launched after both GPUs passed the free-memory/UUID check. No unrelated job was stopped and no scientific settings changed. See PROCESS_NAMING_AUDIT.json and USER_RESUME_STATUS.json for current live evidence; earlier blocked records are historical.
 
 Current answer to all four scientific questions:
 
