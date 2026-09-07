@@ -123,6 +123,28 @@ def snapshot(args):
         scientific_gain='NOT_EVALUATED',publication_scope='IN_PROGRESS_SNAPSHOT'))
 
 
+def pair_pending(args):
+    """Execution order only: finish each edit's paired conditions before the next block."""
+    audit=args.run_root/'private/QUEUE_SCHEDULING_AMENDMENT.json'
+    if audit.exists():
+        raise FileExistsError('pending-only scheduling amendment already applied')
+    order=(CONDITIONS[1],CONDITIONS[0],*CONDITIONS[2:])
+    queue=vf.TaskQueue(args.run_root/'private/TASK_QUEUE.json',args.run_root)
+    def update(data):
+        ranked=sorted(data['tasks'],key=lambda t:(t['event_index'],order.index(t['condition']),t['parameterization']!='P4'))
+        changes=[]
+        for priority,task in enumerate(ranked):
+            if task['status']=='PENDING' and task['priority']!=priority:
+                changes.append(dict(task_id=task['task_id'],before=task['priority'],after=priority))
+                task['priority']=priority
+        return dict(reason='Prompt paired-condition coverage: avoid leaving all W2 until last',
+            scope='PENDING execution priorities only; running/completed tasks, IDs, data, losses and hyperparameters unchanged',
+            original_input_manifest_preserved=True,selection_or_judge_results_read=False,changes=changes)
+    value=queue._locked(update)
+    vf.atomic_json(audit,value)
+    vf.atomic_json(args.public_dir/'QUEUE_SCHEDULING_AMENDMENT.json',value)
+
+
 def finalize(args):
     run,public=args.run_root,args.public_dir
     values=results(run)
@@ -272,11 +294,11 @@ def finalize(args):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('action',choices=('prepare-judge','finalize','snapshot'))
+    p.add_argument('action',choices=('prepare-judge','finalize','snapshot','pair-pending'))
     p.add_argument('--run-root',type=Path,required=True)
     p.add_argument('--public-dir',type=Path,required=True)
     args=p.parse_args()
-    {'prepare-judge':prepare_judge,'finalize':finalize,'snapshot':snapshot}[args.action](args)
+    {'prepare-judge':prepare_judge,'finalize':finalize,'snapshot':snapshot,'pair-pending':pair_pending}[args.action](args)
 
 
 if __name__=='__main__':main()

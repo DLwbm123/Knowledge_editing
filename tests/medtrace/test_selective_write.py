@@ -136,6 +136,25 @@ class SelectiveWriteTest(unittest.TestCase):
             with self.assertRaises(FileExistsError), patch.object(close,'results',return_value=[result]):
                 close.prepare_judge(SimpleNamespace(run_root=run))
 
+    def test_pending_priority_does_not_change_active_tasks_or_scientific_design(self):
+        from scripts.medtrace import finalize_selective_write as close
+        from scripts.medtrace.run_selective_write import vf
+        with tempfile.TemporaryDirectory() as directory:
+            run=Path(directory);public=run/'public'
+            tasks=[dict(task_id=f'{i}-{c}',event_index=i,condition=c,parameterization='P4',
+                        status='PENDING',priority=n*2+i,seed=20260906) for n,c in enumerate(CONDITIONS) for i in (1,2)]
+            tasks[0]['status']='RUNNING'
+            original=copy.deepcopy(tasks)
+            vf.atomic_json(run/'private/TASK_QUEUE.json',dict(tasks=tasks))
+            close.pair_pending(SimpleNamespace(run_root=run,public_dir=public))
+            actual=close.read(run/'private/TASK_QUEUE.json')['tasks']
+            self.assertEqual(actual[0],original[0])
+            for a,b in zip(actual,original):
+                self.assertEqual({k:v for k,v in a.items() if k!='priority'},{k:v for k,v in b.items() if k!='priority'})
+            pending=sorted((t for t in actual if t['status']=='PENDING'),key=lambda t:t['priority'])
+            self.assertLess(next(n for n,t in enumerate(pending) if t['event_index']==1 and t['condition']==CONDITIONS[-1]),
+                            next(n for n,t in enumerate(pending) if t['event_index']==2))
+
 
 if __name__ == '__main__':
     unittest.main()

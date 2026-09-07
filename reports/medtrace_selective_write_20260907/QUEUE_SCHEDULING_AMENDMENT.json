@@ -1,0 +1,323 @@
+{
+  "changes": [
+    {
+      "after": 2,
+      "before": 14,
+      "task_id": "SW_e01_P4_W0_TASK_ONLY"
+    },
+    {
+      "after": 3,
+      "before": 15,
+      "task_id": "SW_e01_L16_W0_TASK_ONLY"
+    },
+    {
+      "after": 4,
+      "before": 28,
+      "task_id": "SW_e01_P4_W1_KL_1"
+    },
+    {
+      "after": 5,
+      "before": 29,
+      "task_id": "SW_e01_L16_W1_KL_1"
+    },
+    {
+      "after": 6,
+      "before": 42,
+      "task_id": "SW_e01_P4_W1_KL_10"
+    },
+    {
+      "after": 7,
+      "before": 43,
+      "task_id": "SW_e01_L16_W1_KL_10"
+    },
+    {
+      "after": 8,
+      "before": 56,
+      "task_id": "SW_e01_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "after": 9,
+      "before": 57,
+      "task_id": "SW_e01_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "after": 11,
+      "before": 3,
+      "task_id": "SW_e02_L16_W1_KL_0.1"
+    },
+    {
+      "after": 12,
+      "before": 16,
+      "task_id": "SW_e02_P4_W0_TASK_ONLY"
+    },
+    {
+      "after": 13,
+      "before": 17,
+      "task_id": "SW_e02_L16_W0_TASK_ONLY"
+    },
+    {
+      "after": 14,
+      "before": 30,
+      "task_id": "SW_e02_P4_W1_KL_1"
+    },
+    {
+      "after": 15,
+      "before": 31,
+      "task_id": "SW_e02_L16_W1_KL_1"
+    },
+    {
+      "after": 16,
+      "before": 44,
+      "task_id": "SW_e02_P4_W1_KL_10"
+    },
+    {
+      "after": 17,
+      "before": 45,
+      "task_id": "SW_e02_L16_W1_KL_10"
+    },
+    {
+      "after": 18,
+      "before": 58,
+      "task_id": "SW_e02_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "after": 19,
+      "before": 59,
+      "task_id": "SW_e02_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "after": 20,
+      "before": 4,
+      "task_id": "SW_e03_P4_W1_KL_0.1"
+    },
+    {
+      "after": 21,
+      "before": 5,
+      "task_id": "SW_e03_L16_W1_KL_0.1"
+    },
+    {
+      "after": 22,
+      "before": 18,
+      "task_id": "SW_e03_P4_W0_TASK_ONLY"
+    },
+    {
+      "after": 23,
+      "before": 19,
+      "task_id": "SW_e03_L16_W0_TASK_ONLY"
+    },
+    {
+      "after": 24,
+      "before": 32,
+      "task_id": "SW_e03_P4_W1_KL_1"
+    },
+    {
+      "after": 25,
+      "before": 33,
+      "task_id": "SW_e03_L16_W1_KL_1"
+    },
+    {
+      "after": 26,
+      "before": 46,
+      "task_id": "SW_e03_P4_W1_KL_10"
+    },
+    {
+      "after": 27,
+      "before": 47,
+      "task_id": "SW_e03_L16_W1_KL_10"
+    },
+    {
+      "after": 28,
+      "before": 60,
+      "task_id": "SW_e03_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "after": 29,
+      "before": 61,
+      "task_id": "SW_e03_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "after": 30,
+      "before": 6,
+      "task_id": "SW_e07_P4_W1_KL_0.1"
+    },
+    {
+      "after": 31,
+      "before": 7,
+      "task_id": "SW_e07_L16_W1_KL_0.1"
+    },
+    {
+      "after": 32,
+      "before": 20,
+      "task_id": "SW_e07_P4_W0_TASK_ONLY"
+    },
+    {
+      "after": 33,
+      "before": 21,
+      "task_id": "SW_e07_L16_W0_TASK_ONLY"
+    },
+    {
+      "after": 36,
+      "before": 48,
+      "task_id": "SW_e07_P4_W1_KL_10"
+    },
+    {
+      "after": 37,
+      "before": 49,
+      "task_id": "SW_e07_L16_W1_KL_10"
+    },
+    {
+      "after": 38,
+      "before": 62,
+      "task_id": "SW_e07_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "after": 39,
+      "before": 63,
+      "task_id": "SW_e07_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "after": 40,
+      "before": 8,
+      "task_id": "SW_e13_P4_W1_KL_0.1"
+    },
+    {
+      "after": 41,
+      "before": 9,
+      "task_id": "SW_e13_L16_W1_KL_0.1"
+    },
+    {
+      "after": 42,
+      "before": 22,
+      "task_id": "SW_e13_P4_W0_TASK_ONLY"
+    },
+    {
+      "after": 43,
+      "before": 23,
+      "task_id": "SW_e13_L16_W0_TASK_ONLY"
+    },
+    {
+      "after": 44,
+      "before": 36,
+      "task_id": "SW_e13_P4_W1_KL_1"
+    },
+    {
+      "after": 45,
+      "before": 37,
+      "task_id": "SW_e13_L16_W1_KL_1"
+    },
+    {
+      "after": 46,
+      "before": 50,
+      "task_id": "SW_e13_P4_W1_KL_10"
+    },
+    {
+      "after": 47,
+      "before": 51,
+      "task_id": "SW_e13_L16_W1_KL_10"
+    },
+    {
+      "after": 48,
+      "before": 64,
+      "task_id": "SW_e13_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "after": 49,
+      "before": 65,
+      "task_id": "SW_e13_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "after": 50,
+      "before": 10,
+      "task_id": "SW_e15_P4_W1_KL_0.1"
+    },
+    {
+      "after": 51,
+      "before": 11,
+      "task_id": "SW_e15_L16_W1_KL_0.1"
+    },
+    {
+      "after": 52,
+      "before": 24,
+      "task_id": "SW_e15_P4_W0_TASK_ONLY"
+    },
+    {
+      "after": 53,
+      "before": 25,
+      "task_id": "SW_e15_L16_W0_TASK_ONLY"
+    },
+    {
+      "after": 54,
+      "before": 38,
+      "task_id": "SW_e15_P4_W1_KL_1"
+    },
+    {
+      "after": 55,
+      "before": 39,
+      "task_id": "SW_e15_L16_W1_KL_1"
+    },
+    {
+      "after": 56,
+      "before": 52,
+      "task_id": "SW_e15_P4_W1_KL_10"
+    },
+    {
+      "after": 57,
+      "before": 53,
+      "task_id": "SW_e15_L16_W1_KL_10"
+    },
+    {
+      "after": 58,
+      "before": 66,
+      "task_id": "SW_e15_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "after": 59,
+      "before": 67,
+      "task_id": "SW_e15_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "after": 60,
+      "before": 12,
+      "task_id": "SW_e16_P4_W1_KL_0.1"
+    },
+    {
+      "after": 61,
+      "before": 13,
+      "task_id": "SW_e16_L16_W1_KL_0.1"
+    },
+    {
+      "after": 62,
+      "before": 26,
+      "task_id": "SW_e16_P4_W0_TASK_ONLY"
+    },
+    {
+      "after": 63,
+      "before": 27,
+      "task_id": "SW_e16_L16_W0_TASK_ONLY"
+    },
+    {
+      "after": 64,
+      "before": 40,
+      "task_id": "SW_e16_P4_W1_KL_1"
+    },
+    {
+      "after": 65,
+      "before": 41,
+      "task_id": "SW_e16_L16_W1_KL_1"
+    },
+    {
+      "after": 66,
+      "before": 54,
+      "task_id": "SW_e16_P4_W1_KL_10"
+    },
+    {
+      "after": 67,
+      "before": 55,
+      "task_id": "SW_e16_L16_W1_KL_10"
+    }
+  ],
+  "original_input_manifest_preserved": true,
+  "reason": "Prompt paired-condition coverage: avoid leaving all W2 until last",
+  "scope": "PENDING execution priorities only; running/completed tasks, IDs, data, losses and hyperparameters unchanged",
+  "selection_or_judge_results_read": false
+}
