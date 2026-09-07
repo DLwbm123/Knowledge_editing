@@ -99,6 +99,30 @@ def hierarchical(rows,key):
     return mean(mean(values.values()) for values in groups.values()) if groups else None
 
 
+def snapshot(args):
+    """Report real checkpoint progress without pretending endpoint/Judge closure."""
+    summarize(args)
+    tasks=read(args.run_root/'private/TASK_QUEUE.json')['tasks']
+    rows=[]
+    for task in tasks:
+        directory=args.run_root/'private/tasks'/task['task_id']
+        row={k:task[k] for k in ('task_id','event_index','parameterization','condition','status')}
+        row.update(observed_optimizer_step=None,H_fit_kl=None,U_fit_kl=None,raw_endpoint_ready=False,semantic_status='NOT_JUDGED')
+        histories=list(directory.glob('attempt*/training_private.json'))
+        if histories:
+            history=read(max(histories,key=lambda p:p.stat().st_mtime))
+            diagnostic=history['diagnostics'][-1]
+            row.update(observed_optimizer_step=diagnostic['step'],H_fit_kl=diagnostic['full_fit_kl']['H'],U_fit_kl=diagnostic['full_fit_kl']['U'])
+        row['raw_endpoint_ready']=(directory/'result_private.json').is_file() and task['status'] in {'RAW_READY','JUDGED'}
+        if task['status']=='JUDGED':row['semantic_status']='JUDGED'
+        rows.append(row)
+    csv_write(args.public_dir/'SELECTIVE_WRITE_BY_EDIT.csv',rows)
+    counts={s:sum(t['status']==s for t in tasks) for s in sorted({t['status'] for t in tasks})}
+    vf.atomic_json(args.public_dir/'LIVE_PROGRESS.json',dict(counts=counts,expected=70,
+        trained_320=sum(r['observed_optimizer_step']==320 for r in rows),raw_ready=sum(r['raw_endpoint_ready'] for r in rows),
+        scientific_gain='NOT_EVALUATED',publication_scope='IN_PROGRESS_SNAPSHOT'))
+
+
 def finalize(args):
     run,public=args.run_root,args.public_dir
     values=results(run)
@@ -248,11 +272,11 @@ def finalize(args):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('action',choices=('prepare-judge','finalize'))
+    p.add_argument('action',choices=('prepare-judge','finalize','snapshot'))
     p.add_argument('--run-root',type=Path,required=True)
     p.add_argument('--public-dir',type=Path,required=True)
     args=p.parse_args()
-    (prepare_judge if args.action=='prepare-judge' else finalize)(args)
+    {'prepare-judge':prepare_judge,'finalize':finalize,'snapshot':snapshot}[args.action](args)
 
 
 if __name__=='__main__':main()
