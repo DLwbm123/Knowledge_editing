@@ -191,6 +191,9 @@ def be_task(runtime, args, task):
             raise RuntimeError("BalancEdit did not execute fixed 50 steps")
         # Native implementation computes anchors with all transforms disabled before writing.
         vf.atomic_json(out / "TRAINING_PRIVATE.json", training)
+        if config.get('kind') == 'MEDTRACE_STAGE5':
+            from scripts.medtrace.stage5_single_scope import freeze
+            freeze(runtime, editor, data, run)
         hook_off = SimpleNamespace(clear_request_routing=lambda: editor.wrapper.set_active(None))
         teacher = sw.TeacherCache(runtime, run, i, config)
         for row in data["rows"]:

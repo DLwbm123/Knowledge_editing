@@ -356,7 +356,7 @@ def shared_initial(runtime, run, task, data, config):
         fixtures = [native, next(r for r in data["rows"] if r["role"] == "fit" and r["label"] == "positive" and r["question"] != native["question"])]
         for rel in RELATIONS.values():
             fixture = next((r for r in data['rows'] if r['role'] == 'fit' and r['fact_relation'] == rel), None)
-            if fixture is None and data.get('track') != 'V4_STAGE3':
+            if fixture is None and data.get('track') != 'V4_STAGE3' and config.get('kind') != 'MEDTRACE_STAGE5':
                 raise ValueError('missing required historical fit stratum')
             if fixture is not None:
                 fixtures.append(fixture)
@@ -374,7 +374,7 @@ def shared_initial(runtime, run, task, data, config):
             with torch.no_grad():
                 for g, rel in RELATIONS.items():
                     pool = [r for r in rows if r["role"] == "fit" and r["fact_relation"] == rel]
-                    if not pool and data.get('track') == 'V4_STAGE3':
+                    if not pool and (data.get('track') == 'V4_STAGE3' or config.get('kind') == 'MEDTRACE_STAGE5'):
                         continue  # Missing support stays absent, never a zero KL.
                     values = {r["logical_id"]: float(teacher.kl(r, hook, training=True, chunk=16)) for r in pool}
                     initial[g] = group_mean(values, pool)
@@ -455,7 +455,7 @@ def train_task(runtime, args, task, chunk=16):
             training["forward_count"], training["backward_count"], None, start)
     expert.requires_grad_(True)
     optimizer = optimizer_for(expert, runtime.model)
-    stage3_task_only = data.get('track') == 'V4_STAGE3' and task['condition'] == CONDITIONS[0]
+    stage3_task_only = (data.get('track') == 'V4_STAGE3' or config.get('kind') == 'MEDTRACE_STAGE5') and task['condition'] == CONDITIONS[0]
     protect = Protection(initial["initial"], task["condition"], allow_missing_task_only=stage3_task_only)
     rows = data["rows"]
     pools = {g: [r for r in rows if r["role"] == "fit" and r["fact_relation"] == rel] for g,rel in RELATIONS.items()}
