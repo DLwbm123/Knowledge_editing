@@ -14,6 +14,23 @@ sys.path.insert(0, str(ROOT))
 from scripts.medtrace import run_stage2 as s2
 
 vf, sw, read = s2.vf, s2.sw, s2.read
+ORIGINAL_GPUS = dict(sw.GPUS)
+
+
+def resource_amendment(run):
+    path = run/'private/GPU_EXPANSION.json'
+    if not path.exists():
+        return None
+    value = read(path)
+    gpus = value['gpu_uuids']
+    if (value['authorization'] != 'USER_ADD_GPU0_GPU1' or set(gpus) != {'0','1','2','3'}
+            or any(gpus[k] != v for k, v in ORIGINAL_GPUS.items())
+            or len(set(gpus.values())) != 4
+            or any(not isinstance(v, str) or not v.startswith('GPU-') for v in gpus.values())):
+        raise ValueError('invalid Stage3 GPU expansion authorization')
+    # Mutate the shared mapping in this Stage3 process only; historical configs stay frozen.
+    sw.GPUS.update(gpus)
+    return value
 
 
 def public_manifest(run):
@@ -39,6 +56,12 @@ def public_manifest(run):
         native_condition_policy='Stage3 retains nonfinite hard stop, not legacy finite condition-number performance threshold',
         unsupported_policy='S0 may run without H/U; S1 never drops missing protection loss',
         scientific_claim='Frozen augmented-support systems evaluation, not paper-exact M3Bench or clinical validation')
+    amendment = resource_amendment(run)
+    if amendment:
+        value['resource_amendment'] = {k: amendment[k] for k in
+            ('authorization', 'gpu_uuids', 'epoch', 'wall_hours', 'gpu_hours', 'generation_gpu_hours')}
+        value['resources'] = dict(value['resources'], gpu_uuids=amendment['gpu_uuids'],
+                                  gpu_indices=[0,1,2,3], generation_gpu_hours=40)
     vf.atomic_json(run/'public/RUN_MANIFEST.json', value)
     vf.atomic_json(run/'public/EXECUTION_STATUS.json', dict(status='PREPARED', compute='NOT_RUN', judge='NOT_RUN',
         publication='PENDING', queue_counts=dict(Counter(t['status'] for t in read(run/'private/TASK_QUEUE.json')['tasks']))))
@@ -47,8 +70,9 @@ def public_manifest(run):
 def preflight(run):
     config = read(run / 'private/CAMPAIGN_CONFIG.json')
     start = read(run / 'private/CAMPAIGN_START.json')
-    if config['kind'] != 'MEDTRACE_STAGE3' or config['gpu_uuids'] != sw.GPUS:
+    if config['kind'] != 'MEDTRACE_STAGE3' or config['gpu_uuids'] != ORIGINAL_GPUS:
         raise ValueError('wrong campaign or GPU identity')
+    resource_amendment(run)
     if start['code_commit'] != config['code_commit'] or start['epoch'] <= 0:
         raise ValueError('coordinator start/config binding missing')
     for task in read(run / 'private/TASK_QUEUE.json')['tasks']:
