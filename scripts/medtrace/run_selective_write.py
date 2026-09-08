@@ -292,6 +292,11 @@ class TeacherCache:
             if path.exists():
                 saved = torch.load(path, map_location="cpu", weights_only=True)
                 tokens = saved["tokens"]
+            elif self.config.get('teacher_reuse_root') and (Path(self.config['teacher_reuse_root']) /
+                    f'private/teacher/e{self.edit:02d}' / scope / path.name).is_file():
+                prior = Path(self.config['teacher_reuse_root']) / f'private/teacher/e{self.edit:02d}' / scope / path.name
+                saved = torch.load(prior, map_location='cpu', weights_only=True)
+                tokens = saved['tokens']  # Read-only; full binding is checked below, never update history.
             else:
                 generated = vf.scope_generate(self.runtime, row, None, cap=128)
                 tokens = generated["raw_token_ids"]
@@ -510,6 +515,17 @@ def train_task(runtime, args, task, chunk=16):
                 diagnostics.append(dict(step=step, full_fit_kl=full,
                     constraint_residual={g: full[g]-protect.epsilon[g] for g in full}, dual=dict(protect.dual),
                     saturation=dict(protect.saturation), scale=protect.scale, epsilon=protect.epsilon))
+                if config.get('stage4_diagnostics'):
+                    with torch.no_grad():
+                        losses = []
+                        for batch in positive_batches:
+                            hook.set_teacher_routing(batch.labels)
+                            losses.append(float(runtime.compute_loss(batch)))
+                        diagnostics[-1].update(native_ce=losses[0], fit_positive_ce=sum(losses[1:])/len(losses[1:]),
+                            normalized_fit_kl={g:full[g]/protect.scale[g] for g in full},
+                            update_norm=float(torch.linalg.vector_norm(torch.cat([
+                                p.detach().flatten() for p in expert.parameters()]))),
+                            norm_definition='CP parameter norm; A2-relative parameter delta is reported by Stage4 checkpoint analysis')
                 save(out / f"step{step:04d}.pt", dict(expert=expert.state_dict(), task=task, step=step, optimizer=optimizer.state_dict(), protection=vars(protect)))
                 vf.atomic_json(out / "training_private.json", dict(curve=curve, diagnostics=diagnostics, forward_count=forwards, backward_count=backwards))
     finally:
