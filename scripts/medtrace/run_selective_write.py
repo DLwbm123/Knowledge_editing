@@ -523,7 +523,7 @@ def train_task(runtime, args, task, chunk=16):
                             losses.append(float(runtime.compute_loss(batch)))
                         diagnostics[-1].update(native_ce=losses[0], fit_positive_ce=sum(losses[1:])/len(losses[1:]),
                             normalized_fit_kl={g:full[g]/protect.scale[g] for g in full},
-                            update_norm=float(torch.linalg.vector_norm(torch.cat([
+                            parameter_norm=float(torch.linalg.vector_norm(torch.cat([
                                 p.detach().flatten() for p in expert.parameters()]))),
                             norm_definition='CP parameter norm; A2-relative parameter delta is reported by Stage4 checkpoint analysis')
                 save(out / f"step{step:04d}.pt", dict(expert=expert.state_dict(), task=task, step=step, optimizer=optimizer.state_dict(), protection=vars(protect)))

@@ -20,3 +20,20 @@ def test_weak_normalized_kl_and_rejection_only_calibration():
     assert calibrate(rows[:2])['status']=='CALIBRATION_UNSUPPORTED'
     with pytest.raises(ValueError): calibrate([dict(rows[0],role='evaluation')])
     assert not accepted(dict(rows[0]['route'],radius=0),0.)
+
+
+def test_stage4_paired_support_and_bootstrap():
+    from scripts.medtrace.finalize_stage4 import paired,bootstrap,OLD
+    rows=[]
+    for edit in (1,2):
+        for method,value in [('W0',0.),('W01',1.)]:
+            rows.append(dict(cohort=OLD,track='A',prefix=0,role='formal_development',stratum='T2G',
+                strict_role='EDIT_TARGET',is_diagnostic=False,edit=edit,eqkey=str(edit),source_group='shared',
+                source_image='shared',method=method,mode='FORCED_ON',semantic=value,v4_primary=value,
+                base_correct_damage=None,base_wrong_became_correct=value,base_wrong_changed=value,fpr=None))
+    row=next(r for r in paired(rows) if r['candidate']=='W01' and r['control']=='W0' and
+             r['mode']=='FORCED_ON' and r['metric']=='v4_primary')
+    assert row['delta']==1 and row['ci_low']==row['ci_high']==1
+    assert row['paired_inputs']==row['paired_edits']==2 and row['source_images']==1
+    assert row['image_cluster_ci_low'] is None
+    assert bootstrap([0.,1.])==bootstrap([0.,1.])

@@ -63,7 +63,8 @@ def prepare(args):
     with probe.open('x') as f: f.write('stage4')
     if probe.read_text()!='stage4': raise OSError('storage probe failed')
     probe.unlink()
-    start=time.time()
+    start=(read(args.prior_preparation/'private/CAMPAIGN_START.json')['epoch']
+           if args.prior_preparation else time.time())
     prior=read(args.stage3_run/'private/CAMPAIGN_CONFIG.json')
     terminal=read(args.stage3_run/'RUN_COMPLETION.json')
     if terminal['compute']['complete_method_endpoints']!=109 or terminal['judge']['missing_tuples']:
@@ -74,6 +75,10 @@ def prepare(args):
             ['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip(),stage4_started_epoch=start)
     vf.atomic_json(run/'private/CAMPAIGN_CONFIG.json',config)
     vf.atomic_json(run/'private/CAMPAIGN_START.json',dict(epoch=start,code_commit=config['code_commit']))
+    if args.prior_preparation:
+        vf.atomic_json(run/'private/PREPARATION_RECOVERY.json',dict(previous=str(args.prior_preparation),
+            reason='source review metadata may be null; no GPU tasks launched in previous preparation',
+            original_clock_preserved=True,failed_preparation_preserved=True))
     q=read(args.stage3_run/'private/TASK_QUEUE.json')['tasks']
     indices=[t['event_index'] for t in q if t['kind']=='SINGLE_GROUP' and 'S1' in t['methods']]
     if len(indices)!=7: raise ValueError('old common cohort changed')
@@ -144,7 +149,7 @@ def prepare(args):
     candidates=list(choices.values())[:32]
     # Historical reviewed text is fact/image-bound. This scan does not authorize new template instantiations.
     approved={(e['event']['edit_record']['image_path'],e['event']['edit_record']['question']) for e in all_edits
-              if e.get('positive_review',{}).get('approved_equivalent')}
+              if (e.get('positive_review') or {}).get('approved_equivalent')}
     for index,row in enumerate(candidates,1):
         if (row['image_path'],row['question']) in approved:
             raise ValueError('candidate survived exclusion despite historical fact review; inspect exposure closure')
@@ -162,6 +167,7 @@ def prepare(args):
                           priority=1000+prefix,status='PENDING',attempts=0,depends_on=None))
     vf.atomic_json(run/'private/TASK_QUEUE.json',dict(tasks=queue))
     public=run/'public'
+    public.mkdir(parents=True,exist_ok=True)
     csv_write(public/'SOURCE_AND_EXPOSURE_MANIFEST.csv',exposure)
     vf.atomic_json(public/'METHOD_AND_ROUTER_LOCKS.json',dict(cohort_locks=locks,lambdas=[0,.01,.1],
         writer_steps=320,diagnostic_steps=[0,80,160,320],stage3_anchor='bab6cda735c4bd115e266871108cf492e524a8a3',
@@ -443,4 +449,5 @@ if __name__=='__main__':
     p.add_argument('action',choices=['prepare','worker','coordinator'])
     p.add_argument('--run-root',type=Path,required=True)
     p.add_argument('--stage3-run',type=Path)
+    p.add_argument('--prior-preparation',type=Path)
     a=p.parse_args();globals()[a.action](a)
