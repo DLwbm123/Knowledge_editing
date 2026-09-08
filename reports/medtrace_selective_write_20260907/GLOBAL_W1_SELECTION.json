@@ -1,0 +1,16 @@
+{
+  "L16": {
+    "eligible": [],
+    "lambda": 1.0,
+    "qualified": false,
+    "role": "calibration"
+  },
+  "P4": {
+    "eligible": [
+      0.1
+    ],
+    "lambda": 0.1,
+    "qualified": true,
+    "role": "calibration"
+  }
+}

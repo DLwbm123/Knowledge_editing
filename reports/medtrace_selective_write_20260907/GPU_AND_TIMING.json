@@ -1,7 +1,8 @@
 {
-  "active_seconds": 6131.2838389873505,
   "authorization": "User 2026-09-07: GPU2/3; sharing authorized when enough free VRAM; no unrelated process termination",
+  "epoch_end": 1788801838.35395,
   "gpu2_3_used": true,
+  "gpu_hours_upper_bound": 16.989331147140927,
   "preflight": {
     "2": {
       "checked_epoch": 1788777296.3175156,
@@ -22,13 +23,13 @@
       "uuid": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c"
     }
   },
-  "processes": {
-    "coordinator": 916100,
-    "worker_gpu2": 916125,
-    "worker_gpu3": 916127
+  "process_exit_codes": {
+    "finalize": 0,
+    "judge": 0,
+    "prepare_judge": 0,
+    "worker_gpu2": 0,
+    "worker_gpu3": 0
   },
-  "sharing_authorized": true,
-  "started_epoch": null,
-  "timing_scope": "active time excluding both explicit pauses",
-  "worker_required_free_mib": 20480
+  "timing_scope": "active time excluding user pause",
+  "wall_seconds": 30580.795824289322
 }

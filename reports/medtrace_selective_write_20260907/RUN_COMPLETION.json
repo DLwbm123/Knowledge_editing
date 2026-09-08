@@ -1,16 +1,40 @@
 {
-  "authorization": "User 2026-09-07: GPU2/3; sharing authorized when enough free VRAM; no unrelated process termination",
   "counts": {
-    "PENDING": 56,
-    "RAW_READY": 12,
-    "RUNNING": 2
+    "JUDGED": 70
   },
-  "evaluation": "NOT_COMPLETE",
+  "error": null,
+  "evaluation": "COMPLETE_FOR_AVAILABLE_RESULTS",
   "expected": 70,
-  "judge": "NOT_RUN",
+  "fixed_router_identity": "PASS",
+  "global_W1": {
+    "L16": {
+      "eligible": [],
+      "lambda": 1.0,
+      "qualified": false,
+      "role": "calibration"
+    },
+    "P4": {
+      "eligible": [
+        0.1
+      ],
+      "lambda": 0.1,
+      "qualified": true,
+      "role": "calibration"
+    }
+  },
+  "judge": "COMPLETE_FOR_AVAILABLE_RESULTS",
+  "judged": 70,
+  "novel_confirmation": "NOT_RUN_NO_AUTHORIZED_UNSEEN_COHORT",
   "novel_n": 0,
-  "publication": "IN_PROGRESS_SNAPSHOT",
-  "scientific_gain": "NOT_EVALUATED",
-  "snapshot_epoch": 1788777388.8325582,
-  "status": "RUNNING"
+  "old_scientific_gain": false,
+  "process_exit_codes": {
+    "finalize": 0,
+    "judge": 0,
+    "prepare_judge": 0,
+    "worker_gpu2": 0,
+    "worker_gpu3": 0
+  },
+  "publication": "PENDING_LOCAL_PUBLICATION",
+  "scientific_gain": "SEE_PAIRED_EFFECTS_NOT_A_PASS_COUNT",
+  "status": "STAGE1_COMPLETE"
 }

@@ -1,12 +1,11 @@
 {
   "counts": {
-    "PENDING": 56,
-    "RAW_READY": 12,
-    "RUNNING": 2
+    "JUDGED": 70
   },
   "expected": 70,
-  "publication_scope": "IN_PROGRESS_SNAPSHOT",
-  "raw_ready": 12,
-  "scientific_gain": "NOT_EVALUATED",
-  "trained_320": 14
+  "publication_scope": "STAGE1_FINAL_RESULTS",
+  "raw_ready": 70,
+  "judged": 70,
+  "scientific_gain": "SEE_RESULTS_SUMMARY_ZH_AND_PAIRED_EFFECTS",
+  "trained_320": 70
 }
