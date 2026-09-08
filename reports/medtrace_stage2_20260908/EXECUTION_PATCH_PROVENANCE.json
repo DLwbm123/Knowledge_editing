@@ -1,0 +1,20 @@
+{
+  "schema_version": "medtrace-stage2-execution-patches-v2",
+  "research_branch": "medtrace-stage2-20260908",
+  "initial_two_BE_training": "73bdb8f",
+  "r02_coordinator_and_old_BE_execution": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+  "new_phase_runner_and_input_binding_revision": "9dfcaafe114ba592d38c88d241f5e55bb25fffe5",
+  "isolated_system_replay_and_actual_activation_transfer_revision": "066c288",
+  "finalizer_revision": "0d30d1999209acd6349ebc4bbff910e6ccc6a307",
+  "deployment": "Scoped source copies into the complete research worktree; remote git base remains 3cde3ed. Patches are explicit, not a claim that its checkout is clean.",
+  "unchanged_scientific_math": "BE 50-step implementation, CP native/A2 and 320-step objectives, optimizer, normalization, teacher distribution/mask and fixed Judge are unchanged. Existing teacher cache mathematical-version anchor remains the frozen campaign code binding.",
+  "repairs": [
+    "Replay saved native by its actual logical_id; reuse two complete transforms with zero new optimizer steps",
+    "New scope Base reuse requires actual prompt-token and image identity; paraphrase source lineage never substitutes native Base output",
+    "Verify real Base native prompt/visual CPU CP-to-L16 residual transfer at existing tolerances",
+    "A system replay mismatch pauses only that Stage2 system combination; its forced endpoint remains scoreable",
+    "Report paired joint protection/generality references and W2 constraint residuals, including zero-support counts"
+  ],
+  "focused_cpu_checks": "3 tests passed; source-review/scanner self-test passed",
+  "new_GPU_and_Judge_end_to_end_status": "Pending their scheduled phases; no completed new-method claim"
+}
