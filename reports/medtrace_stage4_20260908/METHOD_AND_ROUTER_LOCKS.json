@@ -578,7 +578,136 @@
     "objective": "equal H/U edit-macro activation on STRICT_BASE",
     "ranking": "MemoryRouter argmin, stable first entry tie",
     "rule": "R0 off stays off; otherwise retain same expert iff (r-d)/max(r,1e-12)>=kappa",
-    "thresholds": "PENDING_CALIBRATION"
+    "thresholds": [
+      {
+        "calibration_rows": 20,
+        "calibration_sha256": "a846bd0fe54d8b996a7ef5ee7ffb59974039effdcf2892cff9e2dcee76a8ebdc",
+        "candidates": 18,
+        "constraints": [
+          {
+            "average": "micro",
+            "decrease": 0.0,
+            "family": "V1_context_wrapper",
+            "r0": 1.0,
+            "rc": 1.0
+          },
+          {
+            "average": "macro",
+            "decrease": 0.0,
+            "family": "V1_context_wrapper",
+            "r0": 1.0,
+            "rc": 1.0
+          }
+        ],
+        "feasible": 13,
+        "frozen_epoch": 1788868205.536025,
+        "kappa": 0.6736761634987912,
+        "objective": "equal H/U edit-macro strict-base activation; no outcome/gold scoring",
+        "prefix": 1,
+        "r0_objective": 0.6730769230769231,
+        "rc_objective": 0.0,
+        "scope": "prefix-only complete original bank competition",
+        "status": "CALIBRATED",
+        "threshold_sha256": "9a014c89c7c836bdf9bfb65833638e5a5f07c48dbc74f77d192f72818d138162",
+        "tie_rule": "binary64 inclusive >=; nextafter breakpoints; minimum objective then smallest kappa"
+      },
+      {
+        "calibration_rows": 80,
+        "calibration_sha256": "0a1c491de7c386aeba1df11348ee63f606b1f63d3f09361ef2ad2c32f0000f37",
+        "candidates": 61,
+        "constraints": [
+          {
+            "average": "micro",
+            "decrease": 0.0,
+            "family": "V1_context_wrapper",
+            "r0": 1.0,
+            "rc": 1.0
+          },
+          {
+            "average": "macro",
+            "decrease": 0.0,
+            "family": "V1_context_wrapper",
+            "r0": 1.0,
+            "rc": 1.0
+          }
+        ],
+        "feasible": 44,
+        "frozen_epoch": 1788868222.7804325,
+        "kappa": 0.6713591945805766,
+        "objective": "equal H/U edit-macro strict-base activation; no outcome/gold scoring",
+        "prefix": 4,
+        "r0_objective": 0.9635989010989011,
+        "rc_objective": 0.0,
+        "scope": "prefix-only complete original bank competition",
+        "status": "CALIBRATED",
+        "threshold_sha256": "a1a39f22f71ba677526b783098de5aa542ff319394090f317cb55e79900a339a",
+        "tie_rule": "binary64 inclusive >=; nextafter breakpoints; minimum objective then smallest kappa"
+      },
+      {
+        "calibration_rows": 160,
+        "calibration_sha256": "e33d373f5f0a158503129bfd1982819ed7185c19324f6ae6b98bb01f0786414c",
+        "candidates": 92,
+        "constraints": [
+          {
+            "average": "micro",
+            "decrease": 0.0,
+            "family": "V1_context_wrapper",
+            "r0": 1.0,
+            "rc": 1.0
+          },
+          {
+            "average": "macro",
+            "decrease": 0.0,
+            "family": "V1_context_wrapper",
+            "r0": 1.0,
+            "rc": 1.0
+          }
+        ],
+        "feasible": 60,
+        "frozen_epoch": 1788868242.617248,
+        "kappa": 0.6951074436488646,
+        "objective": "equal H/U edit-macro strict-base activation; no outcome/gold scoring",
+        "prefix": 8,
+        "r0_objective": 0.948489010989011,
+        "rc_objective": 0.0,
+        "scope": "prefix-only complete original bank competition",
+        "status": "CALIBRATED",
+        "threshold_sha256": "1a86a4cbf674bddcbf7d6e6999f690adcdcceb4c5bb820f8ed9b15ee71c81702",
+        "tie_rule": "binary64 inclusive >=; nextafter breakpoints; minimum objective then smallest kappa"
+      },
+      {
+        "calibration_rows": 317,
+        "calibration_sha256": "f136ce337854a69b5132b7111e88563a77f18fd91ae1dab3536a1e1a192e20c3",
+        "candidates": 149,
+        "constraints": [
+          {
+            "average": "micro",
+            "decrease": 0.0,
+            "family": "V1_context_wrapper",
+            "r0": 1.0,
+            "rc": 1.0
+          },
+          {
+            "average": "macro",
+            "decrease": 0.0,
+            "family": "V1_context_wrapper",
+            "r0": 1.0,
+            "rc": 1.0
+          }
+        ],
+        "feasible": 87,
+        "frozen_epoch": 1788868264.5102487,
+        "kappa": 0.7696741135364367,
+        "objective": "equal H/U edit-macro strict-base activation; no outcome/gold scoring",
+        "prefix": 16,
+        "r0_objective": 0.9790521978021978,
+        "rc_objective": 0.0,
+        "scope": "prefix-only complete original bank competition",
+        "status": "CALIBRATED",
+        "threshold_sha256": "0e1ea4ff0f38e9c314b9d403af11a23a212e1d23e3572466f30795ad1b76513d",
+        "tie_rule": "binary64 inclusive >=; nextafter breakpoints; minimum objective then smallest kappa"
+      }
+    ]
   },
   "source_commit": "f3d27e5c9037a83e5e7858da3a0f158c44ef789f",
   "stage2_anchor": "74d2a337f7d2b830d58819f76c87058cef0c5f3b",

@@ -1,13 +1,51 @@
-# Stage4 startup — outcomes pending
+# MedTRACE Stage4 factual review
 
-Run `medtrace_stage4_20260908_r02` is RUNNING on the four authorized GPUs. At the startup check, four mutually exclusive W01 tasks had saved step80 diagnostics; no startup failure was recorded. This is not endpoint/Judge completion. The campaign runs independently of the interactive session, with neutral main/run/job process roles, under the original 8-hour wall / 32-GPU-hour budget including preparation and >=90-minute closure reserve.
+Status: COMPLETE_EXECUTABLE_CONFIRMATION_UNAVAILABLE. Judge missing=0. Publication state here is the generator-time snapshot; verify the Git commit for later public delivery.
 
-Fixed scope: 23 new W01 writer endpoints; 69 readonly W0/W1/BE endpoints reused from their exact Stage3-common7 or Stage2-bank16 material/A2 versions; four bank prefixes with shared calibration-only R0/RC decisions. Two cohorts are never pooled as a 23-edit benchmark. All six scientific questions remain pending until new endpoints and Judge close: weak-KL T2G/protection tradeoff, FORCED_ON persistence, actual rejection at fixed support, writer/Base-return/other-writer attribution, independent confirmation, and descriptive next-round eligibility.
+1. Did weaker KL recover original T2G, and what protection was lost?
 
-One bounded source-screen recovery corrected null optional review metadata before any GPU run. The incomplete r01 preparation is preserved; r02 retains its original clock. The source scan adds all Stage2/3 used-role images to stricter historical exclusions. No SLAKE source rows remain; the remaining VQA-RAD source pool has 340 rows across 55 source-image groups, including 186 Base-wrong rows. Thirty-two image-unique Base-eligible candidates are retained in frozen order. No candidate has authorized fact/image-specific fit/calibration positive text review; new template instantiations are not silently approved. Track C is CONFIRMATION_UNAVAILABLE, not executed or renamed development data. Patient independence is UNKNOWN. Tracks A/B are not blocked by this.
+- OLD_STAGE3_COMMON7 R0 original T2G W01-W0: -30.56 pp; CI [-43.06, -16.67] pp; 6 edits / 23 inputs / 6 probe images
+- OLD_STAGE3_COMMON7 R0 original T2G W01-W1: +22.22 pp; CI [8.33, 36.11] pp; 6 edits / 23 inputs / 6 probe images
+- OLD_STAGE3_COMMON7 FORCED_ON original T2G W01-W0: -30.56 pp; CI [-43.06, -16.67] pp; 6 edits / 23 inputs / 6 probe images
+- OLD_STAGE3_COMMON7 FORCED_ON original T2G W01-W1: +22.22 pp; CI [8.33, 36.11] pp; 6 edits / 23 inputs / 6 probe images
+- SLAKE16 FORCED_ON H damage W01-W0: -38.46 pp; CI [-69.23, -15.38] pp; 13 edits / 15 inputs / 6 probe images
+- SLAKE16 FORCED_ON H damage W01-W1: +7.69 pp; CI [0.00, 23.08] pp; 13 edits / 15 inputs / 6 probe images
+- SLAKE16 FORCED_ON U damage W01-W0: -27.96 pp; CI [-40.79, -17.90] pp; 16 edits / 130 inputs / 31 probe images
+- SLAKE16 FORCED_ON U damage W01-W1: +4.69 pp; CI [1.04, 9.20] pp; 16 edits / 130 inputs / 31 probe images
 
-Three focused tests pass. Real CPU checks bind 69 reused endpoints (3,261 input records) to their source rows and resolve 8,334 historical Judge tuples. The preflight subset of 2,003 existing exact tuples fits the original 2048-token Judge context (maximum prompt324 + output24); final preflight includes new full answers and is authoritative. No student result was used to calibrate a threshold or select an endpoint.
+2. Is the loss still present under FORCED_ON?
 
-Provenance: Stage3 public `bab6cda735c4bd115e266871108cf492e524a8a3`; Stage2 public `74d2a337f7d2b830d58819f76c87058cef0c5f3b`; research branch `medtrace-stage4-20260908`; preparation `f3d27e5`, GPU launch `1ba8b4a`. The public source snapshot redacts internal storage/local prefixes in copied dependencies; algorithm code otherwise maps to the research branch. A reporting-only follow-up adds mutually exclusive correct-answer attribution via Base return, owner writer, or another writer before the finalizer executes; it does not alter training or routes.
+The separate FORCED_ON effects above isolate the writer from rejection; negative values remain a writer-side observed tradeoff, not a closed route. Intermediate checkpoints are diagnostic only.
 
-This initial release contains code, tests, preregistration, sanitized method/resource locks, source/exposure availability and startup state. Raw QA, images, student outputs, token IDs, weights, teacher caches, internal paths and private Judge maps remain private. Stage3's old generator-time publication-pending text was superseded by verified public delivery; it did not cause a rerun. No separate monitoring/publication waiter is started. Final scientific tables and public delivery will be verified on a later user-requested check after completion.
+3. Does RC reject non-target inputs with fixed support?
+
+- Fixed W1 RC-R0, prefix16 H fpr: -96.67 pp; CI [-100.00, -90.00] pp; 15 edits / 20 inputs / 7 probe images
+- Fixed W1 RC-R0, prefix16 H base_correct_damage: -30.77 pp; CI [-53.85, -7.69] pp; 13 edits / 15 inputs / 6 probe images
+- Fixed W1 RC-R0, prefix16 H semantic: +26.67 pp; CI [6.67, 53.33] pp; 15 edits / 20 inputs / 7 probe images
+- Fixed W1 RC-R0, prefix16 H base_wrong_became_correct: +0.00 pp; CI [0.00, 0.00] pp; 5 edits / 5 inputs / 1 probe images
+- Fixed W1 RC-R0, prefix16 U fpr: -92.10 pp; CI [-95.14, -89.04] pp; 16 edits / 202 inputs / 41 probe images
+- Fixed W1 RC-R0, prefix16 U base_correct_damage: -23.99 pp; CI [-31.59, -17.05] pp; 16 edits / 130 inputs / 31 probe images
+- Fixed W1 RC-R0, prefix16 U semantic: +13.67 pp; CI [8.46, 19.37] pp; 16 edits / 202 inputs / 41 probe images
+- Fixed W1 RC-R0, prefix16 U base_wrong_became_correct: -5.42 pp; CI [-10.52, -1.25] pp; 16 edits / 72 inputs / 23 probe images
+- Fixed W1 RC-R0, prefix16 T0 semantic: +0.00 pp; CI [0.00, 0.00] pp; 16 edits / 16 inputs / 16 probe images
+- Fixed W1 RC-R0, prefix16 source_style_confirmation semantic: +0.00 pp; CI [0.00, 0.00] pp; 16 edits / 32 inputs / 16 probe images
+- Fixed W1 RC-R0, prefix16 cross_family_confirmation semantic: +0.00 pp; CI [0.00, 0.00] pp; 16 edits / 32 inputs / 16 probe images
+
+4. Writer, rejection, and other-expert contributions
+
+WRITER_PAIRED_EFFECTS isolates W01 at fixed R0/FORCED_ON. BANK_PAIRED_EFFECTS isolates rejection at fixed W1 and supplies W0/W01 interactions. ROUTE_FAILURE_DECOMPOSITION reports P(ON|strict Base), P(wrong|ON,Base-correct,strict Base), final damage, all-source accuracy and Base-wrong correction/change with separate denominators. Other-expert correctness is a descriptive attribution, not an independent causal contribution. Owner mismatch alone is not scored as wrong.
+
+5. Independent confirmation
+
+CONFIRMATION_UNAVAILABLE: 32 capped candidates, zero complete authorized new edits. Existing-source/fact-specific positive support and patient independence are not invented; see UNSEEN_CONFIRMATION_REPORT.md. The 7 and 16 development cohorts remain separate.
+
+6. Preregistered descriptive decisions
+
+NO_DESCRIPTIVE_JOINT_WRITER_CANDIDATE: one or more fixed criteria failed or lacked support.
+DESCRIPTIVE_SCOPE_CANDIDATE
+
+No independent confirmation supports a resolved-generalization, noninferiority, clinical-safety, intrinsic-routing or sequential-200 claim. No automatic Stage5. Threshold constraints are engineering constraints, not 95% guarantees.
+
+Statistics: fixed 10,000 paired-edit bootstrap, seed 20260908; image-cluster and leave-one-image-out sensitivities accompany shared-source dependence. Cases/patients UNKNOWN. Zero denominators NA. Native diagnostics and constructed confirmation are not official T0/T2G substitutes. All-source correctness, Base-wrong correction and Base-correct damage remain side by side.
+
+Stage3 continuity: 7 common groups include six formal T0 anchors; original W1 T2G macro 30.56%, paired W1-W0 -52.78 pp also under FORCED_ON, and T1L damage 100% on six Base-correct inputs. Stage3 was complete before this run; its static pending-publication wording did not cause a rerun.

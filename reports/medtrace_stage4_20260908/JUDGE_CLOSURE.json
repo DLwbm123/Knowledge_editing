@@ -1,0 +1,11 @@
+{
+  "execution_version_changed": false,
+  "max_model_len": 2048,
+  "missing": 0,
+  "new": 70,
+  "no_truncation": true,
+  "required": 2137,
+  "reused": 2067,
+  "scored": 2137,
+  "status": "COMPLETE_CURRENT_TUPLES"
+}
