@@ -22,6 +22,7 @@ REPORTS = (
     "STAGE2_BEHAVIOR_MACRO.csv", "METHOD_COSTS.csv", "NEW_EDIT_FORCED_ON_RESULTS.csv",
     "NEW_EDIT_SYSTEM_RESULTS.csv", "NEW_EDIT_CONFIRMATION_REPORT.md", "NEW_PAIRED_EDIT_EFFECTS.csv",
     "QUEUE_COMPLETION.json", "JUDGE_CLOSURE.json", "GPU_AND_TIMING.json", "RUN_COMPLETION.json", "GPT_PRO_REVIEW.md",
+    "NEW_BASE_BEFORE_SUPPORT.csv", "STAGE2_STARTUP_RECOVERY.json",
 )
 RELDIR = "reports/medtrace_stage2_20260908"
 FORBIDDEN = {"question", "reference", "gold_answer", "raw_answer", "raw_base_answer", "raw_token_ids",

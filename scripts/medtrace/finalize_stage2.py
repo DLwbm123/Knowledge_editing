@@ -57,7 +57,7 @@ def validated_judge(directory):
     return verdicts, execution, sidecar
 
 
-def prepare_judge(args):
+def prepare_judge(args, base_only=False):
     run = args.run_root
     config = read(run / "private/CAMPAIGN_CONFIG.json")
     old = Path(config["stage1_run"]) / "private/judge"
@@ -72,8 +72,31 @@ def prepare_judge(args):
     for key, row in prior_packets.items():
         if key != opaque(row["question"], row["gold_answer"], row["raw_base_answer"], protocol["config_sha256"]):
             raise ValueError("historical tuple binding mismatch")
+    before_dir = run / 'private/base_judge'
+    if not base_only and before_dir.exists():
+        before_sidecar = read(before_dir / 'JUDGE_SIDECAR_PRIVATE.json')
+        if before_sidecar['new']:
+            before_verdicts, before_execution, _ = validated_judge(before_dir)
+            if execution_identity(before_execution) != execution_identity(execution):
+                raise ValueError('Base-before numerical Judge execution drift')
+            for row in vf.read_jsonl(before_dir / 'JUDGE_PACKET_PRIVATE.jsonl'):
+                key = opaque(row['question'], row['gold_answer'], row['raw_base_answer'], protocol['config_sha256'])
+                if key != row['opaque_query_id']:
+                    raise ValueError('Base-before full tuple drift')
+            old_verdicts.update(before_verdicts)
     tuples = {}
-    for result in results(run):
+    values = results(run)
+    if base_only:
+        values = []
+        for episode in read(run / 'private/NEW_EPISODE_MANIFEST_PRIVATE.json')['episodes']:
+            i = episode['event_index']
+            data = read(run / f'private/edits/e{i:02d}.json')
+            outputs = {}
+            for row in data['rows']:
+                base = read(run / f'private/base_generation/e{i:02d}' / (vf.sha256_json(row)+'.json'))
+                outputs[row['logical_id']] = dict(row=row, base=base, forced=base, fixed=base)
+            values.append(dict(task=dict(event_index=i), outputs=outputs))
+    for result in values:
         data = read(run / f"private/edits/e{result['task']['event_index']:02d}.json")
         target = data["event"]["edit_record"]["gold_answer"]
         for item in result["outputs"].values():
@@ -86,7 +109,7 @@ def prepare_judge(args):
                                        raw_base_answer=raw, adjudication_pass=1)
     if not tuples:
         raise RuntimeError("no actual endpoints to Judge")
-    directory = run / "private/judge"
+    directory = run / ('private/base_judge' if base_only else 'private/judge')
     directory.mkdir(exist_ok=False)
     reused = {key: old_verdicts[key] for key in tuples.keys() & old_verdicts.keys()}
     new = {key: value for key, value in tuples.items() if key not in reused}
@@ -97,6 +120,45 @@ def prepare_judge(args):
     vf.atomic_json(directory / "JUDGE_SIDECAR_PRIVATE.json", dict(protocol_sha256=protocol["config_sha256"],
         snapshot=protocol["judge_snapshot_sha"], expected=sorted(new), all_expected=sorted(tuples),
         packet_sha256=vf.sha256_file(packet), reused=len(reused), new=len(new), complete_answers=True))
+
+
+def lock_base_before(args):
+    directory = args.run_root / 'private/base_judge'
+    sidecar = read(directory / 'JUDGE_SIDECAR_PRIVATE.json')
+    verdicts = read(directory / 'REUSED_VERDICTS_PRIVATE.json')
+    if sidecar['new']:
+        new, execution, _ = validated_judge(directory)
+        if execution_identity(execution) != read(directory / 'REUSE_EXECUTION_IDENTITY_PRIVATE.json'):
+            raise ValueError('Base-before Judge execution mismatch')
+        verdicts.update(new)
+    if set(verdicts) != set(sidecar['all_expected']):
+        raise ValueError('Base-before incomplete')
+    membership, support = {}, []
+    for episode in read(args.run_root / 'private/NEW_EPISODE_MANIFEST_PRIVATE.json')['episodes']:
+        i = episode['event_index']
+        data = read(args.run_root / f'private/edits/e{i:02d}.json')
+        membership[str(i)] = {}
+        for row in data['rows']:
+            base = read(args.run_root / f'private/base_generation/e{i:02d}' / (vf.sha256_json(row)+'.json'))
+            key = opaque(row['question'], row['reference'], base['raw_answer'], sidecar['protocol_sha256'])
+            correct = verdicts[key]
+            membership[str(i)][row['logical_id']] = dict(base_correct=correct, eqkey=row['eqkey'], tuple_key=key,
+                H_keep=correct and stratum(row) == 'H', U_keep=correct and stratum(row) == 'U')
+        for role, panel in sorted({(row['role'], stratum(row)) for row in data['rows']}):
+            rows = [r for r in data['rows'] if (r['role'], stratum(r)) == (role, panel)]
+            support.append(dict(edit=i, role=role, panel=panel, inputs=len(rows), source_images=len({r['image_path'] for r in rows}),
+                base_correct_inputs=sum(membership[str(i)][r['logical_id']]['base_correct'] for r in rows)))
+    vf.atomic_json(args.run_root / 'private/BASE_BEFORE_ROLE_LOCK_PRIVATE.json', dict(membership=membership,
+        protocol=sidecar['protocol_sha256'], new_students_started=False, immutable_predicate='locked source correctness of frozen Base full answer'))
+    csv_write(args.public_dir / 'NEW_BASE_BEFORE_SUPPORT.csv', support)
+    queue = vf.TaskQueue(args.run_root / 'private/TASK_QUEUE.json', args.run_root)
+    def activate(data):
+        if any(t['event_index'] >= 100 and t['status'] != 'WAITING_BASE_BEFORE' for t in data['tasks']):
+            raise ValueError('new student queue changed before Base-before lock')
+        for task in data['tasks']:
+            if task['status'] == 'WAITING_BASE_BEFORE':
+                task['status'] = 'PENDING'
+    queue._locked(activate)
 
 
 METRICS = ("semantic", "target_consistency", "token_parity", "kl", "base_correct", "base_correct_damage",
@@ -158,6 +220,8 @@ def finalize(args):
     details, costs = [], []
     values = results(run)
     gates = {}
+    before_path = run / 'private/BASE_BEFORE_ROLE_LOCK_PRIVATE.json'
+    base_membership = read(before_path)['membership'] if before_path.exists() else {}
     for result in values:
         task = result["task"]
         data = read(run / f"private/edits/e{task['event_index']:02d}.json")
@@ -176,6 +240,10 @@ def finalize(args):
         for item in result["outputs"].values():
             row = item["row"]
             base_correct = score(row, row["reference"], item["base"]["raw_answer"])
+            if data['track'] == 'NEW_CONFIRMATION':
+                before = base_membership[str(task['event_index'])][row['logical_id']]
+                if before['eqkey'] != row['eqkey'] or bool(base_correct) != before['base_correct']:
+                    raise ValueError('new Base-correct support changed after student launch')
             for mode, branch in (("BE_FORCED_ON" if method == "BE" else "FORCED_ON", "forced"),
                                  ("BE_NATIVE_ROUTED" if method == "BE" else "BE_ROUTE+"+method, "fixed"), ("BASE", "base")):
                 correct = score(row, row["reference"], item[branch]["raw_answer"])
@@ -191,6 +259,13 @@ def finalize(args):
                     base_wrong_became_correct=correct if not base_correct else None,
                     base_wrong_changed=float(item[branch]["raw_token_ids"] != item["base"]["raw_token_ids"]) if not base_correct else None,
                     on=float(on), joint_on_correct=float(on)*correct))
+    views = []
+    for row in details:
+        if row['track'] == 'NEW_CONFIRMATION' and row['stratum'] in ('H', 'U'):
+            group = row['stratum']
+            row['stratum'] = group+'_all'
+            views.append(dict(row, stratum=group+('_keep' if row['base_correct'] else '_base_wrong')))
+    details.extend(views)
     by_edit, macros = aggregate(details)
     csv_write(public / "STAGE2_BEHAVIOR_BY_EDIT.csv", by_edit)
     csv_write(public / "STAGE2_BEHAVIOR_MACRO.csv", macros)
@@ -222,7 +297,8 @@ def finalize(args):
     n = manifest.get("actual_n", manifest.get("n", 0))
     candidate_n = manifest.get("candidate_episode_count", n)
     old_done = sum(t["kind"] == "BE" and t["event_index"] < 100 and t["status"] == "JUDGED" for t in tasks)
-    done = all(t["status"] in {"JUDGED", "COMPLETE"} for t in tasks) and candidate_n == n
+    done = (all(t["status"] in {"JUDGED", "COMPLETE"} for t in tasks) and candidate_n == n
+            and sum(t['event_index'] >= 100 and t['kind'] != 'INIT' and t['status'] == 'JUDGED' for t in tasks) == 5*n)
     vf.atomic_json(public / "QUEUE_COMPLETION.json", dict(tasks=[{k: t[k] for k in ("task_id", "kind", "event_index", "status")} for t in tasks], counts=dict(Counter(t["status"] for t in tasks))))
     vf.atomic_json(public / "JUDGE_CLOSURE.json", dict(reused=sidecar["reused"], new=sidecar["new"], total=len(verdicts),
         same_execution_verified=True, full_answer_exact_tuple_only=True))
@@ -240,11 +316,14 @@ def finalize(args):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("action", choices=("prepare-judge", "finalize"))
+    p.add_argument("action", choices=("prepare-judge", "prepare-base-judge", "lock-base-before", "finalize"))
     p.add_argument("--run-root", required=True, type=Path)
     p.add_argument("--public-dir", required=True, type=Path)
     args = p.parse_args()
-    (prepare_judge if args.action == "prepare-judge" else finalize)(args)
+    if args.action == 'prepare-base-judge':
+        prepare_judge(args, base_only=True)
+    else:
+        {'prepare-judge': prepare_judge, 'lock-base-before': lock_base_before, 'finalize': finalize}[args.action](args)
 
 
 if __name__ == "__main__":

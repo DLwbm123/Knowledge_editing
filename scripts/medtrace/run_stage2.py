@@ -41,6 +41,9 @@ def prepare(args):
     config.update(kind="MEDTRACE_STAGE2_V2", stage1_run=str(old), seed=SEED,
                   code_commit=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
                   train_seconds=20*3600, wall_hours=24, gpu_hours=48, gpu_uuids=sw.GPUS)
+    if args.reuse_stage2_run:
+        config.update(reuse_stage2_run=str(args.reuse_stage2_run),
+                      campaign_epoch=read(args.reuse_stage2_run / "COORDINATOR_START.json")["epoch"])
     run.mkdir(parents=True)
     (run / "private/edits").mkdir(parents=True)
     vf.atomic_json(run / "private/CAMPAIGN_CONFIG.json", config)
@@ -71,7 +74,12 @@ def prepare(args):
             data = dict(event=event, rows=rows, extra_fit=[])
         data.update(track="OLD_DEV16", event_index=i)
         vf.atomic_json(run / f"private/edits/e{i:02d}.json", data)
-        tasks.append(queue_task(i, "BE", i))
+        task = queue_task(i, "BE", i)
+        if args.reuse_stage2_run:
+            previous = args.reuse_stage2_run / "private/tasks" / task["task_id"]
+            if (previous / "editor_state.pt").exists() and (previous / "TRAINING_PRIVATE.json").exists():
+                task["reuse_be_directory"] = str(previous)
+        tasks.append(task)
     vf.atomic_json(run / "private/TASK_QUEUE.json", dict(tasks=tasks))
 
 
@@ -90,6 +98,13 @@ def bind_rows(runtime, data):
                 attention=batch.attention_mask.tolist() if batch.attention_mask is not None else None,
                 boundary=batch.key_token_index, generation=runtime.generation_config))
         row.setdefault("source_group", vf.sha256_json((record.dataset, str(Path(row["image_path"]).resolve()))))
+    if data['track'] == 'NEW_CONFIRMATION':
+        seen = {}
+        for row in data['rows']:
+            value = (row['role'], row['label'])
+            if row['eqkey'] in seen and seen[row['eqkey']] != value:
+                raise ValueError('new realized model input crosses roles or labels')
+            seen[row['eqkey']] = value
 
 
 def same_output(a, b):
@@ -110,6 +125,11 @@ def base_for(runtime, run, data, row):
         qid = data["event"]["edit_record"]["record_id"] if row["role"] == "native" else row["logical_id"].removeprefix("formal-")
         source = canonical.get(qid)
         known = runtime.stage2_base.get(qid)
+        if known is None and row.get('base_query_ids'):
+            candidates = [runtime.stage2_base[q] for q in row['base_query_ids'] if q in runtime.stage2_base]
+            if candidates and all((c['model_answer_raw'], c['raw_generated_token_ids']) == (candidates[0]['model_answer_raw'], candidates[0]['raw_generated_token_ids']) for c in candidates):
+                known = candidates[0]
+                source = row  # scanner joined source image/question/reference to the canonical query catalog
         if source and known and all(source[k] == row[k] for k in ("question", "image_path", "reference")):
             value = dict(raw_answer=known["model_answer_raw"], raw_token_ids=known["raw_generated_token_ids"], provenance="frozen V4 Base exact query binding")
         else:
@@ -123,6 +143,8 @@ def be_task(runtime, args, task):
     config = read(run / "private/CAMPAIGN_CONFIG.json")
     i = task["event_index"]
     data = read(run / f"private/edits/e{i:02d}.json")
+    if data["track"] == "NEW_CONFIRMATION" and not (run / "private/BASE_BEFORE_ROLE_LOCK_PRIVATE.json").exists():
+        raise RuntimeError("new student requires frozen same-Judge Base-before membership")
     bind_rows(runtime, data)
     vf.atomic_json(run / f"private/edits/e{i:02d}.json", data)
     record = vf.EditorRecord.from_dict(data["event"]["edit_record"])
@@ -145,9 +167,20 @@ def be_task(runtime, args, task):
             base_native = base_for(runtime, run, data, native)
             if not same_output(base_native, vf.scope_generate(runtime, native, None)):
                 raise RuntimeError("target-free no-edit Base parity failure")
-        train_start = time.monotonic()
-        training = editor.apply_edit(record)
-        training_seconds = time.monotonic()-train_start
+        reused = task.get("reuse_be_directory")
+        if reused:
+            previous = Path(reused)
+            training = read(previous / "TRAINING_PRIVATE.json")
+            if training["record_id"] != record.record_id or read(previous / "METHOD_CONFIG_LOCK.json") != lock:
+                raise ValueError("reused transform identity/config mismatch")
+            editor.load_editor_state(previous / "editor_state.pt")
+            if editor.router.logical_ids != [record.record_id] or editor.edit_history != [record.record_id]:
+                raise ValueError("reuse is not this independent single edit")
+            training_seconds = None  # original failed closure did not persist a training timer
+        else:
+            train_start = time.monotonic()
+            training = editor.apply_edit(record)
+            training_seconds = time.monotonic()-train_start
         if training["steps"] != 50 or not training["finite_losses"] or not training["finite_gradients"]:
             raise RuntimeError("BalancEdit did not execute fixed 50 steps")
         # Native implementation computes anchors with all transforms disabled before writing.
@@ -187,10 +220,15 @@ def be_task(runtime, args, task):
                     kl = float(sw.full_vocab_kl(runtime.model(**kwargs).logits[mask], logp, chunk=16))
                 del kwargs, labels, mask, logp
             outputs[row["logical_id"]] = dict(row=row, base=base, forced=forced, fixed=native_output,
-                fixed_on=on, route=actual["route"], kl=kl, route_branch_parity=parity, disabled_parity=True)
+                fixed_on=on, route=actual["route"], kl=kl, route_branch_parity=parity,
+                disabled_parity=row['role'] == 'native', disabled_evidence='actual native replay; other inputs use exact-bound frozen Base cache')
         checkpoint = out / "editor_state.pt"
-        with editor.disabled():
-            saved = editor.save_editor_state(checkpoint)
+        if reused:
+            checkpoint = Path(reused) / "editor_state.pt"
+            saved = dict(size_bytes=checkpoint.stat().st_size)
+        else:
+            with editor.disabled():
+                saved = editor.save_editor_state(checkpoint)
         editor.reset_editor_state()
         if not same_output(vf.scope_generate(runtime, native, None), base_native):
             raise RuntimeError("unload did not restore Base")
@@ -198,7 +236,7 @@ def be_task(runtime, args, task):
         editor.load_editor_state(checkpoint)
         load_seconds = time.monotonic()-load_start
         with editor._activated(record.record_id):
-            if not same_output(vf.scope_generate(runtime, native, None), outputs["native"]["forced"]):
+            if not same_output(vf.scope_generate(runtime, native, None), outputs[native['logical_id']]["forced"]):
                 raise RuntimeError("BalancEdit saved-state reload mismatch")
         gates = {lid: value["fixed_on"] for lid, value in outputs.items()}
         if data["track"] == "NEW_CONFIRMATION":
@@ -216,7 +254,8 @@ def be_task(runtime, args, task):
         training_seconds=training_seconds, elapsed_seconds=time.monotonic()-started,
         parameters=state["edited_parameter_count"], storage_bytes=saved["size_bytes"], load_seconds=load_seconds,
         peak_vram_bytes=torch.cuda.max_memory_allocated(), mode_identity="BalancEdit V4 adaptation",
-        system_status="ACTUAL_NATIVE_ROUTING", training=training)
+        system_status="ACTUAL_NATIVE_ROUTING", training=training, reused_completed_transform=bool(reused),
+        additional_optimizer_steps=0 if reused else 50, disabled_actual_replay_scope='native')
     vf.atomic_json(out / "result_private.json", result)
     return result
 
@@ -227,6 +266,8 @@ def initialize_episode(runtime, args, task):
     data = read(run / f"private/edits/e{i:02d}.json")
     if data["track"] != "NEW_CONFIRMATION" or not data.get("source_eligibility_frozen"):
         raise ValueError("initializer requires a pre-student authorized source manifest")
+    if not (run / "private/BASE_BEFORE_ROLE_LOCK_PRIVATE.json").exists():
+        raise RuntimeError("new initializer requires frozen Base-before Judge membership")
     bind_rows(runtime, data)
     event = dict(data["event"], probes=[])
     out = run / f"private/initial/e{i:02d}/native"
@@ -247,6 +288,16 @@ def initialize_episode(runtime, args, task):
     return dict(elapsed_seconds=result["timing"]["end_to_end_seconds"]+metadata["training_seconds"])
 
 
+def base_task(runtime, args, task):
+    start = time.monotonic()
+    data = read(args.run_root / f"private/edits/e{task['event_index']:02d}.json")
+    bind_rows(runtime, data)
+    for row in data['rows']:
+        base_for(runtime, args.run_root, data, row)
+    vf.atomic_json(args.run_root / f"private/edits/e{task['event_index']:02d}.json", data)
+    return dict(elapsed_seconds=time.monotonic()-start)
+
+
 def worker(args):
     run = args.run_root
     config = read(run / "private/CAMPAIGN_CONFIG.json")
@@ -257,9 +308,9 @@ def worker(args):
     with (run / "private/start.lock").open("a+") as handle:
         fcntl.flock(handle, fcntl.LOCK_EX)
         if not (run / "private/CAMPAIGN_START.json").exists():
-            vf.atomic_json(run / "private/CAMPAIGN_START.json", dict(epoch=time.time(), code_commit=config["code_commit"]))
+            vf.atomic_json(run / "private/CAMPAIGN_START.json", dict(epoch=config.get('campaign_epoch', time.time()), code_commit=config["code_commit"]))
     sw.SEED = SEED
-    queue = vf.TaskQueue(run / "private/TASK_QUEUE.json", run)
+    queue = vf.TaskQueue(run / ('private/BASE_TASK_QUEUE.json' if args.base_only else 'private/TASK_QUEUE.json'), run)
     with vf.Telemetry(run / "private/GPU_TELEMETRY.jsonl", gpu, f"gpu{gpu}") as telemetry:
         while sw.active_elapsed(run) < config["train_seconds"] and not (run / "STOP").exists():
             task = queue.claim(f"gpu{gpu}")
@@ -268,10 +319,10 @@ def worker(args):
             telemetry.task_id = task["task_id"]
             print("START", task["task_id"], flush=True)
             try:
-                result = (be_task(runtime, args, task) if task["kind"] == "BE" else
+                result = (base_task(runtime, args, task) if args.base_only else be_task(runtime, args, task) if task["kind"] == "BE" else
                           initialize_episode(runtime, args, task) if task["kind"] == "INIT" else
                           sw.train_task(runtime, args, task))
-                queue.update(task["task_id"], "COMPLETE" if task["kind"] == "INIT" else "RAW_READY",
+                queue.update(task["task_id"], "COMPLETE" if task["kind"] in {"INIT", "BASE"} else "RAW_READY",
                              elapsed_seconds=result["elapsed_seconds"], finished_epoch=time.time())
                 print("DONE", task["task_id"], flush=True)
             except Exception as error:
@@ -288,6 +339,8 @@ def main():
     p.add_argument("action", choices=("prepare", "worker"))
     p.add_argument("--run-root", type=Path, required=True)
     p.add_argument("--stage1-run", type=Path)
+    p.add_argument("--reuse-stage2-run", type=Path)
+    p.add_argument("--base-only", action='store_true')
     p.add_argument("--first-only", action="store_true")
     args = p.parse_args()
     {"prepare": prepare, "worker": worker}[args.action](args)

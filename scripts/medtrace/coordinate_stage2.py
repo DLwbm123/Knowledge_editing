@@ -28,7 +28,7 @@ def main():
     manifest = read(public / "NEW_EPISODE_MANIFEST_PUBLIC.json")
     if manifest.get("status") in {"PENDING", "NOT_SCANNED"}:
         raise RuntimeError("complete the authorized source scan before frozen queue launch")
-    started = time.time()
+    started = config.get('campaign_epoch', time.time())
     processes, exits, resources = {}, {}, {}
     status = dict(status="RUNNING", publication="PENDING_PUBLIC_PUSH")
     vf.atomic_json(run / "COORDINATOR_START.json", dict(epoch=started, pid=os.getpid(), wall_limit_seconds=24*3600))
@@ -66,6 +66,49 @@ def main():
             exits[name] = processes[name].returncode
         return all(exits[n] == 0 for n in names)
 
+    def cpu_stage(name, action):
+        launch(name, [*finalizer, action, '--run-root', str(run), '--public-dir', str(public)], cpu)
+        if not wait([name], 24*3600):
+            raise RuntimeError(name+' failed')
+
+    def judge_stage(name, directory):
+        if not read(directory / 'JUDGE_SIDECAR_PRIVATE.json')['new']:
+            return
+        env = None
+        for gpu in sw.GPUS:
+            try:
+                env = environment(gpu, judge=True)
+                break
+            except RuntimeError:
+                continue
+        if env is None:
+            raise RuntimeError('Judge memory unavailable; no unrelated jobs stopped')
+        launch(name, [JUDGE_PYTHON, str(ROOT / 'scripts/medtrace/run_fixed_judge_vllm.py'),
+            '--model-path', JUDGE, '--packet', str(directory / 'JUDGE_PACKET_PRIVATE.jsonl'),
+            '--lock', str(Path(config['runtime']['cpu_gate']).parent / 'private/JUDGE_LOCK_V4.json'),
+            '--output', str(directory / 'JUDGE_OUTPUT_PRIVATE.jsonl'),
+            '--execution-lock', str(directory / 'JUDGE_EXECUTION_LOCK_PRIVATE.json'),
+            '--preflight-output', str(directory / 'JUDGE_LENGTH_PREFLIGHT_PRIVATE.json'), '--max-model-len', '2048'], env)
+        if not wait([name], 24*3600):
+            raise RuntimeError(name+' failed')
+
+    def next_workers(prefix, base_only=False):
+        names = []
+        for gpu in sw.GPUS:
+            try:
+                if not base_only and sw.gpu_check(gpu)['free_mib'] < 24576:
+                    raise RuntimeError('new BalancEdit worker needs 24 GiB free')
+                env = environment(gpu)
+                name = prefix+gpu
+                launch(name, [*runner, 'worker', '--run-root', str(run), *(['--base-only'] if base_only else [])], env)
+                names.append(name)
+            except RuntimeError:
+                continue
+        if not names:
+            raise RuntimeError(prefix+' has no sufficiently free authorized device')
+        wait(names, 20*3600)
+        return names
+
     try:
         for gpu in sw.GPUS:
             try:
@@ -87,9 +130,23 @@ def main():
         for task in queue.snapshot()["tasks"]:
             if task["status"] == "RUNNING":
                 queue.update(task["task_id"], "FAILED", last_error="worker exited before atomic endpoint closure")
-        queue.cancel_pending()
         if (run / "STOP").exists():
             raise RuntimeError("explicit STOP: no further model calls")
+        if (run / 'private/BASE_TASK_QUEUE.json').exists() and elapsed() < 20*3600:
+            # Old DEV16, then new Base-before generation/Judge, then new students.
+            # No held-out student output exists when H_keep/U_keep are frozen.
+            next_workers('worker_base_gpu', base_only=True)
+            base_tasks = read(run / 'private/BASE_TASK_QUEUE.json')['tasks']
+            if not all(t['status'] == 'COMPLETE' for t in base_tasks):
+                raise RuntimeError('new Base-before generation incomplete; new students remain blocked')
+            cpu_stage('prepare_base_judge', 'prepare-base-judge')
+            judge_stage('base_judge', run / 'private/base_judge')
+            cpu_stage('lock_base_before', 'lock-base-before')
+            next_workers('worker_new_gpu')
+        for task in queue.snapshot()['tasks']:
+            if task['status'] == 'RUNNING':
+                queue.update(task['task_id'], 'FAILED', last_error='worker exited before atomic endpoint closure')
+        queue.cancel_pending()
         launch("prepare_judge", [*finalizer, "prepare-judge", "--run-root", str(run), "--public-dir", str(public)], cpu)
         if not wait(["prepare_judge"], 24*3600):
             raise RuntimeError("Judge packet preparation failed")
