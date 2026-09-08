@@ -1,0 +1,18 @@
+{
+  "schema_version": "medtrace-stage2-startup-recovery-v2",
+  "initial_attempt": "medtrace_stage2_20260908_r01",
+  "active_attempt": "medtrace_stage2_20260908_r02",
+  "initial_execution_commit": "73bdb8f",
+  "recovery_execution_commit": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+  "failure": "Post-save native replay indexed a literal native key instead of the frozen row logical_id",
+  "affected_old_dev_edits": [1,2],
+  "complete_50_step_transforms_saved": 2,
+  "recovery": "Load the exact single-edit saved transforms and original training/config records; rerun missing endpoint and reload validation only",
+  "additional_training_steps_for_reused_transforms": 0,
+  "original_training_time_for_reused_transforms": "NA; initial failed closure had not persisted the timer",
+  "initial_14_pending_jobs": "Old coordinator labelled them CANCELLED_BY_BUDGET after worker failure; this was not evidence that 24 hours had elapsed. The preserved r01 ledger is not overwritten.",
+  "clock": "r02 inherits r01 coordinator epoch; resource budget is not reset",
+  "preserved": "r01 logs, queue, checkpoints and source/report snapshot; original Stage1 entirely unchanged",
+  "new_fact_queue": "16 source-qualified episodes, 16 native-to-A2 initializations, 80 method trajectories, preceded by frozen-Base generation and same-execution Judge support lock",
+  "semantic_results": "NOT_YET_COMPLETE"
+}

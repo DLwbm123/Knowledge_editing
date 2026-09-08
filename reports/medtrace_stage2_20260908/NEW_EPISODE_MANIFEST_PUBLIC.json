@@ -1,7 +1,11 @@
 {
-  "actual_n": 0,
+  "actual_n": 16,
   "all_static_base_inference_not_treated_as_reservation": true,
   "candidate_episode_count": 16,
+  "evaluation_families": [
+    "source_style_confirmation",
+    "cross_family_confirmation"
+  ],
   "evidence": [
     {
       "file": "frozen_data.json",
@@ -84,6 +88,21 @@
       "reason": "reserved_formal_or_structural_source_group"
     },
     {
+      "file": "STATIC_T0_CANDIDATES.jsonl",
+      "image_groups": 166,
+      "reason": "legacy_heldout_target_source_superset"
+    },
+    {
+      "file": "STATIC_T1_RELATIONS.jsonl",
+      "image_groups": 232,
+      "reason": "legacy_heldout_locality_source_superset"
+    },
+    {
+      "file": "m3bench_lora_strong.py",
+      "image_groups": 298,
+      "reason": "legacy_heldout_selector_freeze_amended189_and_T1L"
+    },
+    {
       "file": "LORA_DEV16_V2_MANIFEST.json",
       "image_groups": 16,
       "reason": "LORA_DEV16"
@@ -99,8 +118,28 @@
       "reason": "LORA_SEQ16"
     },
     {
+      "file": "T2L_FORMAL_RECORDS.jsonl",
+      "image_groups": 1,
+      "reason": "qualification_non_t0_identity_handoff"
+    },
+    {
+      "file": "T3G_FORMAL_RECORDS.jsonl",
+      "image_groups": 2,
+      "reason": "qualification_non_t0_identity_handoff"
+    },
+    {
+      "file": "T4L_FORMAL_RECORDS.jsonl",
+      "image_groups": 1,
+      "reason": "qualification_non_t0_identity_handoff"
+    },
+    {
+      "file": "T4G_FORMAL_RECORDS.jsonl",
+      "image_groups": 2,
+      "reason": "qualification_non_t0_identity_handoff"
+    },
+    {
       "file": "QUAL8_V2_MANIFEST.json",
-      "image_groups": 4,
+      "image_groups": 10,
       "reason": "QUAL8"
     },
     {
@@ -110,8 +149,13 @@
     },
     {
       "file": "positive_input_ledger.csv",
-      "image_groups": 2147,
-      "reason": "existing_image_hash_identity_closure"
+      "image_groups": 0,
+      "reason": "liveedit_all640_source_image_superset"
+    },
+    {
+      "file": "split_manifest.json",
+      "image_groups": 1152,
+      "reason": "liveedit_identity_coverage_binding"
     },
     {
       "file": "SLAKE",
@@ -122,17 +166,25 @@
       "file": "VQA_RAD Dataset Public.json",
       "image_groups": 203,
       "reason": "source_test_image"
+    },
+    {
+      "file": "STATIC_QUERY_INVENTORY.jsonl",
+      "image_groups": 2370,
+      "reason": "existing_image_hash_identity_closure"
     }
   ],
   "exclusion_counts_nonadditive": {
     "SLAKE:excluded:LORA_DEV16": 118,
     "SLAKE:excluded:LORA_QUAL16": 59,
     "SLAKE:excluded:LORA_SEQ16": 95,
-    "SLAKE:excluded:QUAL8": 31,
+    "SLAKE:excluded:QUAL8": 55,
     "SLAKE:excluded:disabled_source_group": 10,
-    "SLAKE:excluded:existing_image_hash_identity_closure": 4449,
+    "SLAKE:excluded:existing_image_hash_identity_closure": 4647,
     "SLAKE:excluded:historical_medtrace_all_roles": 4299,
     "SLAKE:excluded:historical_medtrace_input_images": 2625,
+    "SLAKE:excluded:legacy_heldout_locality_source_superset": 1605,
+    "SLAKE:excluded:legacy_heldout_target_source_superset": 895,
+    "SLAKE:excluded:qualification_non_t0_identity_handoff": 24,
     "SLAKE:excluded:reserved_formal_or_structural_source_group": 1879,
     "SLAKE:excluded:source_validation_or_test_image": 1475,
     "SLAKE:excluded:stage1_all_roles": 2651,
@@ -140,18 +192,61 @@
     "VQA-RAD:excluded:LORA_DEV16": 13,
     "VQA-RAD:excluded:LORA_QUAL16": 27,
     "VQA-RAD:excluded:LORA_SEQ16": 16,
-    "VQA-RAD:excluded:existing_image_hash_identity_closure": 362,
+    "VQA-RAD:excluded:QUAL8": 12,
+    "VQA-RAD:excluded:existing_image_hash_identity_closure": 1194,
     "VQA-RAD:excluded:historical_medtrace_all_roles": 13,
+    "VQA-RAD:excluded:legacy_heldout_locality_source_superset": 29,
+    "VQA-RAD:excluded:legacy_heldout_target_source_superset": 263,
+    "VQA-RAD:excluded:qualification_non_t0_identity_handoff": 12,
     "VQA-RAD:excluded:reserved_formal_or_structural_source_group": 362,
     "VQA-RAD:excluded:source_test_image": 1063,
     "VQA-RAD:source_test_role": 451
   },
-  "identity_mapping_pending_count": 4,
-  "negative_relation_contract": "Use negative_group H/U; do not relabel as verified conflicts or silently pass legacy RELATIONS guards.",
+  "membership_boundary": {
+    "evidence_counts": {
+      "legacy_heldout_source_superset": {
+        "locality_images": 232,
+        "locality_rows": 1610,
+        "target_images": 166,
+        "target_rows": 189
+      },
+      "liveedit_source_superset": {
+        "catalog_image_matches": 0,
+        "image_hashes": 1152,
+        "records": 640,
+        "split_records": {
+          "heldout": 64,
+          "train": 512,
+          "validation": 64
+        },
+        "views": 2560
+      },
+      "qualification_non_t0": {
+        "already_in_structural_exclusion": true,
+        "image_groups": 6,
+        "mapped_events": 4
+      }
+    },
+    "existing_image_hash_coverage": 117,
+    "image_groups_checked": 117,
+    "new_user_authority_required": false,
+    "reserved_overlap_images": {
+      "legacy_heldout_source_superset": 0,
+      "liveedit_source_superset": 0,
+      "qualification_non_t0": 0
+    },
+    "rows_checked": 875,
+    "scope": "Source-role and existing image-identity clearance for the entire pool, not H conflict verification, patient independence, or training-role approval.",
+    "sealed_heldout_answer_files_opened": false,
+    "status": "RESOLVED_IDENTITY_MEMBERSHIP__ENTIRE_SOURCE_POOL"
+  },
+  "negative_relation_contract": "H requires same reviewed clinical attribute, identical original annotated question and distinct annotated value on another source image; U requires a different reviewed or source-annotated attribute. Same-answer contexts are separate, not conflicts.",
+  "official_image_generality": "NA; no authorized equivalent image variants in scanned source pool",
   "patient_identity": "UNKNOWN; no patient-disjoint claim",
   "permission_basis": "User Stage2 V2 authorizes non-reserved development sources; not file presence. Old VQA-RAD audit-only is superseded only for this non-reserved scope.",
+  "positive_review": "prospective source-only agent linguistic review, not human/clinical signoff",
   "positive_review_required_before_student": true,
-  "ready_episode_count": 0,
+  "ready_episode_count": 16,
   "screened_development_pool": {
     "SLAKE": {
       "base_incorrect_rows": 110,
@@ -170,6 +265,5 @@
     "SLAKE/validation": 2099,
     "VQA-RAD/all": 2248
   },
-  "status": "SOURCE_SCREEN_COMPLETE__REVIEW_READINESS_EXPLICIT",
-  "unresolved_permissions": "Direct non-T0 QUAL8 IDs and older heldout identity closure require owner verification against structural exclusion; no sealed/heldout answers were read by this scanner."
+  "status": "SOURCE_SCREEN_COMPLETE__REVIEW_READINESS_EXPLICIT"
 }

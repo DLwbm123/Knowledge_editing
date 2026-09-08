@@ -5,6 +5,7 @@ from dataclasses import asdict
 
 from scripts.medtrace.run_stage2 import NEW_METHODS, queue_task, query_record, same_output, vf
 from scripts.medtrace.finalize_stage2 import execution_identity, aggregate, METRICS
+from scripts.medtrace.closeout_stage2_local import check_public
 
 
 def test_stage2_contract():
@@ -28,6 +29,14 @@ def test_stage2_contract():
         assert queue.claim("test") is None
         queue.update(first["task_id"], "RAW_READY")
         assert queue.claim("test")["task_id"] == second["task_id"]
+        report = root / 'public.json'
+        report.write_text('{"patient_id": "private"}')
+        try:
+            check_public(report)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError('private record passed the aggregate publication gate')
     lock = dict(model={}, tokenizer={}, legacy_semantic_protocol_sha256="x", runtime=dict(vllm="1", gpu_uuid="a", physical_gpu="2"), generation=dict(max_model_len=2048, resolved_engine_config="dynamic"))
     other = dict(lock, runtime=dict(lock["runtime"], gpu_uuid="b", physical_gpu="3"))
     assert execution_identity(lock) == execution_identity(other)

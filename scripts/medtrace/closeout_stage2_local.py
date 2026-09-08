@@ -79,6 +79,7 @@ def main():
     # Inputs are operator-frozen paths, not arbitrary shell snippets.
     if any(c in args.run_root+args.remote_public_dir for c in "'\n\r\x00"):
         raise ValueError("invalid remote path")
+    heads = {str(repo): command(['git', '-C', str(repo), 'rev-parse', 'HEAD']) for repo in (args.research, args.public)}
     deadline = time.time()+25*3600
     status = None
     while time.time() < deadline:
@@ -102,6 +103,10 @@ def main():
         if "RUN_COMPLETION.json" not in received:
             raise RuntimeError("terminal report not available")
         for repo in (args.research, args.public):
+            if command(['git', '-C', str(repo), 'rev-parse', 'HEAD']) != heads[str(repo)]:
+                raise RuntimeError('local checkout advanced during run; publication needs fresh boundary review')
+            if command(['git', '-C', str(repo), 'status', '--porcelain', '--', RELDIR]):
+                raise RuntimeError('local report edits present; do not overwrite them')
             destination = repo / RELDIR
             destination.mkdir(parents=True, exist_ok=True)
             for name in received:

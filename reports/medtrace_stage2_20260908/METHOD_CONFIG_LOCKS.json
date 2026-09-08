@@ -1,7 +1,8 @@
 {
   "schema_version": "medtrace-stage2-fixed-methods-v2",
   "frozen_before_new_student_evaluation": true,
-  "training_execution_commit": "73bdb8f",
+  "training_execution_commit": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+  "reused_first_two_BE_training_commit": "73bdb8f",
   "stage1_public_anchor": "230454602e2c5441a3ecd87ff7eb130b32e46a7e",
   "balancedit_qualification_anchor": "7f827a7f025d18a15da2602a9a0dd49eef3f153e",
   "balancedit": {
