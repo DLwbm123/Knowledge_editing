@@ -26,7 +26,6 @@ def main(args):
     attrs = review['source_attributes']
     negative_ids = review['negative_source_qids']
     by_id = {str(r['qid']): r for r in bounded}
-    catalog = Path(config['runtime']['cpu_gate']).parents[2]/'unused'
     static = Path('/remote-home/wangbomin/Knowledge_editing/outputs/m3bench_data_runtime_finalization_v3/20260904T014138Z/data_static/STATIC_QUERY_INVENTORY.jsonl')
     allowed_images = {r['image_name'].lower() for r in bounded}
     # Only previously cleared source images contribute content to this index.
@@ -52,10 +51,11 @@ def main(args):
     negatives = [source_row(qid) for qid in negative_ids]
     assert len({r['source_group'] for r in negatives}) == len(negatives), 'one source question per negative image'
     # Frozen global image roles avoid cross-edit fit/calibration/evaluation leakage.
-    hard_image = source_row(141)['source_group']
-    groups = sorted({r['source_group'] for r in negatives} - {hard_image})
+    conflicts = {(r['native_qid'], r['other_qid']):r['evidence'] for r in review['hard_conflict_pairs']}
+    hard_images = {source_row(qid)['source_group'] for _, qid in conflicts}
+    groups = sorted({r['source_group'] for r in negatives} - hard_images)
     group_role = {g:s.ROLES[i % 3] for i,g in enumerate(groups)}
-    group_role[hard_image] = 'fit'
+    group_role.update({g:'fit' for g in hard_images})
     episodes, packets, public = [], [], []
     for index, c in enumerate(candidates, 201):
         qid = str(c['source_qid']); texts = review['records'][qid]
@@ -87,10 +87,12 @@ def main(args):
             other_qid = str(other['source_qid'])
             if attrs[other_qid] == attrs[qid]:
                 # Only this finite yes/no predicate conflict was reviewed.
-                if (qid, other_qid) != ('1715', '141'):
+                if (qid, other_qid) not in conflicts:
                     continue
+                assert ''.join(s.normalized(c['question']).split()) == ''.join(s.normalized(other['question']).split())
+                assert {s.normalized(c['reference']), s.normalized(other['reference'])} == {'yes', 'no'}
                 group, relation = 'H', 'same_question_different_image_conflicting_source_answer'
-                evidence = 'Source asks gallbladder enlargement on each image; gall bladder spelling normalized; native No versus other Yes. Same binary predicate, no new image interpretation.'
+                evidence = conflicts[qid, other_qid]
             else:
                 group, relation = 'U', 'broad_unrelated_source_qa'
                 evidence = 'Distinct explicitly reviewed source attribute on another source image: '+attrs[qid]+' versus '+attrs[other_qid]
