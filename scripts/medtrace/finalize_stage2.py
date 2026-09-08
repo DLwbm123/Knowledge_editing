@@ -112,9 +112,9 @@ def aggregate(details):
     for key, rows in sorted(cells.items()):
         row = dict(zip(keys, key))
         row.update(inputs=len(rows), eqkeys=len({r["eqkey"] for r in rows}),
-            source_images=len({r["source_group"] for r in rows}),
+            source_images=len({r.get("source_image_id", r["source_group"]) for r in rows}),
             base_correct_inputs=sum(int(r["base_correct"]) for r in rows),
-            base_correct_images=len({r["source_group"] for r in rows if r["base_correct"]}))
+            base_correct_images=len({r.get("source_image_id", r["source_group"]) for r in rows if r["base_correct"]}))
         for metric in METRICS:
             values = [r[metric] for r in rows if r[metric] is not None]
             row[metric] = hierarchical(rows, metric)
@@ -132,7 +132,8 @@ def aggregate(details):
             base_correct_inputs=sum(r["base_correct_inputs"] for r in rows),
             base_correct_edits=sum(r["base_correct_inputs"] > 0 for r in rows))
         matching = [r for r in details if all(r[k] == v for k, v in zip((k for k in keys if k != "edit"), key))]
-        row["distinct_source_images"] = len({r["source_group"] for r in matching})
+        row["distinct_source_images"] = len({r.get("source_image_id", r["source_group"]) for r in matching})
+        row["distinct_base_correct_images"] = len({r.get("source_image_id", r["source_group"]) for r in matching if r["base_correct"]})
         for metric in METRICS:
             values = [r[metric] for r in rows if r[metric] is not None]
             row[metric] = mean(values) if values else None
@@ -181,6 +182,7 @@ def finalize(args):
                 on = branch == "forced" or branch == "fixed" and item["fixed_on"]
                 details.append(dict(track=data["track"], edit=task["event_index"], method=method, mode=mode,
                     role=row["role"], stratum=row.get("confirmation_panel", stratum(row)), eqkey=row["eqkey"], source_group=row["source_group"],
+                    source_image_id=vf.sha256_json(str(Path(row["image_path"]).resolve())),
                     semantic=correct, target_consistency=score(row, target, item[branch]["raw_answer"]),
                     token_parity=float(item[branch]["raw_token_ids"] == item["base"]["raw_token_ids"]),
                     kl=item["kl"] if on else 0. if item["kl"] is not None else None, base_correct=base_correct,
@@ -218,12 +220,13 @@ def finalize(args):
     tasks = queue.snapshot()["tasks"]
     manifest = read(public / "NEW_EPISODE_MANIFEST_PUBLIC.json")
     n = manifest.get("actual_n", manifest.get("n", 0))
+    candidate_n = manifest.get("candidate_episode_count", n)
     old_done = sum(t["kind"] == "BE" and t["event_index"] < 100 and t["status"] == "JUDGED" for t in tasks)
-    done = all(t["status"] in {"JUDGED", "COMPLETE"} for t in tasks)
+    done = all(t["status"] in {"JUDGED", "COMPLETE"} for t in tasks) and candidate_n == n
     vf.atomic_json(public / "QUEUE_COMPLETION.json", dict(tasks=[{k: t[k] for k in ("task_id", "kind", "event_index", "status")} for t in tasks], counts=dict(Counter(t["status"] for t in tasks))))
     vf.atomic_json(public / "JUDGE_CLOSURE.json", dict(reused=sidecar["reused"], new=sidecar["new"], total=len(verdicts),
         same_execution_verified=True, full_answer_exact_tuple_only=True))
-    status = dict(status="COMPLETE" if done else "PARTIAL_RESULTS", old_dev16_judged=old_done, new_n=n,
+    status = dict(status="COMPLETE" if done else "PARTIAL_RESULTS", old_dev16_judged=old_done, new_n=n, candidate_n=candidate_n,
                   counts=dict(Counter(t["status"] for t in tasks)), publication="PENDING_PUBLIC_PUSH")
     vf.atomic_json(public / "RUN_COMPLETION.json", status)
     def table(rows):
@@ -231,8 +234,8 @@ def finalize(args):
         f = lambda x: "NA" if x is None else f"{100*x:.2f}%"
         return "\n".join(lines+[f"| {r['mode']} | {r['role']} | {r['stratum']} | {r['inputs']} | {r['edits']} | {f(r['semantic'])} | {r['base_correct_inputs']}/{r['base_correct_edits']} | {f(r['base_correct_damage'])} |" for r in rows])
     vf.atomic_text(public / "BALANCEDIT_MATCHED_DEV_REPORT.md", f"# BalancEdit matched DEV16\n\nActual judged edits: {old_done}/16. Frozen V4 adaptation, independent single-edit 50-step full up-projection transforms; not author sequential reproduction. Both native routed and forced-on outputs actually generated. Low scores never gate evaluation.\n\n"+table([r for r in macros if r["track"] == "OLD_DEV16"])+"\n\nSeven old Stage1 facts use identical native/fit/cal/evaluation/H/U/challenge rows. Other DEV16 edits use their available original T0/T1G/T2G/T1L probes. Compare Stage1 FORCED_ON only with BE_FORCED_ON; routing is a separate system axis. Original Stage1 outputs were not retrained. See Stage1 full behavior addendum and METHOD_COSTS.csv. NA is zero support, not zero damage.\n")
-    vf.atomic_text(public / "NEW_EDIT_CONFIRMATION_REPORT.md", f"# New-edit confirmation\n\nActual eligible N={n}; task status {status['status']}. See the source/exposure manifest for authorization boundaries and exclusions.\n\n"+("No new-edit performance or generalization claim is possible at N=0. The executable initializer is run_stage2.initialize_episode; no old fact has been renamed new.\n" if not n else table([r for r in macros if r["track"] == "NEW_CONFIRMATION"])+"\n\nEqKey to source-image to edit aggregation; paired intervals resample edits, not paraphrases. The minus-five-percentage-point margin is descriptive, not statistical or clinical proof. Native and BOTH evaluation text families must be read together with damage; KL alone cannot rank winners.\n"))
-    vf.atomic_text(public / "GPT_PRO_REVIEW.md", f"# Stage2 V2 review\n\nStatus: {status['status']}. BalancEdit old DEV16 {old_done}/16 judged; legal new episodes N={n}.\n\nStage1 T2G audit found no binding correction: P4 W1(.1) protection comes with observed original-T2G loss; old qualification labels are unchanged. H-eval old Base-correct support is only 4 inputs/1 edit; U has 44/7.\n\nRead BALANCEDIT_MATCHED_DEV_REPORT.md (actual native routing vs forced-on), NEW_EDIT_CONFIRMATION_REPORT.md, paired effects and costs. No extra lambda/rank/layer sweep, LoRA gate, W3, new router, sequential or clinical claim.\n\n"+("New-fact generalization remains untested because the full source audit yielded no authorized unexposed episodes; this is not a method-success result.\n" if not n else "Judge protection and both cross-family generality jointly; low KL is not sufficient. Missing or failed tasks remain in the queue ledger, not dropped from the eligible cohort.\n"))
+    vf.atomic_text(public / "NEW_EDIT_CONFIRMATION_REPORT.md", f"# New-edit confirmation\n\nSource candidates={candidate_n}; frozen runnable episodes N={n}; task status {status['status']}. See the source/exposure manifest for authorization boundaries and exclusions.\n\n"+("No new-edit performance claim. N=0 runnable does NOT mean the full source scan found no candidates. Remaining readiness/identity boundaries are in the source manifest. The executable initializer is run_stage2.initialize_episode; no old fact has been renamed new.\n" if not n else table([r for r in macros if r["track"] == "NEW_CONFIRMATION"])+"\n\nEqKey to source-image to edit aggregation; paired intervals resample edits, not paraphrases. The minus-five-percentage-point margin is descriptive, not statistical or clinical proof. Native and BOTH evaluation text families must be read together with damage; KL alone cannot rank winners.\n"))
+    vf.atomic_text(public / "GPT_PRO_REVIEW.md", f"# Stage2 V2 review\n\nStatus: {status['status']}. BalancEdit old DEV16 {old_done}/16 judged; source candidates={candidate_n}, frozen runnable new episodes N={n}.\n\nStage1 T2G audit found no binding correction: P4 W1(.1) protection comes with observed original-T2G loss; old qualification labels are unchanged. H-eval old Base-correct support is only 4 inputs/1 edit; U has 44/7.\n\nRead BALANCEDIT_MATCHED_DEV_REPORT.md (actual native routing vs forced-on), NEW_EDIT_CONFIRMATION_REPORT.md, paired effects and costs. No extra lambda/rank/layer sweep, LoRA gate, W3, new router, sequential or clinical claim.\n\n"+("New-fact generalization remains untested. Inspect actual source candidates and unresolved readiness/identity boundaries, not an assertion of source exhaustion.\n" if not n else "Judge protection and both cross-family generality jointly; low KL is not sufficient. Missing or failed tasks remain in the queue ledger, not dropped from the eligible cohort.\n"))
 
 
 def main():

@@ -1,0 +1,166 @@
+{
+  "evidence": [
+    {
+      "file": "frozen_data.json",
+      "image_groups": 419,
+      "reason": "historical_medtrace_all_roles"
+    },
+    {
+      "file": "invalid_pre_hardfix_frozen_data.json",
+      "image_groups": 437,
+      "reason": "historical_medtrace_all_roles"
+    },
+    {
+      "file": "invalid_pre_role_balance_frozen_data.json",
+      "image_groups": 419,
+      "reason": "historical_medtrace_all_roles"
+    },
+    {
+      "file": "frozen_data.json",
+      "image_groups": 65,
+      "reason": "historical_medtrace_all_roles"
+    },
+    {
+      "file": "roles_private.json",
+      "image_groups": 61,
+      "reason": "historical_medtrace_all_roles"
+    },
+    {
+      "file": "INPUT_MANIFEST.json",
+      "image_groups": 285,
+      "reason": "historical_medtrace_input_images"
+    },
+    {
+      "file": "INPUT_MANIFEST.json",
+      "image_groups": 285,
+      "reason": "historical_medtrace_input_images"
+    },
+    {
+      "file": "INPUT_MANIFEST.json",
+      "image_groups": 0,
+      "reason": "historical_medtrace_input_images"
+    },
+    {
+      "file": "e01.json",
+      "image_groups": 65,
+      "reason": "stage1_all_roles"
+    },
+    {
+      "file": "e02.json",
+      "image_groups": 65,
+      "reason": "stage1_all_roles"
+    },
+    {
+      "file": "e03.json",
+      "image_groups": 70,
+      "reason": "stage1_all_roles"
+    },
+    {
+      "file": "e07.json",
+      "image_groups": 65,
+      "reason": "stage1_all_roles"
+    },
+    {
+      "file": "e13.json",
+      "image_groups": 65,
+      "reason": "stage1_all_roles"
+    },
+    {
+      "file": "e15.json",
+      "image_groups": 68,
+      "reason": "stage1_all_roles"
+    },
+    {
+      "file": "e16.json",
+      "image_groups": 70,
+      "reason": "stage1_all_roles"
+    },
+    {
+      "file": "data_static",
+      "image_groups": 1841,
+      "reason": "reserved_formal_or_structural_source_group"
+    },
+    {
+      "file": "LORA_DEV16_V2_MANIFEST.json",
+      "image_groups": 16,
+      "reason": "LORA_DEV16"
+    },
+    {
+      "file": "LORA_QUAL16_V2_MANIFEST.json",
+      "image_groups": 16,
+      "reason": "LORA_QUAL16"
+    },
+    {
+      "file": "LORA_SEQ16_V2_MANIFEST.json",
+      "image_groups": 16,
+      "reason": "LORA_SEQ16"
+    },
+    {
+      "file": "QUAL8_V2_MANIFEST.json",
+      "image_groups": 4,
+      "reason": "QUAL8"
+    },
+    {
+      "file": "historical_exclusion",
+      "image_groups": 2,
+      "reason": "disabled_source_group"
+    },
+    {
+      "file": "positive_input_ledger.csv",
+      "image_groups": 2147,
+      "reason": "existing_image_hash_identity_closure"
+    },
+    {
+      "file": "SLAKE",
+      "image_groups": 328,
+      "reason": "source_validation_or_test_image"
+    },
+    {
+      "file": "VQA_RAD Dataset Public.json",
+      "image_groups": 203,
+      "reason": "source_test_image"
+    }
+  ],
+  "exclusion_counts_nonadditive": {
+    "SLAKE:excluded:LORA_DEV16": 118,
+    "SLAKE:excluded:LORA_QUAL16": 59,
+    "SLAKE:excluded:LORA_SEQ16": 95,
+    "SLAKE:excluded:QUAL8": 31,
+    "SLAKE:excluded:disabled_source_group": 10,
+    "SLAKE:excluded:existing_image_hash_identity_closure": 4449,
+    "SLAKE:excluded:historical_medtrace_all_roles": 4299,
+    "SLAKE:excluded:historical_medtrace_input_images": 2625,
+    "SLAKE:excluded:reserved_formal_or_structural_source_group": 1879,
+    "SLAKE:excluded:source_validation_or_test_image": 1475,
+    "SLAKE:excluded:stage1_all_roles": 2651,
+    "SLAKE:non_english": 4916,
+    "VQA-RAD:excluded:LORA_DEV16": 13,
+    "VQA-RAD:excluded:LORA_QUAL16": 27,
+    "VQA-RAD:excluded:LORA_SEQ16": 16,
+    "VQA-RAD:excluded:existing_image_hash_identity_closure": 362,
+    "VQA-RAD:excluded:historical_medtrace_all_roles": 13,
+    "VQA-RAD:excluded:reserved_formal_or_structural_source_group": 362,
+    "VQA-RAD:excluded:source_test_image": 1063,
+    "VQA-RAD:source_test_role": 451
+  },
+  "identity_mapping_pending_count": 4,
+  "screened_development_pool": {
+    "SLAKE": {
+      "base_incorrect_rows": 110,
+      "images": 25,
+      "rows": 272
+    },
+    "VQA-RAD": {
+      "base_incorrect_rows": 314,
+      "images": 92,
+      "rows": 603
+    }
+  },
+  "source_counts": {
+    "SLAKE/test": 2094,
+    "SLAKE/train": 9835,
+    "SLAKE/validation": 2099,
+    "VQA-RAD/all": 2248
+  },
+  "unresolved_permissions": "Direct non-T0 QUAL8 IDs and older heldout identity closure require owner verification against structural exclusion; no sealed/heldout answers were read by this scanner."
+}

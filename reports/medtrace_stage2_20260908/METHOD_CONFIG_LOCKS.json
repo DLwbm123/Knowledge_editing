@@ -1,0 +1,43 @@
+{
+  "schema_version": "medtrace-stage2-fixed-methods-v2",
+  "frozen_before_new_student_evaluation": true,
+  "training_execution_commit": "73bdb8f",
+  "stage1_public_anchor": "230454602e2c5441a3ecd87ff7eb130b32e46a7e",
+  "balancedit_qualification_anchor": "7f827a7f025d18a15da2602a9a0dd49eef3f153e",
+  "balancedit": {
+    "label": "BalancEdit V4 adaptation",
+    "implementation": "BalanceEditPaperSpecEditor",
+    "independent_edit_state": true,
+    "target": "final-layer LM MLP up_projection",
+    "transform": "independent full FP32 linear copy per edit",
+    "optimizer": "Adam",
+    "learning_rate": 0.01,
+    "steps": 50,
+    "gradient_clip": 1.0,
+    "alpha": 0.2,
+    "distance": "euclidean",
+    "radius_formula": "(1-alpha)*negative_distance+alpha*positive_distance",
+    "anchors": "pre-edit Base native / frozen official or source-approved fit rephrase / same-size black image",
+    "seed": "unchanged V4 record_seed(record_id, balancedit), base 20260828",
+    "evaluation": ["BE_NATIVE_ROUTED", "BE_FORCED_ON"],
+    "performance_gate": false
+  },
+  "new_cp": {
+    "seed_base": 20260910,
+    "native": "original CP-R4 layer21 down_proj; max200; native-only checks every20 positive steps, complete target normalized match, first token rank1, no length cap hit",
+    "a2": "80 steps native plus source-approved fit paraphrases; shared readonly initialization",
+    "conditions": ["P4-W0_TASK_ONLY", "P4-W1_KL_0.1", "P4-W2_GROUP_CONSTRAINED", "L16-W2_GROUP_CONSTRAINED"],
+    "primary_endpoint_steps": 320,
+    "diagnostic_steps_not_selectors": [80, 160],
+    "positive_loss": "0.5 native CE + 0.5 rotating fit paraphrase CE",
+    "teacher": "fit only for training; Base||ON full vocabulary FP32 T=1; Base generated prefix cap128; full uncapped natural answers for Judge",
+    "scale": "max(A2 initial fit group KL, 1e-3)",
+    "w1": "Lpos + 0.1*(K_H/s_H+K_U/s_U)/2",
+    "w2": {"epsilon": "max(0.5*A2 fit group KL, 1e-4)", "dual_init": 0.5, "dual_lr": 0.05, "ema": 0.9, "dual_clip": [0,20]},
+    "optimizer": {"name": "Adam", "input_lr": 0.0001, "output_lr": 0.001, "betas": [0.9,0.999], "eps": 1e-8, "weight_decay": 0, "gradient_clip": 1.0},
+    "no_additional_grid": true,
+    "capacity_matched_claim": false
+  },
+  "judge": {"same_v4_protocol": true, "same_existing_vllm_awq_environment": true, "max_model_len": 2048, "full_answers": true, "reuse": "exact question-reference-full-answer tuple plus matching numerical execution and semantic protocol"},
+  "resource_limits": {"wall_hours": 24, "gpu_hours_upper": 48, "training_and_generation_hours": 20, "gpu_indices": [2,3], "shared_gpu_allowed": true, "be_worker_free_mib": 24576, "judge_free_mib": "ceil(0.8*total)+2048"}
+}
