@@ -241,13 +241,35 @@
   "performance_gate": false,
   "preparation_status": "INPUTS_FROZEN_BEFORE_STUDENT",
   "protocol": "V4_RELEASE_ALIGNED_AUGMENTED_SUPPORT_EVALUATION",
+  "resource_amendment": {
+    "authorization": "USER_ADD_GPU0_GPU1",
+    "epoch": 1788857216.3470712,
+    "generation_gpu_hours": 40,
+    "gpu_hours": 48,
+    "gpu_uuids": {
+      "0": "GPU-688ed629-7a46-b62c-e3e4-0940e1649b5f",
+      "1": "GPU-5fac6011-5432-229f-bb11-9ce9f104a334",
+      "2": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b",
+      "3": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c"
+    },
+    "wall_hours": 24
+  },
   "resources": {
     "be_worker_free_mib": 24576,
+    "generation_gpu_hours": 40,
     "gpu_hours_upper": 48,
     "gpu_indices": [
+      0,
+      1,
       2,
       3
     ],
+    "gpu_uuids": {
+      "0": "GPU-688ed629-7a46-b62c-e3e4-0940e1649b5f",
+      "1": "GPU-5fac6011-5432-229f-bb11-9ce9f104a334",
+      "2": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b",
+      "3": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c"
+    },
     "judge_free_mib": "ceil(0.8*total)+2048",
     "shared_gpu_allowed": true,
     "training_and_generation_hours": 20,

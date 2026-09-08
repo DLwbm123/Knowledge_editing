@@ -1,5 +1,11 @@
 # Stage3 startup and frozen coverage — results pending
 
+## Later resource amendment: four GPUs
+
+The user subsequently authorized GPU0 and GPU1 in addition to GPU2/3. Scheduling code `9ffae2c` supports this explicit Stage3-only amendment. The replacement coordinator adopts the original GPU2/3 workers without interrupting their training; two added resident workers consume the same mutually exclusive queue. The original manifest/config and experiment start clock are retained, with a separate resource amendment. No method, input, support or scientific boundary changes.
+
+The 24-hour wall and 48 GPU-hour bounds remain unchanged. Accounting conservatively bounds the initial two-GPU interval, the expanded four-GPU generation interval and the later single-GPU Judge interval; generation stops by 40 GPU-hours to preserve closure capacity. Three focused scheduling/Stage3 checks passed. This amendment supersedes the initial two-worker ETA below; four-worker throughput and Judge duration remain provisional. Final results are still pending.
+
 Observed 2026-09-08 08:37:19 UTC. Run: `medtrace_stage3_20260908_r01`. This report records an active experiment, not scientific results. GPU2/3 are running independently of the interactive session; no unrelated GPU processes were stopped. Visible process roles are neutral `main` / `run`.
 
 The four bank prefixes 1/4/8/16 are RAW_READY (57/228/456/906 method-input records). Their measured task times were 9.44/37.50/89.90/112.85 seconds. The first three-method single-edit group is RAW_READY in 495.64 seconds. The queue snapshot contains five RAW_READY, two RUNNING, 42 PENDING and 691 UNSUPPORTED_TRAINING_INPUTS groups. RAW_READY means generation/replay completed, not Judge completion.
