@@ -1,0 +1,26 @@
+{
+  "candidate_n": 16,
+  "counts": {
+    "COMPLETE": 16,
+    "JUDGED": 96
+  },
+  "new_n": 16,
+  "old_dev16_judged": 16,
+  "process_exit_codes": {
+    "base_judge": 0,
+    "finalize": 0,
+    "judge": 0,
+    "lock_base_before": 0,
+    "prepare_base_judge": 0,
+    "prepare_judge": 0,
+    "worker_base_gpu2": 0,
+    "worker_base_gpu3": 0,
+    "worker_gpu2": 0,
+    "worker_gpu3": 0,
+    "worker_new_gpu2": 0,
+    "worker_new_gpu3": 0
+  },
+  "publication": "PENDING_PUBLIC_PUSH",
+  "status": "COMPLETE",
+  "wall_seconds": 14648.659242868423
+}

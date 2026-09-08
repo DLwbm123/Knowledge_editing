@@ -1,0 +1,43 @@
+{
+  "gpu_hours_limit": 48,
+  "gpu_hours_upper_bound": 8.138151091337203,
+  "judge_free_policy": "ceil(.8*total)+2048 MiB",
+  "preflight": {
+    "2": {
+      "checked_epoch": 1788837005.350879,
+      "free_mib": 40445,
+      "gpu": "2",
+      "required_free_mib": 20480,
+      "sharing_authorized": true,
+      "used_mib": 1,
+      "uuid": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b"
+    },
+    "3": {
+      "checked_epoch": 1788837005.508835,
+      "free_mib": 40445,
+      "gpu": "3",
+      "required_free_mib": 20480,
+      "sharing_authorized": true,
+      "used_mib": 1,
+      "uuid": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c"
+    }
+  },
+  "process_exit_codes": {
+    "base_judge": 0,
+    "finalize": 0,
+    "judge": 0,
+    "lock_base_before": 0,
+    "prepare_base_judge": 0,
+    "prepare_judge": 0,
+    "worker_base_gpu2": 0,
+    "worker_base_gpu3": 0,
+    "worker_gpu2": 0,
+    "worker_gpu3": 0,
+    "worker_new_gpu2": 0,
+    "worker_new_gpu3": 0
+  },
+  "sharing_allowed": true,
+  "wall_hours_limit": 24,
+  "wall_seconds": 14648.671962976456,
+  "worker_free_mib": 24576
+}

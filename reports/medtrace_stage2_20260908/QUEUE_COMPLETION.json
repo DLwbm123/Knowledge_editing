@@ -1,0 +1,680 @@
+{
+  "counts": {
+    "COMPLETE": 16,
+    "JUDGED": 96
+  },
+  "tasks": [
+    {
+      "event_index": 1,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e001_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 2,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e002_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 3,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e003_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 4,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e004_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 5,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e005_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 6,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e006_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 7,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e007_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 8,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e008_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 9,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e009_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 10,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e010_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 11,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e011_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 12,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e012_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 13,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e013_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 14,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e014_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 15,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e015_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 16,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e016_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 101,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e101_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 101,
+      "kind": "INIT",
+      "status": "COMPLETE",
+      "task_id": "S2_e101_INIT_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 101,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e101_CP_P4_W0_TASK_ONLY"
+    },
+    {
+      "event_index": 101,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e101_CP_P4_W1_KL_0.1"
+    },
+    {
+      "event_index": 101,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e101_CP_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 101,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e101_CP_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 102,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e102_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 102,
+      "kind": "INIT",
+      "status": "COMPLETE",
+      "task_id": "S2_e102_INIT_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 102,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e102_CP_P4_W0_TASK_ONLY"
+    },
+    {
+      "event_index": 102,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e102_CP_P4_W1_KL_0.1"
+    },
+    {
+      "event_index": 102,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e102_CP_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 102,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e102_CP_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 103,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e103_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 103,
+      "kind": "INIT",
+      "status": "COMPLETE",
+      "task_id": "S2_e103_INIT_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 103,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e103_CP_P4_W0_TASK_ONLY"
+    },
+    {
+      "event_index": 103,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e103_CP_P4_W1_KL_0.1"
+    },
+    {
+      "event_index": 103,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e103_CP_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 103,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e103_CP_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 104,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e104_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 104,
+      "kind": "INIT",
+      "status": "COMPLETE",
+      "task_id": "S2_e104_INIT_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 104,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e104_CP_P4_W0_TASK_ONLY"
+    },
+    {
+      "event_index": 104,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e104_CP_P4_W1_KL_0.1"
+    },
+    {
+      "event_index": 104,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e104_CP_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 104,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e104_CP_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 105,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e105_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 105,
+      "kind": "INIT",
+      "status": "COMPLETE",
+      "task_id": "S2_e105_INIT_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 105,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e105_CP_P4_W0_TASK_ONLY"
+    },
+    {
+      "event_index": 105,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e105_CP_P4_W1_KL_0.1"
+    },
+    {
+      "event_index": 105,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e105_CP_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 105,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e105_CP_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 106,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e106_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 106,
+      "kind": "INIT",
+      "status": "COMPLETE",
+      "task_id": "S2_e106_INIT_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 106,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e106_CP_P4_W0_TASK_ONLY"
+    },
+    {
+      "event_index": 106,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e106_CP_P4_W1_KL_0.1"
+    },
+    {
+      "event_index": 106,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e106_CP_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 106,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e106_CP_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 107,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e107_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 107,
+      "kind": "INIT",
+      "status": "COMPLETE",
+      "task_id": "S2_e107_INIT_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 107,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e107_CP_P4_W0_TASK_ONLY"
+    },
+    {
+      "event_index": 107,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e107_CP_P4_W1_KL_0.1"
+    },
+    {
+      "event_index": 107,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e107_CP_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 107,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e107_CP_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 108,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e108_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 108,
+      "kind": "INIT",
+      "status": "COMPLETE",
+      "task_id": "S2_e108_INIT_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 108,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e108_CP_P4_W0_TASK_ONLY"
+    },
+    {
+      "event_index": 108,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e108_CP_P4_W1_KL_0.1"
+    },
+    {
+      "event_index": 108,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e108_CP_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 108,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e108_CP_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 109,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e109_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 109,
+      "kind": "INIT",
+      "status": "COMPLETE",
+      "task_id": "S2_e109_INIT_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 109,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e109_CP_P4_W0_TASK_ONLY"
+    },
+    {
+      "event_index": 109,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e109_CP_P4_W1_KL_0.1"
+    },
+    {
+      "event_index": 109,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e109_CP_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 109,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e109_CP_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 110,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e110_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 110,
+      "kind": "INIT",
+      "status": "COMPLETE",
+      "task_id": "S2_e110_INIT_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 110,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e110_CP_P4_W0_TASK_ONLY"
+    },
+    {
+      "event_index": 110,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e110_CP_P4_W1_KL_0.1"
+    },
+    {
+      "event_index": 110,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e110_CP_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 110,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e110_CP_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 111,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e111_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 111,
+      "kind": "INIT",
+      "status": "COMPLETE",
+      "task_id": "S2_e111_INIT_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 111,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e111_CP_P4_W0_TASK_ONLY"
+    },
+    {
+      "event_index": 111,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e111_CP_P4_W1_KL_0.1"
+    },
+    {
+      "event_index": 111,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e111_CP_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 111,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e111_CP_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 112,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e112_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 112,
+      "kind": "INIT",
+      "status": "COMPLETE",
+      "task_id": "S2_e112_INIT_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 112,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e112_CP_P4_W0_TASK_ONLY"
+    },
+    {
+      "event_index": 112,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e112_CP_P4_W1_KL_0.1"
+    },
+    {
+      "event_index": 112,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e112_CP_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 112,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e112_CP_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 113,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e113_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 113,
+      "kind": "INIT",
+      "status": "COMPLETE",
+      "task_id": "S2_e113_INIT_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 113,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e113_CP_P4_W0_TASK_ONLY"
+    },
+    {
+      "event_index": 113,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e113_CP_P4_W1_KL_0.1"
+    },
+    {
+      "event_index": 113,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e113_CP_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 113,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e113_CP_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 114,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e114_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 114,
+      "kind": "INIT",
+      "status": "COMPLETE",
+      "task_id": "S2_e114_INIT_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 114,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e114_CP_P4_W0_TASK_ONLY"
+    },
+    {
+      "event_index": 114,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e114_CP_P4_W1_KL_0.1"
+    },
+    {
+      "event_index": 114,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e114_CP_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 114,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e114_CP_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 115,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e115_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 115,
+      "kind": "INIT",
+      "status": "COMPLETE",
+      "task_id": "S2_e115_INIT_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 115,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e115_CP_P4_W0_TASK_ONLY"
+    },
+    {
+      "event_index": 115,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e115_CP_P4_W1_KL_0.1"
+    },
+    {
+      "event_index": 115,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e115_CP_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 115,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e115_CP_L16_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 116,
+      "kind": "BE",
+      "status": "JUDGED",
+      "task_id": "S2_e116_BE_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 116,
+      "kind": "INIT",
+      "status": "COMPLETE",
+      "task_id": "S2_e116_INIT_BE_BALANCEDIT"
+    },
+    {
+      "event_index": 116,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e116_CP_P4_W0_TASK_ONLY"
+    },
+    {
+      "event_index": 116,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e116_CP_P4_W1_KL_0.1"
+    },
+    {
+      "event_index": 116,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e116_CP_P4_W2_GROUP_CONSTRAINED"
+    },
+    {
+      "event_index": 116,
+      "kind": "CP",
+      "status": "JUDGED",
+      "task_id": "S2_e116_CP_L16_W2_GROUP_CONSTRAINED"
+    }
+  ]
+}
