@@ -125,13 +125,19 @@ def base_for(runtime, run, data, row):
         qid = data["event"]["edit_record"]["record_id"] if row["role"] == "native" else row["logical_id"].removeprefix("formal-")
         source = canonical.get(qid)
         known = runtime.stage2_base.get(qid)
-        if known is None and row.get('base_query_ids'):
+        # Augmented positives inherit source lineage, NOT the native model input.
+        # Their original source query ID must never substitute a paraphrase Base answer.
+        if known is None and row.get('base_query_ids') and (row['role'] == 'native' or row['label'] == 'negative'):
             candidates = [runtime.stage2_base[q] for q in row['base_query_ids'] if q in runtime.stage2_base]
             if candidates and all((c['model_answer_raw'], c['raw_generated_token_ids']) == (candidates[0]['model_answer_raw'], candidates[0]['raw_generated_token_ids']) for c in candidates):
                 known = candidates[0]
                 source = row  # scanner joined source image/question/reference to the canonical query catalog
         if source and known and all(source[k] == row[k] for k in ("question", "image_path", "reference")):
-            value = dict(raw_answer=known["model_answer_raw"], raw_token_ids=known["raw_generated_token_ids"], provenance="frozen V4 Base exact query binding")
+            prepared = runtime.adapter.prepare_inputs(row['image_path'], row['question'], None)
+            bound = (prepared['input_ids'][0].tolist() == known['prompt_token_ids'] and
+                     prepared['image_sha256'] == known['image_sha256'] and not known.get('error'))
+            value = (dict(raw_answer=known["model_answer_raw"], raw_token_ids=known["raw_generated_token_ids"],
+                          provenance="frozen V4 Base exact prompt tokens and image binding") if bound else vf.scope_generate(runtime, row, None))
         else:
             value = vf.scope_generate(runtime, row, None)
     vf.atomic_json(path, value)
