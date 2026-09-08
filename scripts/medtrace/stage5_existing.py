@@ -105,7 +105,14 @@ def main(args):
         item = e['item']; native = single_be[e['cohort_name'], e['edit'], item['row']['logical_id']]
         assert native['row'] == item['row'] and native['fixed_on'] == item['fixed_on']
         assert native['base']['raw_token_ids'] == item['base']['raw_token_ids']
-        assert item.get('disabled_parity') and e['system_valid'], 'Base/ON parity unavailable'
+        # BE's flag records which request was actually replayed, not a failed
+        # check: native was replayed; other requests use exact-bound Base cache.
+        be_native = next(v for (c, i, _), v in single_be.items()
+                         if c == e['cohort_name'] and i == e['edit'] and v['row']['role'] == 'native')
+        base_verified = item.get('disabled_parity') or (e['method'] == 'BE'
+            and be_native['disabled_parity'] and item.get('disabled_evidence') ==
+            'actual native replay; other inputs use exact-bound frozen Base cache')
+        assert base_verified and e['system_valid'], 'Base/ON parity unavailable'
         transfer.append(dict(e, item=reject(dict(item, route=native['route']), kappa, False)))
     derived = [r for r in f4.details(transfer, verdicts, side['protocol_sha256']) if r['mode'] == 'R0']
     for r in derived:
