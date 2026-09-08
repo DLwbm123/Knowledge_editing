@@ -1,0 +1,3402 @@
+{
+  "be_steps": 50,
+  "closeout_execution": "cb22fab6eb17ddd7984550db4a1c69cae7b1f274",
+  "cp_steps": 320,
+  "final_bank_costs": [
+    {
+      "bank_size": 32,
+      "derived": 1139,
+      "feature_seconds": 69.368376072729,
+      "generated": 2,
+      "generation_seconds": 0.38376913708634675,
+      "load_seconds": 2.6985089210793376,
+      "method": "BE",
+      "new_training": 0,
+      "route_seconds": 0.1611765290144831,
+      "storage_bytes": 7516776128
+    },
+    {
+      "bank_size": 32,
+      "derived": 1139,
+      "feature_seconds": 70.36346991756,
+      "generated": 2,
+      "generation_seconds": 1.60888279392384,
+      "load_seconds": 0.007033152040094137,
+      "method": "W0",
+      "new_training": 0,
+      "route_seconds": 0.16985975054558367,
+      "storage_bytes": 790144
+    },
+    {
+      "bank_size": 1,
+      "derived": 36,
+      "feature_seconds": 4.0003066272474825,
+      "generated": 1,
+      "generation_seconds": 1.1353070749901235,
+      "load_seconds": 0.003408020013011992,
+      "method": "W1",
+      "new_training": 0,
+      "route_seconds": 0.03175629710312933,
+      "storage_bytes": 24754
+    }
+  ],
+  "kl_weight": 0.1,
+  "new_bank_thresholds": [
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "bank_size": 32,
+      "calibration_rows": 314,
+      "calibration_sha256": "f99b5fec14c871f2b316a5dc95598cb73c8c39fdc4bede21ae67f338af831257",
+      "frozen_before_bank_evaluation": true,
+      "kappa": 0.0,
+      "method": "BE",
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "bank_size": 32,
+      "calibration_rows": 314,
+      "calibration_sha256": "f99b5fec14c871f2b316a5dc95598cb73c8c39fdc4bede21ae67f338af831257",
+      "frozen_before_bank_evaluation": true,
+      "kappa": 0.0,
+      "method": "W0",
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "bank_size": 1,
+      "calibration_rows": 10,
+      "calibration_sha256": "8d3df3513574df357c4ed582cf2614ec86a31e890b417b30347fc4208eb929fa",
+      "frozen_before_bank_evaluation": true,
+      "kappa": 0.0,
+      "method": "W1",
+      "status": "CALIBRATION_UNSUPPORTED"
+    }
+  ],
+  "new_single_thresholds": [
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "d9bc2baea54a397024af8b9726125ac8d39a74b5ce0e3bc5442483cef9aedab3",
+      "edit": 201,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "cebd37f5e56339d4925da4ab670ede70e5abf6a98df72719375f5fe93e049ccd",
+      "edit": 202,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 8,
+      "calibration_sha256": "50694e841b514d622d4eeb5769b459c200bbc1e25520521d825b628e039d71d3",
+      "edit": 203,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "0ba8f11d5aea72028168e93b770eb5d0ee6362f9f4d96f12523ede1defc85846",
+      "edit": 204,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "8d3df3513574df357c4ed582cf2614ec86a31e890b417b30347fc4208eb929fa",
+      "edit": 205,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "88b6840e06ca59a07205308f8ca59e7ea1b621ae57d8b4bb6e7ec1fb2c861fd6",
+      "edit": 206,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "401104ab1cd551323e507bcfab74ed5b59456cc9f89df63956399fadbd9e1d1f",
+      "edit": 207,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "bde8ba720c5700e85185164b1e4a8c8a77a873ca6762bcc243bf6931bcec7986",
+      "edit": 208,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "76046b826dabee16f758d3cac326a5a9016f30c3e7689e77197b0bd21a677c2c",
+      "edit": 209,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "b21935202ee35e63732de832e705cf268b66b16c42aded920fb8f5d04a8d84fe",
+      "edit": 210,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "c38f4aea5d205f76a903b496fa38d126577ed5024c81a7c89933b32f2ab3b64e",
+      "edit": 211,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "8e3a4b5f519f23b369c49f4ad31b17f476ce2a72417a311ec39dc3c5f5224f4f",
+      "edit": 212,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 8,
+      "calibration_sha256": "fa133e5b886f438323436b5054e41a1113e1e2c296e234f1d47bf0fe359c1e6c",
+      "edit": 213,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 8,
+      "calibration_sha256": "717507fb741b2b7c2b664ac9e1d7f437d945423a4cf62f0dc297f124efe66e2a",
+      "edit": 214,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "9d46e8a9cffc43642b13bd2fbd439824745bf2aa03b2fa27efbd3dfc73bff9ff",
+      "edit": 215,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "55ca14f88f9186989c1624262cf58d6b2986d510091692efc53a8ff18cda4ffa",
+      "edit": 216,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "96e0b1cc4af2320255eb6f5fb5da44b7420321bfcc0331141d62380d5297381e",
+      "edit": 217,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "fcabf395add291546b7486c772e716630a3a1b6f3dc7ba358b76afd62a535bb8",
+      "edit": 218,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "caeaae3a43a89297a9ccec78ce394be62bc19191ffc7fb1be8725d956ebeb6be",
+      "edit": 219,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "3d5403f2bb151274a4ef8988960d7e6d325935365a2a3afa0dd5f702895ef27f",
+      "edit": 220,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "81a24ee292235fd8b1d45431893bf8731b70d37975e3940edbd2b0ff2ebedcf5",
+      "edit": 221,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "270be2e19e2c67f57be8173afa8f34673848bf2a95e6a0c33c46990c47b370b7",
+      "edit": 222,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "5f9f1b99703bb9c9bf834b2b1038fb7b04c03d474790faa59bbc3d630b99e4ef",
+      "edit": 223,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "aecb338cc1e8a4185bc194250bbab0bc4969b34522510dd982ad07608bd645d8",
+      "edit": 224,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "c244efd80f141cc4e22d6a6f5e50a1e1acef04cc7d08b4a188a2af3eca420737",
+      "edit": 225,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "795efa77a590c4d12d6b658a15ee918a8d824f9dc8eb24169a0690c54ebb4b26",
+      "edit": 226,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "5954e7d8163fbaf489ccf650672fb583ee495c4b3ee6f5247df5b2f67fc533d6",
+      "edit": 227,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "70289be6027206f5aeed971b94bc8c9f03afc141a26e73e4fafdc6ef9f0affe6",
+      "edit": 228,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "3977a4b91951c736dcae20deae6e6b2fd1dc3078c1b5d72f24e31f465b3dd0e9",
+      "edit": 229,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "bcfd4da73da9145ef6a3efac2fdb93cafee47615c0918f21a4db33c7b0c413c7",
+      "edit": 230,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "05699c5b224428399351778d506d9e798739338ef57a461ad3c193783a6157d8",
+      "edit": 231,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    },
+    {
+      "adaptation": "UNSEEN_EDIT_WITH_EPISODE_CALIBRATION",
+      "calibration_rows": 10,
+      "calibration_sha256": "c3258709570ebdf91d579249a80931404a9fb4f4fb4b775aa80e35dc2916814f",
+      "edit": 232,
+      "frozen_before_evaluation": true,
+      "kappa": 0.0,
+      "semantic_family_independence": false,
+      "status": "CALIBRATION_UNSUPPORTED"
+    }
+  ],
+  "no_new_algorithm": true,
+  "no_patient_independence_claim": true,
+  "no_performance_gate": true,
+  "original_stage4_bank_threshold": {
+    "calibration_rows": 317,
+    "calibration_sha256": "f136ce337854a69b5132b7111e88563a77f18fd91ae1dab3536a1e1a192e20c3",
+    "candidates": 149,
+    "constraints": [
+      {
+        "average": "micro",
+        "decrease": 0.0,
+        "family": "V1_context_wrapper",
+        "r0": 1.0,
+        "rc": 1.0
+      },
+      {
+        "average": "macro",
+        "decrease": 0.0,
+        "family": "V1_context_wrapper",
+        "r0": 1.0,
+        "rc": 1.0
+      }
+    ],
+    "feasible": 87,
+    "frozen_epoch": 1788868264.5102487,
+    "kappa": 0.7696741135364367,
+    "objective": "equal H/U edit-macro strict-base activation; no outcome/gold scoring",
+    "prefix": 16,
+    "r0_objective": 0.9790521978021978,
+    "rc_objective": 0.0,
+    "scope": "prefix-only complete original bank competition",
+    "status": "CALIBRATED",
+    "threshold_sha256": "0e1ea4ff0f38e9c314b9d403af11a23a212e1d23e3572466f30795ad1b76513d",
+    "tie_rule": "binary64 inclusive >=; nextafter breakpoints; minimum objective then smallest kappa"
+  },
+  "positive_semantic_family_independence": false,
+  "reporting_commit": "17e4376ffe2be8475b9445d34e840883ef003c07",
+  "same_method_bank_compositions": {
+    "BE": 32,
+    "W0": 32,
+    "W1": 1
+  },
+  "single_writer_costs": [
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 201,
+      "elapsed_seconds": 53.527189558022656,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.20688904006965458,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506818048,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 4.990215198951773
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 201,
+      "elapsed_seconds": 173.44307220203336,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 668,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 76.88741212897003
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 202,
+      "elapsed_seconds": 57.55673683597706,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.21254655893426389,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506809856,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 4.531696647987701
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 202,
+      "elapsed_seconds": 187.50238521804567,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 668,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 76.60590890201274
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 203,
+      "elapsed_seconds": 57.13225680193864,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 1.3560824210289866,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506883584,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.836051354068331
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 203,
+      "elapsed_seconds": 204.87022375594825,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 77.46619028504938
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 204,
+      "elapsed_seconds": 57.39108167903032,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.21141829201951623,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506875392,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.781519919983111
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 204,
+      "elapsed_seconds": 190.5552621340612,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 78.16706174006686
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 205,
+      "elapsed_seconds": 49.66408630006481,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.2052910439670086,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506850816,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.683030056068674
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24754,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 205,
+      "elapsed_seconds": 181.92838612000924,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 77.64559888490476
+    },
+    {
+      "backward_count": 1280,
+      "checkpoint_container_bytes": 24754,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 205,
+      "elapsed_seconds": 239.1127252059523,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 1316,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W1",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 183.85278451896738
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 206,
+      "elapsed_seconds": 751.0683330629254,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.21301184501498938,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506924544,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 4.382003356004134
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 206,
+      "elapsed_seconds": 216.86846589599736,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 77.75675577390939
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 207,
+      "elapsed_seconds": 54.20184327894822,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.20732755097560585,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506818048,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 4.482042429037392
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 207,
+      "elapsed_seconds": 179.3846490989672,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 78.15534075908363
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 208,
+      "elapsed_seconds": 59.0269141519675,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.20887020707596093,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506834432,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.736055516987108
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 208,
+      "elapsed_seconds": 188.13402959995437,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 672,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 78.00594634003937
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 209,
+      "elapsed_seconds": 54.24936074495781,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 1.550836522015743,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506891776,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.511902612983249
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 209,
+      "elapsed_seconds": 188.89607758505736,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 78.09920306398999
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 210,
+      "elapsed_seconds": 69.39005892898422,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 1.2213589949533343,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506875392,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.651177956955507
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 210,
+      "elapsed_seconds": 221.9754465930164,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 78.10184423299506
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 211,
+      "elapsed_seconds": 53.81602373998612,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.9357147450791672,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506908160,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.495067768031731
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 211,
+      "elapsed_seconds": 185.35615125705954,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 78.72927827690728
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 212,
+      "elapsed_seconds": 59.7365656059701,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.2141226310050115,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506932736,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 4.530259047984146
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 212,
+      "elapsed_seconds": 226.6389468080597,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 77.3900187270483
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 213,
+      "elapsed_seconds": 208.17014204198495,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.2075557690113783,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506867200,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.621126603917219
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 213,
+      "elapsed_seconds": 209.89231299702078,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 77.0588994800346
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 214,
+      "elapsed_seconds": 59.32715091796126,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 1.514340869965963,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506867200,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.234438005019911
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 214,
+      "elapsed_seconds": 198.97628930700012,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 77.19898595300037
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 215,
+      "elapsed_seconds": 55.01769768004306,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.21275878499727696,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506842624,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 4.365992043050937
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 215,
+      "elapsed_seconds": 184.76922057603952,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 77.08476685301866
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 216,
+      "elapsed_seconds": 56.898639481980354,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.9603586930315942,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506834432,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.692078904015943
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 216,
+      "elapsed_seconds": 184.47535157296807,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 77.7218524380587
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 217,
+      "elapsed_seconds": 56.52389295399189,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 1.4307674060110003,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506859008,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.140236616018228
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 217,
+      "elapsed_seconds": 186.28924674901646,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 672,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 77.3527540989453
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 218,
+      "elapsed_seconds": 67.78568975999951,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.5282925210194662,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506908160,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 4.592047285987064
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 218,
+      "elapsed_seconds": 241.05869422492106,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 78.67183531296905
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 219,
+      "elapsed_seconds": 58.27177064598072,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.9364285869523883,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506850816,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.65047544601839
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 219,
+      "elapsed_seconds": 187.48030277399812,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 77.49887150595896
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 220,
+      "elapsed_seconds": 65.02987096004654,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.21245797409210354,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506899968,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 4.453793206019327
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 220,
+      "elapsed_seconds": 230.58029339893255,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 76.40121038991492
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 221,
+      "elapsed_seconds": 53.375894621014595,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.2317973510362208,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506834432,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.41971696598921
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 221,
+      "elapsed_seconds": 173.8386657629162,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 76.45002787502017
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 222,
+      "elapsed_seconds": 55.52291858301032,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.2095096749253571,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506867200,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.170577035984024
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 222,
+      "elapsed_seconds": 217.41437933791894,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 76.84967146103736
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 223,
+      "elapsed_seconds": 56.706286347005516,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.9053333339979872,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506842624,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.416858339915052
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 223,
+      "elapsed_seconds": 189.31510928599164,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 76.38712149695493
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 224,
+      "elapsed_seconds": 51.7294716630131,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.20645624899771065,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506818048,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.199112785048783
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 224,
+      "elapsed_seconds": 176.2429646810051,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 76.93030937993899
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 225,
+      "elapsed_seconds": 60.39680991403293,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.20706813398282975,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506867200,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.853852651081979
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 225,
+      "elapsed_seconds": 212.45516546000727,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 672,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 76.87203004199546
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 226,
+      "elapsed_seconds": 59.15127114299685,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.20661533891689032,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506875392,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.377493079053238
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 226,
+      "elapsed_seconds": 180.02970053395256,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 76.39850012003444
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 227,
+      "elapsed_seconds": 72.58318618696649,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 1.3014870549086481,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506916352,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.314230810967274
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 227,
+      "elapsed_seconds": 234.38109846995212,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 76.46495563001372
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 228,
+      "elapsed_seconds": 44.61252546997275,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.21115909097716212,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506842624,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 4.3434281880036
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 228,
+      "elapsed_seconds": 205.81834018800873,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 76.06386230804492
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 229,
+      "elapsed_seconds": 52.338894524029456,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.21227737108711153,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506859008,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 4.343363801017404
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 229,
+      "elapsed_seconds": 192.01618136907928,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 77.52451381098945
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 230,
+      "elapsed_seconds": 119.95834668097086,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.2023891800781712,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506867200,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.665655325050466
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 230,
+      "elapsed_seconds": 212.87139910599217,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 76.97398828610312
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 231,
+      "elapsed_seconds": 59.06168520194478,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.20801804307848215,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506850816,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 4.363449183991179
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 231,
+      "elapsed_seconds": 204.88800504000392,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 77.50781228602864
+    },
+    {
+      "backward_count": null,
+      "checkpoint_container_bytes": 234899254,
+      "container_scope": "BE exported editor state",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 232,
+      "elapsed_seconds": 49.980844474048354,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": null,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": 0.20880430797114968,
+      "method": "BE",
+      "optimizer_steps": null,
+      "parameters": 58720256,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": 16506834432,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": 234899254,
+      "teacher_forward_count": null,
+      "training_seconds": 5.717247401014902
+    },
+    {
+      "backward_count": 640,
+      "checkpoint_container_bytes": 24690,
+      "container_scope": "CP training checkpoint including optimizer; not weight-only storage",
+      "derived": null,
+      "disk_bytes": null,
+      "edit": 232,
+      "elapsed_seconds": 177.67607786902227,
+      "feature_seconds": null,
+      "fit_samples": null,
+      "forward_count": 676,
+      "generated": null,
+      "generation_seconds": null,
+      "load_seconds": null,
+      "method": "W0",
+      "optimizer_steps": null,
+      "parameters": 1476,
+      "peak_resident_vram_bytes": null,
+      "peak_vram_bytes": null,
+      "replay_seconds": null,
+      "request_seconds": null,
+      "resident_vram_bytes": null,
+      "route_seconds": null,
+      "storage_bytes": null,
+      "teacher_forward_count": 0,
+      "training_seconds": 77.76927197002806
+    }
+  ],
+  "source_commit": "65185fe0b2d4574819cbabb4b1c308c9d0c5900c",
+  "source_review": {
+    "H_limitation": "Only one finite binary source conflict supported; W1 missing-fit endpoints remain unsupported.",
+    "family_limitation": "All derivatives share native semantic lineage. Surface style is not semantic independence.",
+    "method_support_counts": {
+      "BE": 32,
+      "W0": 32,
+      "W1": 1
+    },
+    "new_source_images": 32,
+    "patient_independence": "UNKNOWN",
+    "records": [
+      {
+        "candidate_index": 1,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 201,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 7
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 2,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 202,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 7
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 3,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 203,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 5
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 6
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 4,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 204,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 5,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 205,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "SUPPORTED"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 1,
+            "U": 8
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 6,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 206,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 7,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 207,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 8,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 208,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 8
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 9,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 209,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 10,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 210,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 11,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 211,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 12,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 212,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 13,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 213,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 5
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 6
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 14,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 214,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 5
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 6
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 15,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 215,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 16,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 216,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 17,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 217,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 8
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 18,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 218,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 19,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 219,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 20,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 220,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 21,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 221,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 22,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 222,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 23,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 223,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 24,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 224,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 25,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 225,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 8
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 26,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 226,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 27,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 227,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 28,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 228,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 29,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 229,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 6
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 30,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 230,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 31,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 231,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      },
+      {
+        "candidate_index": 32,
+        "clinical_human_reviewed": false,
+        "distinct_surface_styles": 2,
+        "event_index": 232,
+        "method_support": {
+          "BE": "SUPPORTED",
+          "W0": "SUPPORTED",
+          "W1": "UNSUPPORTED_MISSING_FIT_H_OR_U"
+        },
+        "negative_support": {
+          "calibration": {
+            "H": 0,
+            "U": 7
+          },
+          "evaluation": {
+            "H": 0,
+            "U": 7
+          },
+          "fit": {
+            "H": 0,
+            "U": 9
+          }
+        },
+        "official_text_generality": "NA",
+        "original_image_generality": "NA",
+        "patient_id": "UNKNOWN",
+        "positive_counts": {
+          "calibration": 2,
+          "evaluation": 4,
+          "fit": 2
+        },
+        "semantic_family_count": 1,
+        "source_use_authorized": true,
+        "status": "SOURCE_PACKET_FROZEN",
+        "text_equivalence_reviewed": true
+      }
+    ],
+    "source_text": "Derived language, not official M3Bench rephrases or independent clinical annotation"
+  },
+  "writer_execution": "09cd56458dc9248e42475ab0426d9a1009b0a31e",
+  "writer_methods": [
+    "W0",
+    "W1",
+    "BE"
+  ]
+}

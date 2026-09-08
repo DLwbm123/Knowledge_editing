@@ -1,0 +1,12 @@
+{
+  "bank_prefix": 16,
+  "decision_contract": "same original expert or Base; no rank change; frozen calibration-only threshold",
+  "historical_judge_closure": 2137,
+  "kappa": 0.7696741135364367,
+  "missing_judge_scores": 0,
+  "new_judge_calls": 0,
+  "new_writer_training": 0,
+  "replay": "Stage4 actual OFF/Base and route parity inherited; new natural-branch replay pending",
+  "status": "DERIVED_COMPLETE_REPLAY_PENDING",
+  "threshold_transfer_scope": "OLD_STAGE3_COMMON7 single entries only; development diagnostic, not new confirmation"
+}

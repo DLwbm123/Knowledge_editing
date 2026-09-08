@@ -1,0 +1,75 @@
+{
+  "base_worker_pid": 1063483,
+  "candidate_count": 32,
+  "closeout_exit_codes": {
+    "bank_BE": 0,
+    "bank_W0": 0,
+    "bank_W1": 0,
+    "existing_replay": 0,
+    "final_judge": 0,
+    "final_reports": 0,
+    "prepare_final_judge": 0
+  },
+  "code_commit": "947edd195afa8af89e55e931174ec50bda311829",
+  "completed_writers": {
+    "BE": 32,
+    "W0": 32,
+    "W1": 1
+  },
+  "compute": "COMPLETE",
+  "counts": {
+    "COMPLETE": 32,
+    "RAW_READY": 65
+  },
+  "coverage_counts": {
+    "RAW_READY": 65,
+    "UNSUPPORTED_MISSING_FIT_H_OR_U": 31
+  },
+  "elapsed_seconds": 12330.99348282814,
+  "existing_factorial": "DERIVED_COMPLETE_REPLAY_COMPLETE",
+  "final_bank_sizes": {
+    "BE": 32,
+    "W0": 32,
+    "W1": 1
+  },
+  "final_bank_status": {
+    "BE": "RAW_READY",
+    "W0": "RAW_READY",
+    "W1": "RAW_READY"
+  },
+  "gpu": 2,
+  "gpu_hours_bound_basis": "only GPU2 authorized; wall time is a conservative bound, not measured utilization",
+  "gpu_hours_limit": 48,
+  "gpu_hours_upper_bound": 3.5588230553600524,
+  "independent_source_images": 32,
+  "judge": {
+    "missing": 0,
+    "new": 783,
+    "required": 1094,
+    "reused": 311,
+    "scored": 1094
+  },
+  "legal_new_edit_count": 32,
+  "negative_source_images": 23,
+  "official_text_generality": "NA",
+  "original_image_generality": "NA",
+  "patients": "UNKNOWN",
+  "process_exit_codes": {
+    "base_judge": 0,
+    "lock_base_before": 0,
+    "prepare_base_judge": 0,
+    "worker_students_01": 0
+  },
+  "publication": "PUBLICATION_PENDING",
+  "remaining": "Publication only",
+  "source_commit": "65185fe0b2d4574819cbabb4b1c308c9d0c5900c",
+  "source_review": "SOURCE_PACKETS_FROZEN",
+  "status": "COMPUTE_COMPLETE",
+  "supported_writer_endpoints": {
+    "BE": 32,
+    "W0": 32,
+    "W1": 1
+  },
+  "wall_hours_limit": 12,
+  "wall_seconds": 12811.762997627258
+}

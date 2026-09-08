@@ -152,7 +152,9 @@ def finalize(args):
         judge=dict(required=len(side['all_expected']), scored=len(verdicts), missing=missing, reused=side['reused'], new=side['new']),
         completed_writers=completed, coverage_counts=counts, final_bank_sizes=bank_sizes, final_bank_status=bank_status,
         original_image_generality='NA', official_text_generality='NA', publication='PUBLICATION_PENDING',
-        independent_source_images=32, negative_source_images=23, patients='UNKNOWN')
+        independent_source_images=32, negative_source_images=23, patients='UNKNOWN',
+        existing_factorial='DERIVED_COMPLETE_REPLAY_COMPLETE' if old_replay['status'] == 'COMPLETE' else 'DERIVED_COMPLETE_REPLAY_PENDING',
+        remaining='Publication only' if closed else 'See coverage, bank and Judge states for incomplete phases')
     f4.vf.atomic_json(public/'RUN_STATUS.json', status)
     f4.vf.atomic_json(public/'METHOD_ROUTER_AND_EXPOSURE_LOCK.json', dict(source_commit=config['source_commit'],
         writer_execution=f4.read(run/'private/TRAINING_LAUNCH_PROVENANCE.json')['code_commit'],

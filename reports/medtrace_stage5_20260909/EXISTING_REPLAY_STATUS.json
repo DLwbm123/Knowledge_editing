@@ -1,0 +1,45 @@
+{
+  "additional_judge_calls": 0,
+  "additional_writer_training": 0,
+  "generated": 6,
+  "replays": [
+    {
+      "branch": "ON",
+      "edit": 101,
+      "method": "BE",
+      "status": "PASSED"
+    },
+    {
+      "branch": "OFF",
+      "edit": 101,
+      "method": "BE",
+      "status": "PASSED"
+    },
+    {
+      "branch": "ON",
+      "edit": 101,
+      "method": "W0",
+      "status": "PASSED"
+    },
+    {
+      "branch": "OFF",
+      "edit": 101,
+      "method": "W0",
+      "status": "PASSED"
+    },
+    {
+      "branch": "ON",
+      "edit": 101,
+      "method": "W1",
+      "status": "PASSED"
+    },
+    {
+      "branch": "OFF",
+      "edit": 101,
+      "method": "W1",
+      "status": "PASSED"
+    }
+  ],
+  "selection": "first natural branch in frozen source order; no outcome selection or threshold adjustment",
+  "status": "COMPLETE"
+}
