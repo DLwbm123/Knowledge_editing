@@ -2,6 +2,7 @@
 """Stage5 exact Judge reuse, single/bank factorial and explicit missing coverage."""
 import argparse
 import csv
+import subprocess
 from collections import Counter
 from pathlib import Path
 import sys
@@ -18,7 +19,7 @@ COHORT = 'STAGE5_SOURCE_CONSISTENCY_REVIEWED_NEW32'
 
 
 def inventory(run):
-    entries, coverage = [], []
+    entries, coverage, costs = [], [], []
     tasks = f4.read(run/'private/TASK_QUEUE.json')['tasks']
     by_method = {(t['event_index'], t['condition']):t for t in tasks if t['kind'] in ('BE','CP')}
     for original in f4.read(run/'private/NEW_EPISODE_MANIFEST_PRIVATE.json')['episodes']:
@@ -37,10 +38,15 @@ def inventory(run):
             if not complete:
                 continue
             result = f4.read(path)
+            f4.f3.finite(result)
             assert result['status'] == 'RAW_READY' and result['base_guard']['unchanged']
             assert result['step'] == (50 if method == 'B' else 320) and result['task']['task_id'] == t['task_id']
             if method != 'B':
                 assert result['a2_sha256'] == data['a2_sha256']
+            checkpoints = list(path.parent.glob('attempt_chunk*/step0320.pt')) if method != 'B' else [path.parent/'editor_state.pt']
+            costs.append(dict(edit=i, method=label, **{k:result.get(k) for k in f4.f3.COSTS},
+                checkpoint_container_bytes=sum(p.stat().st_size for p in checkpoints),
+                container_scope='BE exported editor state' if method == 'B' else 'CP training checkpoint including optimizer; not weight-only storage'))
             assert be and scope and scope['lock']['frozen_before_evaluation']
             for row in data['rows']:
                 item = result['outputs'][row['logical_id']]; baseline = be['outputs'][row['logical_id']]
@@ -64,7 +70,7 @@ def inventory(run):
         for item in result['outputs']:
             entries.append(dict(track='B', prefix=result['bank_size'], edit=item['source_edit_index'], method=label,
                 item=item, common_support=False, system_valid=True, cohort_name=COHORT, route_mode=item['route_mode']))
-    return entries, coverage, []
+    return entries, coverage, costs
 
 
 def install(run):
@@ -107,7 +113,7 @@ def details(entries, verdicts, protocol):
 
 def finalize(args):
     run = args.run_root; public = run/'public'
-    entries, coverage, _ = inventory(run)
+    entries, coverage, costs = inventory(run)
     verdicts, side = f4.f3.current_verdicts(run)
     assert side
     rows = details(entries, verdicts, side['protocol_sha256'])
@@ -125,13 +131,14 @@ def finalize(args):
     f4.csv_write(public/'NEW_PAIRED_EFFECTS.csv', effects)
     f4.vf.atomic_json(run/'private/NEW_DETAILS.json', rows)
     missing = len(set(side['all_expected'])-verdicts.keys())
-    bank_status = {}; bank_sizes = {}; thresholds = []
+    bank_status = {}; bank_sizes = {}; thresholds = []; bank_costs = []
     for method in METHODS:
         path = run/'private/final_bank'/method/'result_private.json'
         value = f4.read(path) if path.exists() else {}
         bank_status[method] = value.get('status', 'MISSING')
         bank_sizes[method] = value.get('bank_size', 0)
         if value.get('threshold'):thresholds.append(dict(method=method, **value['threshold']))
+        if value.get('costs'):bank_costs.append(dict(method=method, bank_size=bank_sizes[method], **value['costs']))
     completed = {m:sum(r['completed'] for r in coverage if r['method'] == m) for m in METHODS}
     counts = dict(Counter(r['status'] for r in coverage))
     config = f4.read(run/'private/CAMPAIGN_CONFIG.json')
@@ -149,6 +156,9 @@ def finalize(args):
     f4.vf.atomic_json(public/'RUN_STATUS.json', status)
     f4.vf.atomic_json(public/'METHOD_ROUTER_AND_EXPOSURE_LOCK.json', dict(source_commit=config['source_commit'],
         writer_execution=f4.read(run/'private/TRAINING_LAUNCH_PROVENANCE.json')['code_commit'],
+        closeout_execution=f4.read(run/'private/CLOSEOUT_LAUNCH_PROVENANCE.json')['code_commit'],
+        reporting_commit=subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip(),
+        single_writer_costs=costs, final_bank_costs=bank_costs,
         writer_methods=['W0','W1','BE'], kl_weight=.1, cp_steps=320, be_steps=50,
         source_review=source, new_bank_thresholds=thresholds,
         new_single_thresholds=[dict(edit=int(p.stem[1:]), **f4.read(p)['lock']) for p in sorted((run/'private/single_scope').glob('e*.json'))],
