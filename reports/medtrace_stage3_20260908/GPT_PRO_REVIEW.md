@@ -1,33 +1,138 @@
-# Stage3 startup and frozen coverage — results pending
+# MedTRACE Stage3 factual review
 
-## Later resource amendment: four GPUs
+Status: PARTIAL; compute=COMPLETE_EXECUTABLE; Judge=COMPLETE_CURRENT_TUPLES; publication=PENDING.
+S1 = BE_ROUTE + P4-W1_KL_0.1; S0 = same route + P4-W0_TASK_ONLY; BE = native BalancEdit V4 adaptation.
 
-The user subsequently authorized GPU0 and GPU1 in addition to GPU2/3. Scheduling code `9ffae2c` supports this explicit Stage3-only amendment. The replacement coordinator adopts the original GPU2/3 workers without interrupting their training; two added resident workers consume the same mutually exclusive queue. The original manifest/config and experiment start clock are retained, with a separate resource amendment. No method, input, support or scientific boundary changes.
+1. How does S1 perform on original V4 generalization and locality?
 
-The 24-hour wall and 48 GPU-hour bounds remain unchanged. Accounting conservatively bounds the initial two-GPU interval, the expanded four-GPU generation interval and the later single-GPU Judge interval; generation stops by 40 GPU-hours to preserve closure capacity. Three focused scheduling/Stage3 checks passed. This amendment supersedes the initial two-worker ETA below; four-worker throughput and Judge duration remain provisional. Final results are still pending.
+| Method | Prefix | Role / panel | Strict role | Inputs | V4 primary macro (eligible) | All-source macro | All-source micro | Damage macro |
+|---|---:|---|---|---:|---:|---:|---:|---:|
+| S1 | 0 | formal_development / T1G | EDIT_TARGET | 22 | 1.0000 (22) | 1.0000 | 1.0000 | NA |
+| S1 | 0 | formal_development / T1L | STRICT_BASE | 10 | 0.0000 (6) | 0.2000 | 0.2000 | 1.0000 |
+| S1 | 0 | formal_development / T2G | EDIT_TARGET | 23 | 0.3056 (23) | 0.3056 | 0.3043 | NA |
+| S1 | 0 | formal_development / T2L | STRICT_BASE | 2 | 1.0000 (2) | 1.0000 | 1.0000 | 0.0000 |
+| S1 | 0 | formal_development / T3G | UNKNOWN | 0 | NA (0) | NA | NA | NA |
+| S1 | 0 | formal_development / T3L | UNKNOWN | 0 | NA (0) | NA | NA | NA |
+| S1 | 0 | formal_development / T4G | UNKNOWN | 0 | NA (0) | NA | NA | NA |
+| S1 | 0 | formal_development / T4L | UNKNOWN | 0 | NA (0) | NA | NA | NA |
+| S1 | 0 | formal_development / T5 | UNKNOWN | 0 | NA (0) | NA | NA | NA |
+| S1 | 0 | native / NATIVE_DIAGNOSTIC | EDIT_TARGET | 1 | NA (0) | 1.0000 | 1.0000 | NA |
+| S1 | 0 | native / T0 | EDIT_TARGET | 6 | 1.0000 (6) | 1.0000 | 1.0000 | NA |
 
-Observed 2026-09-08 08:37:19 UTC. Run: `medtrace_stage3_20260908_r01`. This report records an active experiment, not scientific results. GPU2/3 are running independently of the interactive session; no unrelated GPU processes were stopped. Visible process roles are neutral `main` / `run`.
+Official task labels remain separate from fit and source-style/cross-family confirmation. T5 is NA; no official Overall is computed.
+Primary metric mapping reuses m3bench_repro/evaluation/metrics.py: T0 reliability=postcorrect; T*G=postcorrect among Base-wrong; T*L=postcorrect among Base-correct. Primary macro averages eligible probes per edit then edits; semantic is the separate all-source correctness metric. Token parity is diagnostic. Task-specific native rows remain NATIVE_DIAGNOSTIC, not T0 anchors.
 
-The four bank prefixes 1/4/8/16 are RAW_READY (57/228/456/906 method-input records). Their measured task times were 9.44/37.50/89.90/112.85 seconds. The first three-method single-edit group is RAW_READY in 495.64 seconds. The queue snapshot contains five RAW_READY, two RUNNING, 42 PENDING and 691 UNSUPPORTED_TRAINING_INPUTS groups. RAW_READY means generation/replay completed, not Judge completion.
+2. What protection does S1 retain against W0, and at what cost?
 
-The first full single group took about 8.3 minutes. A simple two-worker extrapolation for the remaining 44 groups is about three hours of generation; this is provisional because most remaining groups have two methods and input lengths vary. Judge time is not yet measured. The hard bound remains 24 hours wall / 48 GPU-hours, with four hours reserved for closure after the generation window.
+- U (evaluation), S1−S0 semantic: NA; paired edits=0.
+- U (evaluation), S1−S0 v4_primary: NA; paired edits=0.
+- U (evaluation), S1−S0 base_correct_damage: NA; paired edits=0.
+- U (evaluation), S1−BE semantic: NA; paired edits=0.
+- U (evaluation), S1−BE v4_primary: NA; paired edits=0.
+- U (evaluation), S1−BE base_correct_damage: NA; paired edits=0.
+- cross_family_confirmation (evaluation), S1−S0 semantic: NA; paired edits=0.
+- cross_family_confirmation (evaluation), S1−S0 v4_primary: NA; paired edits=0.
+- cross_family_confirmation (evaluation), S1−S0 base_correct_damage: NA; paired edits=0.
+- cross_family_confirmation (evaluation), S1−BE semantic: NA; paired edits=0.
+- cross_family_confirmation (evaluation), S1−BE v4_primary: NA; paired edits=0.
+- cross_family_confirmation (evaluation), S1−BE base_correct_damage: NA; paired edits=0.
+- source_style_confirmation (evaluation), S1−S0 semantic: NA; paired edits=0.
+- source_style_confirmation (evaluation), S1−S0 v4_primary: NA; paired edits=0.
+- source_style_confirmation (evaluation), S1−S0 base_correct_damage: NA; paired edits=0.
+- source_style_confirmation (evaluation), S1−BE semantic: NA; paired edits=0.
+- source_style_confirmation (evaluation), S1−BE v4_primary: NA; paired edits=0.
+- source_style_confirmation (evaluation), S1−BE base_correct_damage: NA; paired edits=0.
+- T1G (formal_development), S1−S0 semantic: 0.0; paired edits=6.
+- T1G (formal_development), S1−S0 v4_primary: 0.0; paired edits=6.
+- T1G (formal_development), S1−S0 base_correct_damage: NA; paired edits=0.
+- T1G (formal_development), S1−BE semantic: 0.0; paired edits=6.
+- T1G (formal_development), S1−BE v4_primary: 0.0; paired edits=6.
+- T1G (formal_development), S1−BE base_correct_damage: NA; paired edits=0.
+- T1L (formal_development), S1−S0 semantic: 0.0; paired edits=2.
+- T1L (formal_development), S1−S0 v4_primary: 0.0; paired edits=2.
+- T1L (formal_development), S1−S0 base_correct_damage: 0.0; paired edits=2.
+- T1L (formal_development), S1−BE semantic: 0.0; paired edits=2.
+- T1L (formal_development), S1−BE v4_primary: 0.0; paired edits=2.
+- T1L (formal_development), S1−BE base_correct_damage: 0.0; paired edits=2.
+- T2G (formal_development), S1−S0 semantic: -0.5277777777777778; paired edits=6.
+- T2G (formal_development), S1−S0 v4_primary: -0.5277777777777778; paired edits=6.
+- T2G (formal_development), S1−S0 base_correct_damage: NA; paired edits=0.
+- T2G (formal_development), S1−BE semantic: -0.5694444444444444; paired edits=6.
+- T2G (formal_development), S1−BE v4_primary: -0.5694444444444444; paired edits=6.
+- T2G (formal_development), S1−BE base_correct_damage: NA; paired edits=0.
+- T2L (formal_development), S1−S0 semantic: 0.0; paired edits=1.
+- T2L (formal_development), S1−S0 v4_primary: 0.0; paired edits=1.
+- T2L (formal_development), S1−S0 base_correct_damage: 0.0; paired edits=1.
+- T2L (formal_development), S1−BE semantic: 0.5; paired edits=1.
+- T2L (formal_development), S1−BE v4_primary: 0.5; paired edits=1.
+- T2L (formal_development), S1−BE base_correct_damage: -0.5; paired edits=1.
+- NATIVE_DIAGNOSTIC (native), S1−S0 semantic: 0.0; paired edits=1.
+- NATIVE_DIAGNOSTIC (native), S1−S0 v4_primary: NA; paired edits=0.
+- NATIVE_DIAGNOSTIC (native), S1−S0 base_correct_damage: NA; paired edits=0.
+- NATIVE_DIAGNOSTIC (native), S1−BE semantic: 0.0; paired edits=1.
+- NATIVE_DIAGNOSTIC (native), S1−BE v4_primary: NA; paired edits=0.
+- NATIVE_DIAGNOSTIC (native), S1−BE base_correct_damage: NA; paired edits=0.
+- T0 (native), S1−S0 semantic: 0.0; paired edits=6.
+- T0 (native), S1−S0 v4_primary: 0.0; paired edits=6.
+- T0 (native), S1−S0 base_correct_damage: NA; paired edits=0.
+- T0 (native), S1−BE semantic: 0.0; paired edits=6.
+- T0 (native), S1−BE v4_primary: 0.0; paired edits=6.
+- T0 (native), S1−BE base_correct_damage: NA; paired edits=0.
 
-## Frozen methods and coverage
+Paired edit intervals are in SINGLE_PAIRED_EFFECTS.csv. They resample edits; shared source images remain correlated. Missing judged pairs are NA, not zero effects.
 
-S1 is BE_ROUTE + P4-W1_KL_0.1; S0 uses the same route + P4-W0_TASK_ONLY; B is native BalancEdit V4 adaptation. Original formulas, runtime and evaluation rules remain locked. BalancEdit and CP differ in edited layers, capacity and supervision, so costs must accompany behavior comparisons. FORCED_ON is a paired diagnostic.
+3. How does the native BalancEdit system compare in behavior and cost?
 
-The authoritative catalog contains 179 T0 events and 1,108 total events / 2,496 probes. Across 736 planned training groups, executable support is BE 45, S0 45 and S1 seven; the common comparison subset was frozen at seven before outputs. BE/S0 cover 22 T0 anchors and 23 T2L groups, not 45 T0 events. No T3/T4 group has the required approved training support. Unsupported groups remain planned rather than being dropped from denominators. This augmented-supervision evaluation is not full V4 coverage or paper-exact reproduction.
+| Method | Prefix | Role / panel | Strict role | Inputs | V4 primary macro (eligible) | All-source macro | All-source micro | Damage macro |
+|---|---:|---|---|---:|---:|---:|---:|---:|
+| BE | 0 | evaluation / U | STRICT_BASE | 100 | NA (0) | 0.5800 | 0.5800 | 0.4200 |
+| BE | 0 | evaluation / cross_family_confirmation | EDIT_TARGET | 40 | NA (0) | 1.0000 | 1.0000 | NA |
+| BE | 0 | evaluation / source_style_confirmation | EDIT_TARGET | 40 | NA (0) | 1.0000 | 1.0000 | NA |
+| BE | 0 | formal_development / T1G | EDIT_TARGET | 83 | 0.9545 (83) | 0.9545 | 0.9518 | NA |
+| BE | 0 | formal_development / T1L | STRICT_BASE | 26 | 0.2857 (19) | 0.4143 | 0.3077 | 0.7143 |
+| BE | 0 | formal_development / T2G | EDIT_TARGET | 72 | 0.8939 (72) | 0.8939 | 0.8750 | NA |
+| BE | 0 | formal_development / T2L | STRICT_BASE | 39 | 0.0217 (39) | 0.0217 | 0.0256 | 0.9783 |
+| BE | 0 | formal_development / T3G | UNKNOWN | 0 | NA (0) | NA | NA | NA |
+| BE | 0 | formal_development / T3L | UNKNOWN | 0 | NA (0) | NA | NA | NA |
+| BE | 0 | formal_development / T4G | UNKNOWN | 0 | NA (0) | NA | NA | NA |
+| BE | 0 | formal_development / T4L | UNKNOWN | 0 | NA (0) | NA | NA | NA |
+| BE | 0 | formal_development / T5 | UNKNOWN | 0 | NA (0) | NA | NA | NA |
+| BE | 0 | native / NATIVE_DIAGNOSTIC | EDIT_TARGET | 23 | NA (0) | 1.0000 | 1.0000 | NA |
+| BE | 0 | native / T0 | EDIT_TARGET | 22 | 0.9545 (22) | 0.9545 | 0.9545 | NA |
 
-Track B uses the existing 16 Stage2 experts without retraining. Prefix-local target-free routing executes the actually selected writer, with strict-role and conflict handling fixed before output inspection. These viewed insertion replays are not blind confirmation, causal online learning or sequential-179 training.
+Only ROUTED versus ROUTED and separately FORCED_ON versus FORCED_ON are compared. METHOD_COSTS.csv reports available training, teacher, generation, loading, routing, memory and storage measurements; missing measurements are NA. Layers, capacity and supervision differ; no matched-capacity claim.
 
-## Evidence and open questions
+4. Do benefits survive sixteen coexisting experts; where do failures come from?
 
-Twenty-five focused Stage3 checks passed in the existing environment. A read-only historical Judge binding check resolved 7,780 exact-bound tuples; tokenizer preflight also passed. The first real GPU tasks progressed without a recorded queue failure at this observation. Scientific comparisons still require Judge closure and the final tables.
+| Method | Prefix | Role / panel | Strict role | Inputs | V4 primary macro (eligible) | All-source macro | All-source micro | Damage macro |
+|---|---:|---|---|---:|---:|---:|---:|---:|
+| S1 | 1 | evaluation / H | STRICT_BASE | 2 | NA (0) | 1.0000 | 1.0000 | 0.0000 |
+| S1 | 1 | evaluation / U | STRICT_BASE | 12 | NA (0) | 0.5833 | 0.5833 | 0.0000 |
+| S1 | 1 | evaluation / cross_family_confirmation | EDIT_TARGET | 2 | NA (0) | 1.0000 | 1.0000 | NA |
+| S1 | 1 | evaluation / source_style_confirmation | EDIT_TARGET | 2 | NA (0) | 1.0000 | 1.0000 | NA |
+| S1 | 1 | native / T0 | EDIT_TARGET | 1 | NA (0) | 1.0000 | 1.0000 | NA |
+| S1 | 4 | evaluation / H | STRICT_BASE | 6 | NA (0) | 0.3750 | 0.5000 | 0.5000 |
+| S1 | 4 | evaluation / U | STRICT_BASE | 50 | NA (0) | 0.4776 | 0.4800 | 0.3175 |
+| S1 | 4 | evaluation / cross_family_confirmation | EDIT_TARGET | 8 | NA (0) | 1.0000 | 1.0000 | NA |
+| S1 | 4 | evaluation / source_style_confirmation | EDIT_TARGET | 8 | NA (0) | 1.0000 | 1.0000 | NA |
+| S1 | 4 | native / T0 | EDIT_TARGET | 4 | NA (0) | 1.0000 | 1.0000 | NA |
+| S1 | 8 | evaluation / H | STRICT_BASE | 13 | NA (0) | 0.4375 | 0.5385 | 0.3750 |
+| S1 | 8 | evaluation / U | STRICT_BASE | 99 | NA (0) | 0.5649 | 0.5657 | 0.1737 |
+| S1 | 8 | evaluation / cross_family_confirmation | EDIT_TARGET | 16 | NA (0) | 1.0000 | 1.0000 | NA |
+| S1 | 8 | evaluation / source_style_confirmation | EDIT_TARGET | 16 | NA (0) | 1.0000 | 1.0000 | NA |
+| S1 | 8 | native / T0 | EDIT_TARGET | 8 | NA (0) | 1.0000 | 1.0000 | NA |
+| S1 | 16 | evaluation / H | STRICT_BASE | 20 | NA (0) | 0.5000 | 0.5500 | 0.3077 |
+| S1 | 16 | evaluation / U | STRICT_BASE | 202 | NA (0) | 0.5053 | 0.5050 | 0.2399 |
+| S1 | 16 | evaluation / cross_family_confirmation | EDIT_TARGET | 32 | NA (0) | 1.0000 | 1.0000 | NA |
+| S1 | 16 | evaluation / source_style_confirmation | EDIT_TARGET | 32 | NA (0) | 1.0000 | 1.0000 | NA |
+| S1 | 16 | native / T0 | EDIT_TARGET | 16 | NA (0) | 1.0000 | 1.0000 | NA |
 
-All five requested decisions remain pending: original V4 generalization/locality; S1 protection gains and costs versus S0; behavior/cost versus BalancEdit; bank error attribution to selection, rejection or writer; and whether scale-up is justified. The Stage2 T2G decline remains a historical measured tradeoff, not a resolved defect. See the [Stage2 behavior audit](../medtrace_stage2_20260908/STAGE1_FULL_BEHAVIOR_ADDENDUM.md); no new Stage3 result is inferred from it.
+EXPERT_BANK16_RESULTS.csv reports rejection with a correct own writer, wrong-writer failures, selected writer errors and equivalent-expert correct outputs, each with explicit denominators. EXPERT_BANK16_HISTORY.csv pairs each input's first evaluable prefix with prefix16; absent pairs are not counted. Conflicting/unknown roles retain original-reference descriptive scores but have no strict semantic/locality score. NOW_EDITED_CONTEXT is scored against its frozen effective target and excluded from strict Base damage. This is viewed Stage2 insertion replay, not causal online training or M3Bench 200-edit sequential.
 
-## Provenance and delivery boundary
+5. What is covered, what is missing, and should the route be expanded?
 
-Research branch `medtrace-stage3-20260908`: frozen runner/source `22c397a`, scoring `751608a`. The manifest source lock predates the scoring commit; this does not indicate retraining with a different method. Prior Stage2 public anchor: `74d2a337f7d2b830d58819f76c87058cef0c5f3b`.
+Planned method endpoints=2220; executable=109; unsupported=2111; complete=109; pending=0. Current Judge tuples=1492; missing=0. EXECUTION_STATUS.json retains every queued method and missing prefix. Publication is unverified.
+No new experiment or performance permission gate is introduced. Finish the existing pending computation/Judge/publication only; no scale-up conclusion is supported by this partial snapshot.
 
-This release includes source, tests, sanitized manifest and timestamped startup status only. Final result CSVs are not yet available. Images, QA, raw outputs, token IDs, teacher distributions, checkpoints and private Judge maps remain private. The detached coordinator will run generation, Judge and aggregation within its bound. Per the current long-experiment instructions, no separate polling/publication waiter is launched; final GitHub delivery will be verified on the next requested check after completion.
+Historical continuity: Stage2 GPT_PRO_REVIEW.md records a real original-T2G loss for P4-W1 and sparse old H support; a perfect constructed-text panel does not erase that finding. Historical scores are not relabeled as current execution. See the Stage2 publication at 74d2a337f7d2b830d58819f76c87058cef0c5f3b.
+Micro averages count observed inputs; macro averages aggregate equivalent inputs within source groups, then edits. Image/group supports are not patient counts (patient identity UNKNOWN). Empty denominators are NA. Judge uses full answers; EOS/cap-hit flags are reported only when supplied by the generator.
