@@ -49,7 +49,7 @@ def inventory(run):
                 assert item['base']['raw_token_ids'] == baseline['base']['raw_token_ids']
                 assert item.get('system_replay_valid', item.get('route_branch_parity', True))
                 entry = dict(track='A', prefix=0, edit=i, method=label, item=item, common_support=False,
-                    system_valid=True, target=data['event']['edit_record']['gold_answer'], cohort_name=COHORT,
+                    system_valid=True, target=row['reference'], cohort_name=COHORT,
                     route_mode='R0')
                 entries.append(entry)
                 entries.append(dict(entry, route_mode='RC', item=reject(dict(item, route=baseline['route']), scope['lock']['kappa'], False)))
