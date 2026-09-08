@@ -1,0 +1,271 @@
+{
+  "balancedit": {
+    "alpha": 0.2,
+    "anchors": "pre-edit Base native / frozen official or source-approved fit rephrase / same-size black image",
+    "distance": "euclidean",
+    "evaluation": [
+      "BE_NATIVE_ROUTED",
+      "BE_FORCED_ON"
+    ],
+    "gradient_clip": 1.0,
+    "implementation": "BalanceEditPaperSpecEditor",
+    "independent_edit_state": true,
+    "label": "BalancEdit V4 adaptation",
+    "learning_rate": 0.01,
+    "optimizer": "Adam",
+    "performance_gate": false,
+    "radius_formula": "(1-alpha)*negative_distance+alpha*positive_distance",
+    "seed": "unchanged V4 record_seed(record_id, balancedit), base 20260828",
+    "steps": 50,
+    "target": "final-layer LM MLP up_projection",
+    "transform": "independent full FP32 linear copy per edit"
+  },
+  "base_reuse": "Exact runtime, actual prompt tokens and image binding; no global Base rerun",
+  "candidate": "MEDTRACE_SW_P4_KL01_FROZEN_CANDIDATE_V1",
+  "checkpoint_reuse": "Track A NONE: amended fit/H/U/role bindings; Track B original Stage2 artifacts only",
+  "counts": {
+    "authorized_pool_rows": 875,
+    "bound_catalog_events": 372,
+    "catalog_events": 1108,
+    "catalog_events_by_task": {
+      "T0": 179,
+      "T1G": 179,
+      "T1L": 14,
+      "T2G": 179,
+      "T2L": 358,
+      "T3G": 9,
+      "T3L": 1,
+      "T4G": 114,
+      "T4L": 75
+    },
+    "common_support_groups": 7,
+    "executable_by_method": {
+      "BE": 45,
+      "S0": 45,
+      "S1": 7
+    },
+    "executable_formal_probes": {
+      "BE": {
+        "T0": 22,
+        "T1G": 83,
+        "T1L": 26,
+        "T2G": 72,
+        "T2L": 39
+      },
+      "S0": {
+        "T0": 22,
+        "T1G": 83,
+        "T1L": 26,
+        "T2G": 72,
+        "T2L": 39
+      },
+      "S1": {
+        "T0": 6,
+        "T1G": 22,
+        "T1L": 10,
+        "T2G": 23,
+        "T2L": 2
+      }
+    },
+    "executable_generated_rows_per_system": {
+      "BE": 960,
+      "S0": 960,
+      "S1": 143
+    },
+    "executable_groups": 45,
+    "expected_formal_records_all_paths": 1336,
+    "expected_formal_records_by_path": {
+      "BASE": 242,
+      "BE_FORCED_ON": 242,
+      "BE_ROUTED": 242,
+      "S0_FORCED_ON": 242,
+      "S0_ROUTED": 242,
+      "S1_FORCED_ON": 63,
+      "S1_ROUTED": 63
+    },
+    "formal_probes": 2496,
+    "formal_probes_by_task": {
+      "T0": 179,
+      "T1G": 704,
+      "T1L": 53,
+      "T2G": 676,
+      "T2L": 601,
+      "T3G": 10,
+      "T3L": 1,
+      "T4G": 197,
+      "T4L": 75
+    },
+    "official_rephrase_admission": {
+      "FROZEN_OFFICIAL_EDITING_SUPPORT": 6,
+      "REJECTED_FORMAL_OR_HELDOUT_QUERY_OVERLAP": 216,
+      "REJECTED_NATIVE_IDENTITY_DUPLICATE": 514
+    },
+    "official_rephrase_overlap_audit": {
+      "merged_representatives": {
+        "identity_fallback_no_frozen_rephrase": {
+          "exact_global_formal_overlap": 169,
+          "exact_nonoverlap": 345,
+          "normalized_global_formal_overlap": 170,
+          "normalized_nonoverlap": 344,
+          "total": 514
+        },
+        "legacy_official_rephrase": {
+          "exact_global_formal_overlap": 216,
+          "exact_nonoverlap": 6,
+          "normalized_global_formal_overlap": 216,
+          "normalized_nonoverlap": 6,
+          "total": 222
+        }
+      },
+      "raw_catalog": {
+        "identity_fallback_no_frozen_rephrase": {
+          "exact_global_formal_overlap": 169,
+          "exact_nonoverlap": 345,
+          "normalized_global_formal_overlap": 170,
+          "normalized_nonoverlap": 344,
+          "total": 514
+        },
+        "legacy_official_rephrase": {
+          "exact_global_formal_overlap": 576,
+          "exact_nonoverlap": 18,
+          "normalized_global_formal_overlap": 576,
+          "normalized_nonoverlap": 18,
+          "total": 594
+        }
+      }
+    },
+    "planned_formal_outputs_per_system": 2496,
+    "planned_generated_rows_per_system": 4020,
+    "planned_groups": 736,
+    "pool_rows_after_protection": 480,
+    "support_by_task": {
+      "T0": {
+        "BE": 22,
+        "S0": 22,
+        "S1": 6,
+        "planned": 179
+      },
+      "T2L": {
+        "BE": 23,
+        "S0": 23,
+        "S1": 1,
+        "planned": 358
+      },
+      "T3G": {
+        "BE": 0,
+        "S0": 0,
+        "S1": 0,
+        "planned": 9
+      },
+      "T3L": {
+        "BE": 0,
+        "S0": 0,
+        "S1": 0,
+        "planned": 1
+      },
+      "T4G": {
+        "BE": 0,
+        "S0": 0,
+        "S1": 0,
+        "planned": 114
+      },
+      "T4L": {
+        "BE": 0,
+        "S0": 0,
+        "S1": 0,
+        "planned": 75
+      }
+    },
+    "t0_anchors": 179,
+    "task_specific_groups": 557,
+    "unique_native_inputs": 678,
+    "unsupported_by_method": {
+      "BE": {
+        "NATIVE_IS_PROTECTED_EVALUATION_QUERY": 31,
+        "NO_APPROVED_ROLE_DISJOINT_FIT_PARAPHRASE": 691
+      },
+      "S0": {
+        "NATIVE_IS_PROTECTED_EVALUATION_QUERY": 31,
+        "NO_APPROVED_ROLE_DISJOINT_FIT_PARAPHRASE": 691
+      },
+      "S1": {
+        "H_FIT_UNSUPPORTED_BY_AUTHORIZED_SOURCE_RELATION": 725,
+        "NATIVE_IS_PROTECTED_EVALUATION_QUERY": 31,
+        "NO_APPROVED_ROLE_DISJOINT_FIT_PARAPHRASE": 691,
+        "U_FIT_UNSUPPORTED_BY_AUTHORIZED_SOURCE_RELATION": 692
+      }
+    }
+  },
+  "cp": {
+    "a2": "80 steps native plus source-approved fit paraphrases; shared readonly initialization",
+    "capacity_matched_claim": false,
+    "conditions": [
+      "P4-W0_TASK_ONLY",
+      "P4-W1_KL_0.1"
+    ],
+    "diagnostic_steps_not_selectors": [
+      80,
+      160
+    ],
+    "native": "original CP-R4 layer21 down_proj; max200; native-only checks every20 positive steps, complete target normalized match, first token rank1, no length cap hit",
+    "no_additional_grid": true,
+    "optimizer": {
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "eps": 1e-08,
+      "gradient_clip": 1.0,
+      "input_lr": 0.0001,
+      "name": "Adam",
+      "output_lr": 0.001,
+      "weight_decay": 0
+    },
+    "positive_loss": "0.5 native CE + 0.5 rotating fit paraphrase CE",
+    "primary_endpoint_steps": 320,
+    "scale": "max(A2 initial fit group KL, 1e-3)",
+    "seed_base": 20260910,
+    "teacher": "fit only for training; Base||ON full vocabulary FP32 T=1; Base generated prefix cap128; full uncapped natural answers for Judge",
+    "w1": "Lpos + 0.1*(K_H/s_H+K_U/s_U)/2"
+  },
+  "execution_commit": "22c397ad3fddeecc16cce5e3c74079a5eeb956bf",
+  "exposure": "Stage2 bank and old MedTRACE edits viewed; other cohorts separately tagged, no whole-cohort blind claim",
+  "historical_patch_provenance": "Stage2 EXECUTION_PATCH_PROVENANCE.json; compatible source ancestry retained",
+  "methods": {
+    "B": "BalancEdit V4 adaptation native routing",
+    "S0": "same BE_ROUTE + P4-W0_TASK_ONLY",
+    "S1": "BE_ROUTE + P4-W1_KL_0.1"
+  },
+  "native_condition_policy": "Stage3 retains nonfinite hard stop, not legacy finite condition-number performance threshold",
+  "patient_identity": "UNKNOWN",
+  "performance_gate": false,
+  "preparation_status": "INPUTS_FROZEN_BEFORE_STUDENT",
+  "protocol": "V4_RELEASE_ALIGNED_AUGMENTED_SUPPORT_EVALUATION",
+  "resources": {
+    "be_worker_free_mib": 24576,
+    "gpu_hours_upper": 48,
+    "gpu_indices": [
+      2,
+      3
+    ],
+    "judge_free_mib": "ceil(0.8*total)+2048",
+    "shared_gpu_allowed": true,
+    "training_and_generation_hours": 20,
+    "wall_hours": 24
+  },
+  "result_commit": "assigned at result publication",
+  "scientific_claim": "Frozen augmented-support systems evaluation, not paper-exact M3Bench or clinical validation",
+  "sources": {
+    "catalog": "FORMAL_SINGLE_EVENT_CATALOG.jsonl",
+    "historical_fit": "frozen_data.json",
+    "manifest": "FORMAL_CATALOG_MANIFEST.json",
+    "official_support_method_lock": "FORMAL_METHOD_CONFIG_BUNDLE.json",
+    "stage2_sources": "NEW_EPISODE_MANIFEST_PRIVATE.json",
+    "static_inventory": "STATIC_QUERY_INVENTORY.jsonl"
+  },
+  "stage2_public_commit": "74d2a337f7d2b830d58819f76c87058cef0c5f3b",
+  "stage2_source_execution_commit": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+  "t5": "NA_NO_LEGAL_MATERIAL",
+  "task_order": "bank prefixes 1,4,8,16; T0 anchor groups; frozen task-specific groups",
+  "unsupported_policy": "S0 may run without H/U; S1 never drops missing protection loss"
+}

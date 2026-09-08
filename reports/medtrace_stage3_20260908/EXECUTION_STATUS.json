@@ -1,0 +1,21 @@
+{
+  "compute": "RUNNING",
+  "judge": "NOT_RUN",
+  "publication": "PENDING",
+  "queue_counts": {
+    "RAW_READY": 5,
+    "RUNNING": 2,
+    "PENDING": 42,
+    "UNSUPPORTED_TRAINING_INPUTS": 691
+  },
+  "status": "RUNNING",
+  "observed_utc": "2026-09-08T08:37:19Z",
+  "observation_scope": "Startup snapshot from the live remote queue; not a terminal result or live feed",
+  "bank_prefixes_raw_ready": [1, 4, 8, 16],
+  "single_groups_raw_ready": 1,
+  "first_single_group_elapsed_seconds": 495.64358820207417,
+  "total_queue_groups": 740,
+  "executable_queue_groups": 49,
+  "research_runner_commit": "22c397ad3fddeecc16cce5e3c74079a5eeb956bf",
+  "research_scoring_commit": "751608a"
+}
