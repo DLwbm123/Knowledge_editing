@@ -17,7 +17,8 @@ from scripts.medtrace.finalize_selective_write import csv_write,hierarchical,opa
 
 ORIGINAL_HISTORY=f3.historical_judge
 METRICS=(*f3.METRICS,'wrong_given_on_base_correct','wrong_given_on_strict_base',
-         'positive_wrong_rejection','positive_wrong_selection','positive_owner_error')
+         'positive_wrong_rejection','positive_wrong_selection','positive_owner_error',
+         'correct_via_base_return','correct_via_owner_writer','correct_via_other_writer')
 
 
 def historical(config,protocol):
@@ -108,6 +109,7 @@ def details(entries,verdicts,protocol):
     for entry in entries:
         cells[entry['cohort_name'],entry['track'],entry.get('route_mode'),entry.get('diagnostic_step')].append(entry)
     for (cohort,track,route,step),group in cells.items():
+        route_items={(e['prefix'],e['edit'],e['method'],e['item']['row']['eqkey']):e['item'] for e in group}
         produced=f3.details_for(group,verdicts,protocol)
         for row in produced:
             if track=='B' and row['mode']!='ROUTED':continue
@@ -116,10 +118,15 @@ def details(entries,verdicts,protocol):
                        diagnostic_step=320 if step is None else step,is_diagnostic=step is not None)
             correct=row['semantic'];on=row['on']==1;local=row['strict_role']=='STRICT_BASE'
             positive=row['strict_role'] in ('EDIT_TARGET','NOW_EDITED_CONTEXT')
+            item=route_items.get((row['prefix'],row['edit'],row['method'],row['eqkey']),{})
+            owner=item.get('selected_expert')==item.get('source_expert')
             row.update(wrong_given_on_base_correct=1-correct if local and on and row['base_correct']==1 and correct is not None else None,
                 wrong_given_on_strict_base=1-correct if local and on and correct is not None else None,
                 positive_wrong_rejection=float(not on and correct==0) if positive and correct is not None else None,
-                positive_wrong_selection=row['wrong_writer'],positive_owner_error=row['writer_error'])
+                positive_wrong_selection=row['wrong_writer'],positive_owner_error=row['writer_error'],
+                correct_via_base_return=float(not on and correct==1) if track=='B' and correct is not None else None,
+                correct_via_owner_writer=float(on and owner and correct==1) if track=='B' and correct is not None else None,
+                correct_via_other_writer=float(on and not owner and correct==1) if track=='B' and correct is not None else None)
             output.append(row)
     return output
 

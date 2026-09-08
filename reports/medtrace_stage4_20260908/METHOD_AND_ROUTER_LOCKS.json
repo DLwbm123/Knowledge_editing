@@ -1,0 +1,588 @@
+{
+  "cohort_locks": [
+    {
+      "a2_sha256": "0b4aab74fedea2337421e2b24f5c007c006a14fe7222f22d2f4f43c62b525853",
+      "cohort": "OLD_STAGE3_COMMON7",
+      "config_sha256": "1f34b42eac8a6686392b4b35f67890225793c46eac4135292c8c4cd7c179dea2",
+      "data_sha256": "5b28ea91d6adb25a59875df2709ffbbbd1d2dcccebdc9c821323bd70d290f70c",
+      "edit": 27,
+      "initial_kl": {
+        "H": 0.458554208278656,
+        "U": 0.016500760645916063
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.458554208278656,
+        "U": 0.016500760645916063
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "22c397ad3fddeecc16cce5e3c74079a5eeb956bf",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "64e45eac41391d57b7ff9ff5000d3004ee3e3f5f96a90b622bb094390c80b124",
+      "cohort": "OLD_STAGE3_COMMON7",
+      "config_sha256": "1f34b42eac8a6686392b4b35f67890225793c46eac4135292c8c4cd7c179dea2",
+      "data_sha256": "333a73ae89e337dafdf24f3f83add2603d4575f548641e2bbd95e9ebaa00bc90",
+      "edit": 35,
+      "initial_kl": {
+        "H": 0.25905566414197284,
+        "U": 0.03683708452930053
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.25905566414197284,
+        "U": 0.03683708452930053
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "22c397ad3fddeecc16cce5e3c74079a5eeb956bf",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "423f0ee9ad0ea11d4c4e68e8bdcc43abc04e95719d50a134a88abcd64fa95fb9",
+      "cohort": "OLD_STAGE3_COMMON7",
+      "config_sha256": "1f34b42eac8a6686392b4b35f67890225793c46eac4135292c8c4cd7c179dea2",
+      "data_sha256": "1ff44591ea01d97b0d061c77a4347e07517efc2fd287e21833a8763ea65725b9",
+      "edit": 66,
+      "initial_kl": {
+        "H": 0.1423151046037674,
+        "U": 0.01090027638045805
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.1423151046037674,
+        "U": 0.01090027638045805
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "22c397ad3fddeecc16cce5e3c74079a5eeb956bf",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "878cf539ee0afdf68e9d5ae7babbb56dffdc4a3cba02685026b8bb5996518560",
+      "cohort": "OLD_STAGE3_COMMON7",
+      "config_sha256": "1f34b42eac8a6686392b4b35f67890225793c46eac4135292c8c4cd7c179dea2",
+      "data_sha256": "87ee46b6e2b7f8c26ad334b5cca3d699abe11608ebcbd54db6c9fffafe39753b",
+      "edit": 143,
+      "initial_kl": {
+        "H": 0.6220349371433258,
+        "U": 0.045861131977289915
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.6220349371433258,
+        "U": 0.045861131977289915
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "22c397ad3fddeecc16cce5e3c74079a5eeb956bf",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "f157b7ce015b909d4305bd242eb94b0a7e23024a361fe2b0c4d27cb5db2aa6ce",
+      "cohort": "OLD_STAGE3_COMMON7",
+      "config_sha256": "1f34b42eac8a6686392b4b35f67890225793c46eac4135292c8c4cd7c179dea2",
+      "data_sha256": "656c6bff96c94a13f8c7c4521c4699707979b03d4d6786fa9076a03fcdb81236",
+      "edit": 168,
+      "initial_kl": {
+        "H": 0.5516619235277176,
+        "U": 0.016693406117459137
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.5516619235277176,
+        "U": 0.016693406117459137
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "22c397ad3fddeecc16cce5e3c74079a5eeb956bf",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "de73f89182d054149227188801a464facde929d77085263dbe9c8393b84aae81",
+      "cohort": "OLD_STAGE3_COMMON7",
+      "config_sha256": "1f34b42eac8a6686392b4b35f67890225793c46eac4135292c8c4cd7c179dea2",
+      "data_sha256": "6f542041307aac50b720e5c8dc5aa7fd960fa83d7493db419cb544529b8cd72c",
+      "edit": 172,
+      "initial_kl": {
+        "H": 0.43586355447769165,
+        "U": 0.0269619170576334
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.43586355447769165,
+        "U": 0.0269619170576334
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "22c397ad3fddeecc16cce5e3c74079a5eeb956bf",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "9486235bbbd37b589bef62fd294ea740ede242890ff81a71374574b6d7c37cd8",
+      "cohort": "OLD_STAGE3_COMMON7",
+      "config_sha256": "1f34b42eac8a6686392b4b35f67890225793c46eac4135292c8c4cd7c179dea2",
+      "data_sha256": "2390846525ba019946109a08d090a56b7c6b0c6b47e17217c7c8a0c3695eb1d9",
+      "edit": 270,
+      "initial_kl": {
+        "H": 0.25898364186286926,
+        "U": 0.036854857578873634
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.25898364186286926,
+        "U": 0.036854857578873634
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "22c397ad3fddeecc16cce5e3c74079a5eeb956bf",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "636bdbf2f2691f26d0d237ce48c51435c6286bedbe5d10088df50fea82b8f9d0",
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "config_sha256": "692f35b288eb745780e3ccde9380093cfd0ac64e530394c4cefb0d0fac479181",
+      "data_sha256": "63f54ae86a0a96ed7d8e20d198c9f1a7472c4e23d182c712235fc68401703e1d",
+      "edit": 101,
+      "initial_kl": {
+        "H": 0.24338256319363913,
+        "U": 0.12899520957412627
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.24338256319363913,
+        "U": 0.12899520957412627
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "1581cd5b34844a76ccc0d6056d7badc03f1524a8e7896d3c3d8bb1cef625072e",
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "config_sha256": "692f35b288eb745780e3ccde9380093cfd0ac64e530394c4cefb0d0fac479181",
+      "data_sha256": "1a69ca0e0c3261ba3e2aaf1b3e8a94536f2d9f373bcf887b19fd4dc9cf4d0587",
+      "edit": 102,
+      "initial_kl": {
+        "H": 0.16167540848255157,
+        "U": 0.0610579279434335
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.16167540848255157,
+        "U": 0.0610579279434335
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "18323430f5943792ee46b47981802a7ecfb2538cc3e59c173d03fca3c42c0e9c",
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "config_sha256": "692f35b288eb745780e3ccde9380093cfd0ac64e530394c4cefb0d0fac479181",
+      "data_sha256": "ce777d7b2eb0aa5840073c118e73a06f23ebf46a268dd6ae63b3f71ea01a7f01",
+      "edit": 103,
+      "initial_kl": {
+        "H": 0.16757816076278687,
+        "U": 0.10662448651523196
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.16757816076278687,
+        "U": 0.10662448651523196
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "0be8cadcb7a92cf31c51128039aa0c15a07dd9d449555af5c242d815a4e0774d",
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "config_sha256": "692f35b288eb745780e3ccde9380093cfd0ac64e530394c4cefb0d0fac479181",
+      "data_sha256": "d02073224ce0403fbec8fb64a270b42d828dc19bfdc2179a4dd2d0c509461cbc",
+      "edit": 104,
+      "initial_kl": {
+        "H": 0.3922816514968872,
+        "U": 0.14823450620930928
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.3922816514968872,
+        "U": 0.14823450620930928
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "1d0b63b1c940bf246280cf5c31f56c4aeb8de0c64f8763191013ea4bc840ef6e",
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "config_sha256": "692f35b288eb745780e3ccde9380093cfd0ac64e530394c4cefb0d0fac479181",
+      "data_sha256": "007e7bff92357ad456237cf21cac4d1bf6b300f6207363e3599b3454f670c455",
+      "edit": 105,
+      "initial_kl": {
+        "H": 0.2729709893465042,
+        "U": 0.05656212693653428
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.2729709893465042,
+        "U": 0.05656212693653428
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "5575a41955a74e1c69ae1ef1b6de6a0573c59f6c6f2de9ff73833f988830c295",
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "config_sha256": "692f35b288eb745780e3ccde9380093cfd0ac64e530394c4cefb0d0fac479181",
+      "data_sha256": "7c9460e346937cb0a8e59fa49ac70878280c5ae54c822d23f14037ed3f4cc17f",
+      "edit": 106,
+      "initial_kl": {
+        "H": 0.3943132658799489,
+        "U": 0.07776580847656497
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.3943132658799489,
+        "U": 0.07776580847656497
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "dbd2ab9620b4ea2587090d53b94f4c16924eae97d8563a36148f4baadb3e6a90",
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "config_sha256": "692f35b288eb745780e3ccde9380093cfd0ac64e530394c4cefb0d0fac479181",
+      "data_sha256": "3fd786a3d8ef251beb1e7e6b6110c8366d80bf0d95fff1878e861c92a85712b4",
+      "edit": 107,
+      "initial_kl": {
+        "H": 0.09263372421264648,
+        "U": 0.05406535985613508
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.09263372421264648,
+        "U": 0.05406535985613508
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "ed268cf77776e53e660c5d5aff154efde3d1a5e1c33d46a58bd48a250c4031f9",
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "config_sha256": "692f35b288eb745780e3ccde9380093cfd0ac64e530394c4cefb0d0fac479181",
+      "data_sha256": "56e1a9a14e190130d01c8fc6504d1fac49c2f20439d61a588000b885c3b0a7d2",
+      "edit": 108,
+      "initial_kl": {
+        "H": 0.3431199789047241,
+        "U": 0.12458149866702464
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.3431199789047241,
+        "U": 0.12458149866702464
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "b5d7a160a9e75749b9d5c9cf6a9652f65132a327790229fccb88a3328edfd94b",
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "config_sha256": "692f35b288eb745780e3ccde9380093cfd0ac64e530394c4cefb0d0fac479181",
+      "data_sha256": "2b117d7684ffae72c9f32ec3c0072b2b051be0ce02f2cb8e2c74489de0938890",
+      "edit": 109,
+      "initial_kl": {
+        "H": 0.2927499860525131,
+        "U": 0.09632641057084713
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.2927499860525131,
+        "U": 0.09632641057084713
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "5fa33aae57c4914263e096230f85bf9a9d82c40df3aab4af5afb05264aca6195",
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "config_sha256": "692f35b288eb745780e3ccde9380093cfd0ac64e530394c4cefb0d0fac479181",
+      "data_sha256": "c17953f0584e3ef002ce95a4273e03ab6bb6dea5670b62fd052f48f4f53139d1",
+      "edit": 110,
+      "initial_kl": {
+        "H": 0.33986639976501465,
+        "U": 0.05511920237248497
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.33986639976501465,
+        "U": 0.05511920237248497
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "fe8dd9bd22d8744046c354358e5cef8fc1904746e91807ee8dacdd86810dfb4c",
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "config_sha256": "692f35b288eb745780e3ccde9380093cfd0ac64e530394c4cefb0d0fac479181",
+      "data_sha256": "db7cfb02a24a011491d4ed2f3bc228b1da76b9621b245c90f13b369aee2ef817",
+      "edit": 111,
+      "initial_kl": {
+        "H": 0.23949843645095825,
+        "U": 0.13544633344281465
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.23949843645095825,
+        "U": 0.13544633344281465
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "14fa7638c832c0d8a71cdbee39f357a148b28907b35d9a3731f39be89cd262f0",
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "config_sha256": "692f35b288eb745780e3ccde9380093cfd0ac64e530394c4cefb0d0fac479181",
+      "data_sha256": "4016622189134b3be1e7b91e381e7b5a29b8c7f6feb3fbde12adf3bb75334741",
+      "edit": 112,
+      "initial_kl": {
+        "H": 0.8313307762145996,
+        "U": 0.1001684455467122
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.8313307762145996,
+        "U": 0.1001684455467122
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "7d071e23f1e5f489e21ea9f893ed52c53f9faf6d6c17a00e6bdb98794e468361",
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "config_sha256": "692f35b288eb745780e3ccde9380093cfd0ac64e530394c4cefb0d0fac479181",
+      "data_sha256": "15e780c4aec53128879cf2caf0c50b7d6500cb5de1392007aa89888f93327913",
+      "edit": 113,
+      "initial_kl": {
+        "H": 0.16435357928276062,
+        "U": 0.0830116487174694
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.16435357928276062,
+        "U": 0.0830116487174694
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "480adcebed821eb7025130249ff3b56f219f1cc74aea8ba32ab522d2c775e047",
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "config_sha256": "692f35b288eb745780e3ccde9380093cfd0ac64e530394c4cefb0d0fac479181",
+      "data_sha256": "8495d1c4420fe35813e1b07bfde5415135d62e6a76a4325a3687b1c290ebe480",
+      "edit": 114,
+      "initial_kl": {
+        "H": 0.6152722835540771,
+        "U": 0.005327695090922394
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.6152722835540771,
+        "U": 0.005327695090922394
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "91a23f3baf4b0753a66ab2f9805e21bcd8d573e5dbc226d28ff94fc348d4cba9",
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "config_sha256": "692f35b288eb745780e3ccde9380093cfd0ac64e530394c4cefb0d0fac479181",
+      "data_sha256": "7bf9e8119ae7d87656168b51af13c3041f6c111a17286225445be9e95923945d",
+      "edit": 115,
+      "initial_kl": {
+        "H": 0.476687490940094,
+        "U": 0.12434911226423886
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.476687490940094,
+        "U": 0.12434911226423886
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    },
+    {
+      "a2_sha256": "3c9db8fb6cba57177d3c12a70afbb723586b1d8fa772c3f63291e78c51eca6a5",
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "config_sha256": "692f35b288eb745780e3ccde9380093cfd0ac64e530394c4cefb0d0fac479181",
+      "data_sha256": "21586d7d653147a8ec67b913b11b826cebf421d302e30cf3730899ac95b25ffd",
+      "edit": 116,
+      "initial_kl": {
+        "H": 0.2194378674030304,
+        "U": 0.12142187915742397
+      },
+      "native_and_fit_target": "inherited exact cohort binding",
+      "scale": {
+        "H": 0.2194378674030304,
+        "U": 0.12142187915742397
+      },
+      "teacher": {
+        "cap": 128,
+        "code": "3cde3ed0652a2577d81262abd10e112f669b49e9",
+        "direction": "Base||ON",
+        "fit_only": true,
+        "full_vocab": true,
+        "temperature": 1
+      }
+    }
+  ],
+  "diagnostic_steps": [
+    0,
+    80,
+    160,
+    320
+  ],
+  "gpu_hours": 32,
+  "gpu_uuids": {
+    "0": "GPU-688ed629-7a46-b62c-e3e4-0940e1649b5f",
+    "1": "GPU-5fac6011-5432-229f-bb11-9ce9f104a334",
+    "2": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b",
+    "3": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c"
+  },
+  "judge_reserve_minutes": 90,
+  "lambdas": [
+    0,
+    0.01,
+    0.1
+  ],
+  "router": {
+    "calibration": "native and original calibration only; no future expert; positive family micro/macro loss <=.05",
+    "distance": "unchanged FP32 euclidean d and r",
+    "objective": "equal H/U edit-macro activation on STRICT_BASE",
+    "ranking": "MemoryRouter argmin, stable first entry tie",
+    "rule": "R0 off stays off; otherwise retain same expert iff (r-d)/max(r,1e-12)>=kappa",
+    "thresholds": "PENDING_CALIBRATION"
+  },
+  "source_commit": "f3d27e5c9037a83e5e7858da3a0f158c44ef789f",
+  "stage2_anchor": "74d2a337f7d2b830d58819f76c87058cef0c5f3b",
+  "stage3_anchor": "bab6cda735c4bd115e266871108cf492e524a8a3",
+  "wall_hours": 8,
+  "writer_steps": 320
+}

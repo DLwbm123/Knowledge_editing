@@ -1,0 +1,16 @@
+{
+  "bank_prefixes": [
+    1,
+    4,
+    8,
+    16
+  ],
+  "compute": "RUNNING",
+  "confirmation": "CONFIRMATION_UNAVAILABLE",
+  "judge": "NOT_RUN",
+  "new_writer_endpoints": 23,
+  "publication": "PENDING",
+  "reused_writer_endpoints": 69,
+  "status": "RUNNING",
+  "unsupported_confirmation": 32
+}

@@ -1,0 +1,49 @@
+{
+  "execution_commit": "1ba8b4ac0da373d02886a485a3fd3a2a56fd4bd4",
+  "neutral_process_roles": [
+    "main",
+    "run",
+    "job"
+  ],
+  "original_clock_preserved": true,
+  "preparation_commit": "f3d27e5c9037a83e5e7858da3a0f158c44ef789f",
+  "resource_preflight": {
+    "0": {
+      "checked_epoch": 1788866275.8154576,
+      "free_mib": 40445,
+      "gpu": "0",
+      "required_free_mib": 20480,
+      "sharing_authorized": true,
+      "used_mib": 1,
+      "uuid": "GPU-688ed629-7a46-b62c-e3e4-0940e1649b5f"
+    },
+    "1": {
+      "checked_epoch": 1788866275.8640175,
+      "free_mib": 40022,
+      "gpu": "1",
+      "required_free_mib": 20480,
+      "sharing_authorized": true,
+      "used_mib": 423,
+      "uuid": "GPU-5fac6011-5432-229f-bb11-9ce9f104a334"
+    },
+    "2": {
+      "checked_epoch": 1788866275.937242,
+      "free_mib": 40445,
+      "gpu": "2",
+      "required_free_mib": 20480,
+      "sharing_authorized": true,
+      "used_mib": 1,
+      "uuid": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b"
+    },
+    "3": {
+      "checked_epoch": 1788866275.9912515,
+      "free_mib": 40445,
+      "gpu": "3",
+      "required_free_mib": 20480,
+      "sharing_authorized": true,
+      "used_mib": 1,
+      "uuid": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c"
+    }
+  },
+  "stage3_anchor": "bab6cda735c4bd115e266871108cf492e524a8a3"
+}

@@ -1,0 +1,3 @@
+# Independent confirmation
+
+CONFIRMATION_UNAVAILABLE. One inherited source screen after all Stage2/3-role exclusions yielded 340 training-side rows and 32 capped candidate edits with frozen Base-wrong eligibility. No candidate has an already authorized fact/image-specific positive and calibration text review. Template reuse on a new fact is not silently approved. No additional students run; no existing edit is renamed as unseen. Patient identity is unknown. Minimum additional permission, if desired in a later round, is source-only review of fit/calibration and held-out text for the listed private candidate facts; this run does not wait for or assume that permission.

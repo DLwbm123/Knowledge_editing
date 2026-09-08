@@ -1,0 +1,56 @@
+cohort,index,exposure,independent_case_count,status,missing
+OLD_STAGE3_COMMON7,27,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+OLD_STAGE3_COMMON7,35,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+OLD_STAGE3_COMMON7,66,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+OLD_STAGE3_COMMON7,143,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+OLD_STAGE3_COMMON7,168,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+OLD_STAGE3_COMMON7,172,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+OLD_STAGE3_COMMON7,270,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+SLAKE_STAGE2_BANK16,101,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+SLAKE_STAGE2_BANK16,102,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+SLAKE_STAGE2_BANK16,103,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+SLAKE_STAGE2_BANK16,104,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+SLAKE_STAGE2_BANK16,105,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+SLAKE_STAGE2_BANK16,106,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+SLAKE_STAGE2_BANK16,107,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+SLAKE_STAGE2_BANK16,108,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+SLAKE_STAGE2_BANK16,109,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+SLAKE_STAGE2_BANK16,110,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+SLAKE_STAGE2_BANK16,111,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+SLAKE_STAGE2_BANK16,112,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+SLAKE_STAGE2_BANK16,113,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+SLAKE_STAGE2_BANK16,114,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+SLAKE_STAGE2_BANK16,115,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+SLAKE_STAGE2_BANK16,116,VIEWED_DEVELOPMENT,UNKNOWN,EXECUTABLE,
+TRACK_C_CANDIDATE,1,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,2,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,3,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,4,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,5,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,6,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,7,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,8,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,9,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,10,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,11,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,12,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,13,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,14,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,15,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,16,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,17,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,18,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,19,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,20,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,21,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,22,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,23,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,24,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,25,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,26,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,27,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,28,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,29,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,30,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,31,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
+TRACK_C_CANDIDATE,32,QUERY_HOLDOUT_CASE_INDEPENDENCE_UNKNOWN,UNKNOWN,UNSUPPORTED,No authorized fact-specific fit/calibration paraphrase review; no new derived text approval
