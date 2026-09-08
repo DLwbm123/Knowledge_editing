@@ -1,5 +1,5 @@
 {
-  "status": "VERIFIED_IN_PROGRESS_SNAPSHOT",
+  "status": "VERIFIED_STAGE1_RESULTS_RELEASE",
   "research_repository": "https://github.com/DLwbm123/Knowledge_editing",
   "research_branch": "medtrace-selective-write-20260907",
   "public_repository": "https://github.com/DLwbm123/Knowledge_editing-public",
@@ -7,14 +7,17 @@
   "coordinator_commit": "7f2397d",
   "judge_closure_commit": "502a912",
   "progress_reporting_commit": "2932fb9",
-  "verified_research_content_commit": "e8ff8f6984d4b4149e97a68b0e0daee540f855e0",
-  "verified_public_content_commit": "c55a0fc37e5efc23235cc62b40b08ed54ead9c2c",
-  "anonymous_research_review_http": 200,
+  "verified_research_content_commit": "60b517ec570f64f1ee38dd67c490f1062b1b6428",
+  "verified_public_content_commit": "230454602e2c5441a3ecd87ff7eb130b32e46a7e",
+  "verification_scope": "Completed result content commits; receipt metadata may be committed afterward",
+  "execution_resume_source_commit": "5981c5499da3a1958dfa3c028053f556aaaa8706",
+  "anonymous_research_review_http": null,
   "anonymous_public_review_http": 200,
   "research_review": "https://github.com/DLwbm123/Knowledge_editing/blob/medtrace-selective-write-20260907/reports/medtrace_selective_write_20260907/GPT_PRO_REVIEW.md",
-  "public_review": "https://github.com/DLwbm123/Knowledge_editing-public/blob/main/reports/medtrace_selective_write_20260907/GPT_PRO_REVIEW.md",
-  "experiment_complete": false,
-  "allowed_scope": ["source dependency snapshot", "frozen protocol", "aggregate CPU checks", "fit source counts", "status and audit reports"],
+  "public_review": "https://github.com/DLwbm123/Knowledge_editing-public/blob/230454602e2c5441a3ecd87ff7eb130b32e46a7e/reports/medtrace_selective_write_20260907/RESULTS_SUMMARY_ZH.md",
+  "experiment_complete": true,
+  "completion_scope": "Stage 1: 70/70 judged; new-edit confirmation N=0 remains not run",
+  "allowed_scope": ["source dependency snapshot", "frozen protocol", "aggregate CPU checks", "fit source counts", "final macro and per-edit metrics", "paired bootstrap intervals", "constraint trajectories", "result summary", "status and audit reports"],
   "withheld": ["QA and references", "patient images", "raw answers and tokens", "teacher distributions", "activations", "expert and backbone weights", "Judge mapping", "complete private logs"],
-  "final_results_publication": "PENDING_EXPERIMENT_AND_JUDGE_COMPLETION"
+  "final_results_publication": "VERIFIED_STAGE1_COMPLETE_RELEASE"
 }

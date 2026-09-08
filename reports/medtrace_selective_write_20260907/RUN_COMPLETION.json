@@ -34,7 +34,7 @@
     "worker_gpu2": 0,
     "worker_gpu3": 0
   },
-  "publication": "PENDING_LOCAL_PUBLICATION",
+  "publication": "VERIFIED_STAGE1_RESULTS_RELEASE_SEE_PUBLICATION_STATUS",
   "scientific_gain": "SEE_PAIRED_EFFECTS_NOT_A_PASS_COUNT",
   "status": "STAGE1_COMPLETE"
 }
