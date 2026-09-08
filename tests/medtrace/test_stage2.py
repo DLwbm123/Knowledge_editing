@@ -1,9 +1,11 @@
 """Small CPU check for routing boundaries, frozen tasks and Judge reuse identity."""
 import tempfile
+from unittest.mock import Mock, patch
+from types import SimpleNamespace
 from pathlib import Path
 from dataclasses import asdict
 
-from scripts.medtrace.run_stage2 import NEW_METHODS, queue_task, query_record, same_output, vf
+from scripts.medtrace.run_stage2 import NEW_METHODS, queue_task, query_record, same_output, vf, sw
 from scripts.medtrace.finalize_stage2 import execution_identity, aggregate, METRICS
 from scripts.medtrace.closeout_stage2_local import check_public
 
@@ -47,3 +49,15 @@ def test_stage2_contract():
     edits, macros = aggregate([details])
     assert edits[0]["base_correct_damage"] is None and macros[0]["base_correct_edits"] == 0
     assert same_output(dict(raw_answer="a", raw_token_ids=[1]), dict(raw_answer="a", raw_token_ids=[1]))
+
+
+def test_system_mismatch_retains_forced_endpoint():
+    row = dict(logical_id='query', label='positive')
+    base, forced, mismatch = [dict(raw_answer=str(i), raw_token_ids=[i]) for i in range(3)]
+    with tempfile.TemporaryDirectory() as directory:
+        run = Path(directory)
+        vf.atomic_json(run / 'private/base_generation/e01' / (vf.sha256_json(row)+'.json'), base)
+        with patch.object(vf, 'MedTraceLayerHook', return_value=Mock()), patch.object(vf, 'scope_generate', side_effect=[forced, mismatch, base]):
+            output = sw.endpoint(SimpleNamespace(get_module=lambda _: None), run,
+                dict(event_index=1, task_id='S2_fixture'), dict(rows=[row], frozen_gate={'query': True}), None, None, 16)
+        assert output['query']['forced'] == forced and not output['query']['system_replay_valid']

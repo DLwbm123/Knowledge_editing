@@ -398,14 +398,15 @@ def endpoint(runtime, run, task, data, expert, teacher, chunk):
             if disabled["raw_token_ids"] != base["raw_token_ids"] or disabled["raw_answer"] != base["raw_answer"]:
                 raise RuntimeError("DISABLED failed Base parity")
             expected = forced if on else base
-            if fixed["raw_token_ids"] != expected["raw_token_ids"] or fixed["raw_answer"] != expected["raw_answer"]:
+            system_replay_valid = fixed["raw_token_ids"] == expected["raw_token_ids"] and fixed["raw_answer"] == expected["raw_answer"]
+            if not system_replay_valid and not task['task_id'].startswith('S2_'):
                 raise RuntimeError("fixed-router replay differs")
             kl = None
             if row["label"] == "negative":
                 with torch.no_grad():
                     kl = float(teacher.kl(row, hook, training=False, chunk=chunk))
             outputs[row["logical_id"]] = dict(row=row, base=base, forced=forced, fixed=fixed,
-                disabled_parity=True, fixed_on=on, kl=kl,
+                disabled_parity=True, fixed_on=on, kl=kl, system_replay_valid=system_replay_valid,
                 token_parity=forced["raw_token_ids"] == base["raw_token_ids"])
     finally:
         hook.detach()

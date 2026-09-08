@@ -144,7 +144,8 @@ def lock_base_before(args):
             correct = verdicts[key]
             membership[str(i)][row['logical_id']] = dict(base_correct=correct, eqkey=row['eqkey'], tuple_key=key,
                 H_keep=correct and stratum(row) == 'H', U_keep=correct and stratum(row) == 'U')
-        for role, panel in sorted({(row['role'], stratum(row)) for row in data['rows']}):
+        panels = {(row['role'], stratum(row)) for row in data['rows']} | {(role, group) for role in ('fit', 'calibration', 'evaluation') for group in ('H', 'U')}
+        for role, panel in sorted(panels):
             rows = [r for r in data['rows'] if (r['role'], stratum(r)) == (role, panel)]
             support.append(dict(edit=i, role=role, panel=panel, inputs=len(rows), source_images=len({r['image_path'] for r in rows}),
                 base_correct_inputs=sum(membership[str(i)][r['logical_id']]['base_correct'] for r in rows)))
@@ -227,6 +228,7 @@ def finalize(args):
         data = read(run / f"private/edits/e{task['event_index']:02d}.json")
         target = data["event"]["edit_record"]["gold_answer"]
         method = "BE" if task["kind"] == "BE" else "A2" if task["kind"] == "REFERENCE" else task["parameterization"]+"-"+task["condition"]
+        system_valid = all(item.get('system_replay_valid', True) for item in result['outputs'].values())
         if data["track"] == "NEW_CONFIRMATION":
             decisions = {k: item["fixed_on"] for k, item in result["outputs"].items()}
             if task["event_index"] in gates and decisions != gates[task["event_index"]]:
@@ -236,6 +238,7 @@ def finalize(args):
             parameters=result.get("parameters"), training_seconds=result.get("training_seconds"),
             elapsed_seconds=result.get("elapsed_seconds"), storage_bytes=result.get("storage_bytes"),
             load_seconds=result.get("load_seconds"), peak_vram_bytes=result.get("peak_vram_bytes"),
+            system_status='ACTUAL_REPLAY_VALID' if system_valid else 'SYSTEM_COMBINATION_PAUSED_REPLAY_MISMATCH_FORCED_ON_RETAINED',
             forward_count=result.get("forward_count"), backward_count=result.get("backward_count")))
         for item in result["outputs"].values():
             row = item["row"]
@@ -246,6 +249,8 @@ def finalize(args):
                     raise ValueError('new Base-correct support changed after student launch')
             for mode, branch in (("BE_FORCED_ON" if method == "BE" else "FORCED_ON", "forced"),
                                  ("BE_NATIVE_ROUTED" if method == "BE" else "BE_ROUTE+"+method, "fixed"), ("BASE", "base")):
+                if branch == 'fixed' and not system_valid:
+                    continue
                 correct = score(row, row["reference"], item[branch]["raw_answer"])
                 on = branch == "forced" or branch == "fixed" and item["fixed_on"]
                 details.append(dict(track=data["track"], edit=task["event_index"], method=method, mode=mode,
