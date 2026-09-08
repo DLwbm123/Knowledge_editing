@@ -261,7 +261,7 @@ def bank_task(runtime,run,task):
                 frozen_epoch=time.time(),scope='prefix-only complete original bank competition')
     vf.atomic_json(out/'CALIBRATION_PRIVATE.json',dict(rows=calibration,lock=lock))
     vf.atomic_json(out/'THRESHOLD_LOCK.json',dict(lock,threshold_sha256=vf.sha256_json(lock)))
-    # Evaluation outputs are read only after threshold freezing. No outcome enters calibrate().
+    # Evaluate only after threshold freezing. Earlier artifact reads validate bindings, not calibration outcomes.
     old=read(stage3/f'private/bank/prefix{prefix}/result_private.json')
     if old['base_guard']['after_sha256']!=guard['after_sha256'] or not old['base_guard']['unchanged']:
         raise ValueError('bank Base binding mismatch')
@@ -388,6 +388,8 @@ def coordinator(args):
     finalizer=[sys.executable,str(ROOT/'scripts/medtrace/finalize_stage4.py')]
     cpu=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1')
     status=dict(status='RUNNING',compute='RUNNING',judge='NOT_RUN',publication='PENDING')
+    initial_status=read(run/'public/EXECUTION_STATUS.json')
+    vf.atomic_json(run/'public/EXECUTION_STATUS.json',dict(initial_status,status='RUNNING',compute='RUNNING'))
     try:
         while elapsed()<config['train_seconds'] and not (run/'STOP').exists():
             for gpu,name in list(live.items()):
@@ -398,6 +400,11 @@ def coordinator(args):
                         if t['status']=='RUNNING' and t.get('pid')==proc.pid:
                             queue.update(t['task_id'],'FAILED',last_error='worker exited before closure')
                     del live[gpu]
+            faults=Counter((t['kind'],t.get('last_error')) for t in queue.snapshot()['tasks'] if t['status']=='FAILED')
+            paused={kind for (kind,error),count in faults.items() if count>=2}
+            for t in queue.snapshot()['tasks']:
+                if t['status']=='PENDING' and t['kind'] in paused:
+                    queue.update(t['task_id'],'PAUSED_INTEGRATION',reason='repeated same integration fault in this branch')
             if not queue.ready() and not live:break
             for gpu in GPUS:
                 if gpu in live or not queue.ready():continue
@@ -432,7 +439,7 @@ def coordinator(args):
         launch('finalize',[*finalizer,'finalize','--run-root',str(run)],cpu);wait('finalize')
         status=read(run/'public/EXECUTION_STATUS.json')
     except Exception as error:
-        status.update(status='PARTIAL',error=str(error))
+        status.update(status='PARTIAL',error_type=type(error).__name__,private_failure_record='FAILURE_PRIVATE.json')
         vf.atomic_json(run/'FAILURE_PRIVATE.json',dict(error=str(error),traceback=traceback.format_exc()))
     finally:
         for name,p in children.items():stop(p);exits[name]=p.returncode

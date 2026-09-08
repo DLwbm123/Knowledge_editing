@@ -288,6 +288,8 @@ def finalize(args):
     joint=[]
     t2=effect(OLD,'A',0,'T2G','W01','W0','R0','v4_primary','formal_development')
     joint.append(t2 is not None and t2['delta'] is not None and t2['delta']>=-.05)
+    native_old=effect(OLD,'A',0,'T0','W01','W0','R0','semantic','native')
+    joint.append(native_old is not None and native_old['delta'] is not None and native_old['delta']>=-.05)
     for panel in ('T0','source_style_confirmation','cross_family_confirmation'):
         r=effect(BANK,'A',0,panel,'W01','W0','FORCED_ON','semantic','native' if panel=='T0' else 'evaluation')
         joint.append(r is not None and r['delta'] is not None and r['delta']>=-.05)

@@ -37,3 +37,14 @@ def test_stage4_paired_support_and_bootstrap():
     assert row['paired_inputs']==row['paired_edits']==2 and row['source_images']==1
     assert row['image_cluster_ci_low'] is None
     assert bootstrap([0.,1.])==bootstrap([0.,1.])
+
+
+def test_bank_waits_for_writer_branch_and_failed_writer_does_not_block_scope(tmp_path):
+    from scripts.medtrace.run_stage4 import Queue,vf
+    path=tmp_path/'private/TASK_QUEUE.json'
+    vf.atomic_json(path,dict(tasks=[dict(task_id='a',kind='WRITER',priority=0,status='RUNNING',attempts=1),
+                                  dict(task_id='b',kind='BANK',priority=1,status='PENDING',attempts=0)]))
+    q=Queue(path,tmp_path)
+    assert not q.ready() and q.claim('test') is None
+    q.update('a','FAILED')
+    assert q.claim('test')['task_id']=='b'
