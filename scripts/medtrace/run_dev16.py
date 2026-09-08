@@ -147,6 +147,7 @@ def run_event(
     out: Path,
     *,
     seed_base: int = SEED_BASE,
+    condition_limit: float | None = 1e4,
 ) -> dict[str, Any]:
     record = EditorRecord.from_dict(event["edit_record"])
     random_lock = rng_lock(derive_seed(record.record_id, base=seed_base))
@@ -193,7 +194,7 @@ def run_event(
             optimizer.step()
             expert.normalize_factors_(verify_dense=step == 1 or step % 20 == 0)
         condition = cp_condition(expert)
-        if not math.isfinite(condition) or condition > 1e4:
+        if not math.isfinite(condition) or (condition_limit is not None and condition > condition_limit):
             raise RuntimeError(f"CP input basis condition hard stop: {condition}")
         if step % 20:
             continue

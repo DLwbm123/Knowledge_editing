@@ -245,7 +245,7 @@ def be_task(runtime, args, task):
             if not same_output(vf.scope_generate(runtime, native, None), outputs[native['logical_id']]["forced"]):
                 raise RuntimeError("BalancEdit saved-state reload mismatch")
         gates = {lid: value["fixed_on"] for lid, value in outputs.items()}
-        if data["track"] == "NEW_CONFIRMATION":
+        if data["track"] in {"NEW_CONFIRMATION", "V4_STAGE3"}:
             data.update(frozen_gate=gates, frozen_gate_sha256=vf.sha256_json(gates),
                         router_provenance="BE pre-edit Base anchors; single expert; no eval threshold calibration")
             vf.atomic_json(run / f"private/edits/e{i:02d}.json", data)
@@ -270,9 +270,9 @@ def initialize_episode(runtime, args, task):
     """Runnable native->A2 entry: early stop reads native only, never held-out probes."""
     run, i = args.run_root, task["event_index"]
     data = read(run / f"private/edits/e{i:02d}.json")
-    if data["track"] != "NEW_CONFIRMATION" or not data.get("source_eligibility_frozen"):
+    if data["track"] not in {"NEW_CONFIRMATION", "V4_STAGE3"} or not data.get("source_eligibility_frozen"):
         raise ValueError("initializer requires a pre-student authorized source manifest")
-    if not (run / "private/BASE_BEFORE_ROLE_LOCK_PRIVATE.json").exists():
+    if data["track"] == "NEW_CONFIRMATION" and not (run / "private/BASE_BEFORE_ROLE_LOCK_PRIVATE.json").exists():
         raise RuntimeError("new initializer requires frozen Base-before Judge membership")
     bind_rows(runtime, data)
     event = dict(data["event"], probes=[])
@@ -282,7 +282,8 @@ def initialize_episode(runtime, args, task):
     before = base_for(runtime, run, data, native)
     record = vf.EditorRecord.from_dict(event["edit_record"])
     base = {record.record_id: dict(raw_generated_token_ids=before["raw_token_ids"], model_answer_raw=before["raw_answer"])}
-    result = run_event(runtime, event, base, out, seed_base=SEED)
+    result = run_event(runtime, event, base, out, seed_base=SEED,
+                       condition_limit=None if data['track'] == 'V4_STAGE3' else 1e4)
     vf.atomic_json(out / "result.json", result)
     checkpoint = torch.load(out / "expert.pt", map_location=runtime.device, weights_only=True)
     cp, metadata = train_condition(runtime, record, [r["question"] for r in data["fit_paraphrases"]], checkpoint, sw.A2, seed_base=SEED)

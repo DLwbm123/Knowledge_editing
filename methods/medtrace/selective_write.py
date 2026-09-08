@@ -131,8 +131,9 @@ def group_mean(values, rows):
 
 class Protection:
     """Detached fit-only primal-dual state, initialized before any optimizer step."""
-    def __init__(self, initial, condition):
-        if condition not in CONDITIONS or set(initial) != {"H", "U"}:
+    def __init__(self, initial, condition, *, allow_missing_task_only=False):
+        missing_allowed = allow_missing_task_only and condition == CONDITIONS[0] and set(initial) <= {'H', 'U'}
+        if condition not in CONDITIONS or (set(initial) != {"H", "U"} and not missing_allowed):
             raise ValueError("unknown condition or incomplete fit groups")
         if any(not math.isfinite(k) or k < -1e-5 for k in initial.values()):
             raise FloatingPointError("invalid initial KL")

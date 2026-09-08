@@ -349,7 +349,12 @@ def shared_initial(runtime, run, task, data, config):
         record = vf.EditorRecord.from_dict(data["event"]["edit_record"])
         native = next(r for r in data["rows"] if r["role"] == "native")
         fixtures = [native, next(r for r in data["rows"] if r["role"] == "fit" and r["label"] == "positive" and r["question"] != native["question"])]
-        fixtures += [next(r for r in data["rows"] if r["role"] == "fit" and r["fact_relation"] == rel) for rel in RELATIONS.values()]
+        for rel in RELATIONS.values():
+            fixture = next((r for r in data['rows'] if r['role'] == 'fit' and r['fact_relation'] == rel), None)
+            if fixture is None and data.get('track') != 'V4_STAGE3':
+                raise ValueError('missing required historical fit stratum')
+            if fixture is not None:
+                fixtures.append(fixture)
         lr = LowRankExpert(cp, vf.derive_seed(record.record_id, SEED))
         transfer = []
         for row in fixtures:
@@ -364,6 +369,8 @@ def shared_initial(runtime, run, task, data, config):
             with torch.no_grad():
                 for g, rel in RELATIONS.items():
                     pool = [r for r in rows if r["role"] == "fit" and r["fact_relation"] == rel]
+                    if not pool and data.get('track') == 'V4_STAGE3':
+                        continue  # Missing support stays absent, never a zero KL.
                     values = {r["logical_id"]: float(teacher.kl(r, hook, training=True, chunk=16)) for r in pool}
                     initial[g] = group_mean(values, pool)
         finally:
@@ -443,11 +450,12 @@ def train_task(runtime, args, task, chunk=16):
             training["forward_count"], training["backward_count"], None, start)
     expert.requires_grad_(True)
     optimizer = optimizer_for(expert, runtime.model)
-    protect = Protection(initial["initial"], task["condition"])
+    stage3_task_only = data.get('track') == 'V4_STAGE3' and task['condition'] == CONDITIONS[0]
+    protect = Protection(initial["initial"], task["condition"], allow_missing_task_only=stage3_task_only)
     rows = data["rows"]
     pools = {g: [r for r in rows if r["role"] == "fit" and r["fact_relation"] == rel] for g,rel in RELATIONS.items()}
     schedules = {g: balanced_schedule(fit_groups(pool, g), STEPS, vf.derive_seed(record.record_id, SEED)+j)
-                 for j,(g,pool) in enumerate(pools.items())}
+                 for j,(g,pool) in enumerate(pools.items()) if pool or not stage3_task_only}
     positive_batches = [runtime.build_edit_batch(record)] + [runtime.build_edit_batch(replace(record, question=p["question"])) for p in data["fit_paraphrases"]]
     teacher = TeacherCache(runtime, run, task["event_index"], config)
     hook = vf.MedTraceLayerHook(runtime.get_module(vf.LAYER), expert)
@@ -497,7 +505,7 @@ def train_task(runtime, args, task, chunk=16):
             if step in (0,80,160,320):
                 with torch.no_grad():
                     full = {g: group_mean({r["logical_id"]: float(teacher.kl(r, hook, training=True, chunk=chunk)) for r in pool}, pool)
-                            for g,pool in pools.items()}
+                            for g,pool in pools.items() if pool or not stage3_task_only}
                     forwards += sum(len(p) for p in pools.values())
                 diagnostics.append(dict(step=step, full_fit_kl=full,
                     constraint_residual={g: full[g]-protect.epsilon[g] for g in full}, dual=dict(protect.dual),

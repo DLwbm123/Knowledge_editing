@@ -76,6 +76,8 @@ def main():
     p.add_argument("--research", required=True, type=Path)
     p.add_argument("--public", required=True, type=Path)
     p.add_argument("--state", required=True, type=Path)
+    p.add_argument("--branch", default="medtrace-stage2-20260908")
+    p.add_argument("--terminal-report", default="RUN_COMPLETION.json", choices=("RUN_COMPLETION.json", "EXECUTION_STATUS.json"))
     args = p.parse_args()
     # Inputs are operator-frozen paths, not arbitrary shell snippets.
     if any(c in args.run_root+args.remote_public_dir for c in "'\n\r\x00"):
@@ -101,7 +103,7 @@ def main():
                 continue  # Missing optional/unfinished reports remain visibly absent.
             check_public(temporary / name)
             received.append(name)
-        if "RUN_COMPLETION.json" not in received:
+        if args.terminal_report not in received:
             raise RuntimeError("terminal report not available")
         for repo in (args.research, args.public):
             if command(['git', '-C', str(repo), 'rev-parse', 'HEAD']) != heads[str(repo)]:
@@ -113,9 +115,9 @@ def main():
             for name in received:
                 shutil.copyfile(temporary / name, destination / name)
         paths = [RELDIR+"/"+name for name in received]
-        research_sha = push(args.research, paths, "https://github.com/DLwbm123/Knowledge_editing.git", "medtrace-stage2-20260908", "Publish bounded Stage2 result closure")
-        public_sha = push(args.public, paths, "origin", "main", "Publish Stage2 aggregate results and completion ledger")
-        url = f"https://raw.githubusercontent.com/DLwbm123/Knowledge_editing-public/{public_sha}/{RELDIR}/RUN_COMPLETION.json"
+        research_sha = push(args.research, paths, "https://github.com/DLwbm123/Knowledge_editing.git", args.branch, "Publish bounded experiment result closure")
+        public_sha = push(args.public, paths, "origin", "main", "Publish aggregate results and completion ledger")
+        url = f"https://raw.githubusercontent.com/DLwbm123/Knowledge_editing-public/{public_sha}/{RELDIR}/{args.terminal_report}"
         with urllib.request.urlopen(url, timeout=30) as response:
             observed = json.load(response)
         if observed != status:
