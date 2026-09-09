@@ -1,0 +1,416 @@
+[
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F0",
+    "edit": 27,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F1",
+    "edit": 27,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F2",
+    "edit": 27,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F0",
+    "edit": 35,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F1",
+    "edit": 35,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F2",
+    "edit": 35,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F0",
+    "edit": 66,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F1",
+    "edit": 66,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F2",
+    "edit": 66,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F0",
+    "edit": 143,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F1",
+    "edit": 143,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F2",
+    "edit": 143,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F0",
+    "edit": 168,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F1",
+    "edit": 168,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F2",
+    "edit": 168,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F0",
+    "edit": 172,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F1",
+    "edit": 172,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F2",
+    "edit": 172,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F0",
+    "edit": 270,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F1",
+    "edit": 270,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "OLD_STAGE3_COMMON7",
+    "condition": "F2",
+    "edit": 270,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F0",
+    "edit": 101,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F1",
+    "edit": 101,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F2",
+    "edit": 101,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F0",
+    "edit": 102,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F1",
+    "edit": 102,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F2",
+    "edit": 102,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F0",
+    "edit": 103,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F1",
+    "edit": 103,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F2",
+    "edit": 103,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F0",
+    "edit": 104,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F1",
+    "edit": 104,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F2",
+    "edit": 104,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F0",
+    "edit": 105,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F1",
+    "edit": 105,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F2",
+    "edit": 105,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F0",
+    "edit": 106,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F1",
+    "edit": 106,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F2",
+    "edit": 106,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F0",
+    "edit": 107,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F1",
+    "edit": 107,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F2",
+    "edit": 107,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F0",
+    "edit": 108,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F1",
+    "edit": 108,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F2",
+    "edit": 108,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F0",
+    "edit": 109,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F1",
+    "edit": 109,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F2",
+    "edit": 109,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F0",
+    "edit": 110,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F1",
+    "edit": 110,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F2",
+    "edit": 110,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F0",
+    "edit": 111,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F1",
+    "edit": 111,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F2",
+    "edit": 111,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F0",
+    "edit": 112,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F1",
+    "edit": 112,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F2",
+    "edit": 112,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F0",
+    "edit": 113,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F1",
+    "edit": 113,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F2",
+    "edit": 113,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F0",
+    "edit": 114,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F1",
+    "edit": 114,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F2",
+    "edit": 114,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F0",
+    "edit": 115,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F1",
+    "edit": 115,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F2",
+    "edit": 115,
+    "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F0",
+    "edit": 116,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F1",
+    "edit": 116,
+    "status": "COMPLETE"
+  },
+  {
+    "cohort": "SLAKE_STAGE2_BANK16",
+    "condition": "F2",
+    "edit": 116,
+    "status": "COMPLETE"
+  }
+]

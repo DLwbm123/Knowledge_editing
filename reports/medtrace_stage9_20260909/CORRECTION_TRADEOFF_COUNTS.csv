@@ -1,0 +1,9 @@
+candidate,control,role,panel,inputs,lost_correction,gained_correction,avoided_damage,introduced_damage
+F1,F0,evaluation,H,19,0,0,9,0
+F2,F0,evaluation,H,19,0,0,9,0
+F1,F0,evaluation,U,190,11,1,50,3
+F2,F0,evaluation,U,190,11,1,51,3
+F1,B0,evaluation,H,19,0,0,9,0
+F2,B0,evaluation,H,19,0,0,9,0
+F1,B0,evaluation,U,190,9,0,31,2
+F2,B0,evaluation,U,190,9,0,32,2

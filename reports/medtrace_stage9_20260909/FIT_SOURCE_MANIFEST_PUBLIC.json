@@ -1,0 +1,391 @@
+{
+  "audit": "finite original fit packet audit; not new clinical signoff",
+  "exposure": "viewed development",
+  "planned": 23,
+  "runnable": 15,
+  "selection": "frozen source-group then EqKey order; no outcome selection",
+  "tasks": [
+    {
+      "H_pairs": 0,
+      "H_source_groups": 0,
+      "U_source_groups": 4,
+      "cohort": "OLD_STAGE3_COMMON7",
+      "edit": 27,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 0,
+      "patient": "UNKNOWN",
+      "rejected": {
+        "MISSING_DIRECT_SOURCE_BINDING": 1
+      },
+      "relations": [],
+      "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+    },
+    {
+      "H_pairs": 0,
+      "H_source_groups": 0,
+      "U_source_groups": 4,
+      "cohort": "OLD_STAGE3_COMMON7",
+      "edit": 35,
+      "fit_positive_inputs": 2,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 1,
+      "patient": "UNKNOWN",
+      "rejected": {
+        "MISSING_DIRECT_SOURCE_BINDING": 3
+      },
+      "relations": [],
+      "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+    },
+    {
+      "H_pairs": 0,
+      "H_source_groups": 0,
+      "U_source_groups": 4,
+      "cohort": "OLD_STAGE3_COMMON7",
+      "edit": 66,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 2,
+      "patient": "UNKNOWN",
+      "rejected": {
+        "MISSING_DIRECT_SOURCE_BINDING": 1
+      },
+      "relations": [],
+      "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+    },
+    {
+      "H_pairs": 0,
+      "H_source_groups": 0,
+      "U_source_groups": 4,
+      "cohort": "OLD_STAGE3_COMMON7",
+      "edit": 143,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 3,
+      "patient": "UNKNOWN",
+      "rejected": {
+        "MISSING_DIRECT_SOURCE_BINDING": 2
+      },
+      "relations": [],
+      "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+    },
+    {
+      "H_pairs": 0,
+      "H_source_groups": 0,
+      "U_source_groups": 4,
+      "cohort": "OLD_STAGE3_COMMON7",
+      "edit": 168,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 4,
+      "patient": "UNKNOWN",
+      "rejected": {
+        "MISSING_DIRECT_SOURCE_BINDING": 4
+      },
+      "relations": [],
+      "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+    },
+    {
+      "H_pairs": 0,
+      "H_source_groups": 0,
+      "U_source_groups": 4,
+      "cohort": "OLD_STAGE3_COMMON7",
+      "edit": 172,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 5,
+      "patient": "UNKNOWN",
+      "rejected": {
+        "MISSING_DIRECT_SOURCE_BINDING": 2
+      },
+      "relations": [],
+      "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+    },
+    {
+      "H_pairs": 0,
+      "H_source_groups": 0,
+      "U_source_groups": 4,
+      "cohort": "OLD_STAGE3_COMMON7",
+      "edit": 270,
+      "fit_positive_inputs": 2,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 6,
+      "patient": "UNKNOWN",
+      "rejected": {
+        "MISSING_DIRECT_SOURCE_BINDING": 3
+      },
+      "relations": [],
+      "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+    },
+    {
+      "H_pairs": 3,
+      "H_source_groups": 3,
+      "U_source_groups": 4,
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 101,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 7,
+      "patient": "UNKNOWN",
+      "rejected": {},
+      "relations": [
+        "SOURCE_SINGLE_REGION_SLOT",
+        "SOURCE_SINGLE_REGION_SLOT",
+        "SOURCE_SINGLE_REGION_SLOT"
+      ],
+      "status": "PENDING"
+    },
+    {
+      "H_pairs": 1,
+      "H_source_groups": 1,
+      "U_source_groups": 4,
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 102,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 8,
+      "patient": "UNKNOWN",
+      "rejected": {},
+      "relations": [
+        "SAME_PROPOSITION_YES_NO"
+      ],
+      "status": "PENDING"
+    },
+    {
+      "H_pairs": 1,
+      "H_source_groups": 1,
+      "U_source_groups": 4,
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 103,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 9,
+      "patient": "UNKNOWN",
+      "rejected": {},
+      "relations": [
+        "SAME_PROPOSITION_YES_NO"
+      ],
+      "status": "PENDING"
+    },
+    {
+      "H_pairs": 2,
+      "H_source_groups": 2,
+      "U_source_groups": 4,
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 104,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 10,
+      "patient": "UNKNOWN",
+      "rejected": {
+        "VALUES_NOT_COVERED_BY_RELATION": 1
+      },
+      "relations": [
+        "SOURCE_SINGLE_REGION_SLOT",
+        "SOURCE_SINGLE_REGION_SLOT"
+      ],
+      "status": "PENDING"
+    },
+    {
+      "H_pairs": 1,
+      "H_source_groups": 1,
+      "U_source_groups": 4,
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 105,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 11,
+      "patient": "UNKNOWN",
+      "rejected": {
+        "VALUES_NOT_COVERED_BY_RELATION": 2
+      },
+      "relations": [
+        "SOURCE_SINGLE_REGION_SLOT"
+      ],
+      "status": "PENDING"
+    },
+    {
+      "H_pairs": 3,
+      "H_source_groups": 3,
+      "U_source_groups": 4,
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 106,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 12,
+      "patient": "UNKNOWN",
+      "rejected": {},
+      "relations": [
+        "SOURCE_SINGLE_REGION_SLOT",
+        "SOURCE_SINGLE_REGION_SLOT",
+        "SOURCE_SINGLE_REGION_SLOT"
+      ],
+      "status": "PENDING"
+    },
+    {
+      "H_pairs": 1,
+      "H_source_groups": 1,
+      "U_source_groups": 4,
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 107,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 13,
+      "patient": "UNKNOWN",
+      "rejected": {},
+      "relations": [
+        "SAME_PROPOSITION_YES_NO"
+      ],
+      "status": "PENDING"
+    },
+    {
+      "H_pairs": 3,
+      "H_source_groups": 3,
+      "U_source_groups": 4,
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 108,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 14,
+      "patient": "UNKNOWN",
+      "rejected": {},
+      "relations": [
+        "SOURCE_SINGLE_REGION_SLOT",
+        "SOURCE_SINGLE_REGION_SLOT",
+        "SOURCE_SINGLE_REGION_SLOT"
+      ],
+      "status": "PENDING"
+    },
+    {
+      "H_pairs": 2,
+      "H_source_groups": 2,
+      "U_source_groups": 4,
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 109,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 15,
+      "patient": "UNKNOWN",
+      "rejected": {},
+      "relations": [
+        "SAME_PROPOSITION_YES_NO",
+        "SAME_PROPOSITION_YES_NO"
+      ],
+      "status": "PENDING"
+    },
+    {
+      "H_pairs": 1,
+      "H_source_groups": 1,
+      "U_source_groups": 4,
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 110,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 16,
+      "patient": "UNKNOWN",
+      "rejected": {},
+      "relations": [
+        "SAME_PROPOSITION_YES_NO"
+      ],
+      "status": "PENDING"
+    },
+    {
+      "H_pairs": 1,
+      "H_source_groups": 1,
+      "U_source_groups": 4,
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 111,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 17,
+      "patient": "UNKNOWN",
+      "rejected": {},
+      "relations": [
+        "SAME_PROPOSITION_YES_NO"
+      ],
+      "status": "PENDING"
+    },
+    {
+      "H_pairs": 1,
+      "H_source_groups": 1,
+      "U_source_groups": 4,
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 112,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 18,
+      "patient": "UNKNOWN",
+      "rejected": {
+        "NO_EXACT_QUESTION_OR_APPROVED_EQUIVALENCE": 1
+      },
+      "relations": [
+        "SOURCE_SINGLE_WEIGHTING_SLOT"
+      ],
+      "status": "PENDING"
+    },
+    {
+      "H_pairs": 1,
+      "H_source_groups": 1,
+      "U_source_groups": 4,
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 113,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 19,
+      "patient": "UNKNOWN",
+      "rejected": {},
+      "relations": [
+        "SAME_PROPOSITION_YES_NO"
+      ],
+      "status": "PENDING"
+    },
+    {
+      "H_pairs": 1,
+      "H_source_groups": 1,
+      "U_source_groups": 4,
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 114,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 20,
+      "patient": "UNKNOWN",
+      "rejected": {},
+      "relations": [
+        "SOURCE_UNIQUE_LARGEST_SLOT"
+      ],
+      "status": "PENDING"
+    },
+    {
+      "H_pairs": 0,
+      "H_source_groups": 0,
+      "U_source_groups": 4,
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 115,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 21,
+      "patient": "UNKNOWN",
+      "rejected": {
+        "VALUES_NOT_COVERED_BY_RELATION": 1
+      },
+      "relations": [],
+      "status": "UNSUPPORTED_MATCHED_TRAINING_INPUT"
+    },
+    {
+      "H_pairs": 1,
+      "H_source_groups": 1,
+      "U_source_groups": 4,
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 116,
+      "fit_positive_inputs": 4,
+      "new_use": "original fit H source-answer supervision; exact question, source records and explicit slot/proposition relation",
+      "order": 22,
+      "patient": "UNKNOWN",
+      "rejected": {},
+      "relations": [
+        "SOURCE_SINGLE_REGION_SLOT"
+      ],
+      "status": "PENDING"
+    }
+  ]
+}

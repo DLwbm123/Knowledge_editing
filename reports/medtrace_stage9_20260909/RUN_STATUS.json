@@ -1,0 +1,22 @@
+{
+  "complete_trajectories": 45,
+  "exit_codes": {
+    "first": 0,
+    "judge": 0,
+    "part0": 0,
+    "part1": 0,
+    "prepare_judge": 0,
+    "report": 0
+  },
+  "gpu_hours_upper_bound": 1.3030728122260835,
+  "judge_missing": 0,
+  "judge_new": 277,
+  "judge_required": 1620,
+  "judge_reused": 1343,
+  "judge_scored": 1620,
+  "planned_trajectories": 69,
+  "publication": "PENDING",
+  "status": "COMPUTE_COMPLETE_SUPPORTED_SUBSET",
+  "unsupported_trajectories": 24,
+  "wall_seconds": 2838.905998945236
+}

@@ -1,0 +1,60 @@
+{
+  "conditions": [
+    "F0_POS_CONT",
+    "F1_SOURCE_CE",
+    "F2_BIDIRECTIONAL_FACT_CONTRAST"
+  ],
+  "execution_commit": "ecf3921",
+  "gpu_uuids": {
+    "0": "GPU-688ed629-7a46-b62c-e3e4-0940e1649b5f",
+    "2": "GPU-35be76e9-8ca5-1877-ddfe-27eb08f6721b",
+    "3": "GPU-43e3d478-7979-ea29-8130-64a467b48a5c"
+  },
+  "gpus": [
+    0,
+    2,
+    3
+  ],
+  "initialization": "independent clones of original CP W0 step320, optimizer empty; original seed retained",
+  "judge_gpu": 0,
+  "layer": "model.layers.21.mlp.down_proj",
+  "loss": {
+    "H": "source CE including EOS",
+    "U": "0.01 unnormalized token-mean Base||student KL",
+    "pair": "0.1 times bidirectional mean hinge, margin0.5; content tokens only",
+    "positive": "0.5 native CE + 0.5 rotating fit CE"
+  },
+  "optimizer": {
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "clip": 1,
+    "eps": 1e-08,
+    "input_lr": 0.0001,
+    "name": "Adam",
+    "output_rho_lr": 0.001,
+    "weight_decay": 0
+  },
+  "parameter_count": 1476,
+  "parameters": [
+    "u_in",
+    "v_in",
+    "u_out",
+    "v_out",
+    "rho"
+  ],
+  "publication": "PENDING",
+  "rank": 4,
+  "record_step": 80,
+  "seed_order": 20260910,
+  "stage8_public_commit": "c88307eea7b0503f472c0039f0b5b9853f9d6825",
+  "steps": 160,
+  "total_gpu_hours": 8,
+  "training_gpu_hours_limit": 6.5,
+  "wall_hours": 8,
+  "worker_gpus": [
+    2,
+    3
+  ]
+}
