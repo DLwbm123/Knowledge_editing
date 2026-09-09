@@ -1,0 +1,13 @@
+{
+  "status": "PUBLIC_DELIVERY_VERIFIED",
+  "supersedes": "RUN_STATUS.json publication field records the pre-publication compute closeout; this receipt supersedes that pending publication state.",
+  "research_branch": "medtrace-stage5-20260909",
+  "research_result_commit": "abf004385f3932602216c16667330071f0d205ad",
+  "public_branch": "main",
+  "public_result_commit": "1b25ab3290d87ef7bcd5b86be17e7b8ef51ed4e4",
+  "report_url": "https://github.com/DLwbm123/Knowledge_editing-public/blob/1b25ab3290d87ef7bcd5b86be17e7b8ef51ed4e4/reports/medtrace_stage5_20260909/GPT_PRO_REVIEW.md",
+  "remote_commits_verified": true,
+  "anonymous_report_access_verified": true,
+  "computation_repeated": false,
+  "excluded": "Private QA, images, weights, credentials, patient data and full private logs/history."
+}
