@@ -34,6 +34,7 @@ def main(args):
             batch=s.bank.input_batch(runtime,row)
             key=runtime.extract_layer_input_key(batch,module_path=generator.target,pooling='mean')
             return asdict(selected_router.route(key))
+    old_fit_eqkeys={r['eqkey'] for e in episodes for r in e['rows'] if r['role']=='fit'}
     replays=[];cache={};entries=[];started=time.time()
     def generate(selected,row):
         identity=dict(eqkey=row['eqkey'],writer=artifacts[method,selected]['identity'] if selected else 'BASE')
@@ -73,6 +74,7 @@ def main(args):
             owner=byedit[probe['edit']]
             # Only realizes EqKey; no routes or labels are chosen by bind_rows.
             s.bind_rows(runtime,dict(event=owner['event'],rows=[row],track='STAGE6_EVALUATION_ONLY'))
+            assert row['eqkey'] not in old_fit_eqkeys, 'new sidecar realized input overlaps old fit'
             decision=route(row);selected=decision['logical_edit_id'] if decision['activated'] else None
             baseline=generate(None,row);actual=generate(selected,row)
             positive=row['label']=='positive'

@@ -262,7 +262,8 @@ def report(args):
     pair_input=[dict(r,mode=('DEV_THRESHOLD_TRANSFER_DIAGNOSTIC' if r['track']=='A' else 'RC')) if r['mode']==FIXED else r for r in rows]
     effects=f5.pairs(pair_input)
     for r in effects:
-        if r['mode'] in ('RC','DEV_THRESHOLD_TRANSFER_DIAGNOSTIC'):r['mode']=FIXED
+        for field in ('mode','control_mode'):
+            if r[field] in ('RC','DEV_THRESHOLD_TRANSFER_DIAGNOSTIC'):r[field]=FIXED
     f5.f4.csv_write(run/'public/PAIRED_EFFECTS.csv',effects)
     vf.atomic_json(run/'private/DETAILS.json',rows)
     complete=all((run/f'private/sidecar_{m}.json').exists() and read(run/f'private/sidecar_{m}.json')['status']=='RAW_READY' for m in ('W0','BE')) and not missing
