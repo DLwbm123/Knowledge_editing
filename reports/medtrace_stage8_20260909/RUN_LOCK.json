@@ -1,0 +1,83 @@
+{
+  "all_exposed_development": true,
+  "backbone_unchanged": true,
+  "cohorts": {
+    "OLD_STAGE3_COMMON7": 7,
+    "SLAKE_STAGE2_BANK16": 16
+  },
+  "conditions": [
+    "B0_W0",
+    "B1_APR_FULL",
+    "B2_APR_DAMPED",
+    "B3_APR_TR"
+  ],
+  "deploy_dtype": "float32",
+  "eta": 0.1,
+  "execution_commit": "85f8e9f616a780ab6a611b7a544884e41df0a0ee",
+  "publication_identity": "Containing Git commit; original RUN_STATUS publication field is the compute-time snapshot",
+  "fit_dtype": "float64",
+  "fp32_constraint_tolerance": 5e-05,
+  "fp64_constraint_tolerance": 1e-08,
+  "gpu_hours_limit": 8,
+  "gpu_indices": [
+    0
+  ],
+  "gpu_uuids": {
+    "0": "GPU-688ed629-7a46-b62c-e3e4-0940e1649b5f"
+  },
+  "historical_fields": "Other numerical/checkpoint settings inherited from Stage7; preparation_commit refers to Stage7",
+  "known_patients": "UNKNOWN",
+  "layer": "model.layers.21.mlp.down_proj",
+  "maximum_closed_form_solves": 46,
+  "maximum_new_endpoints": 46,
+  "multiplier_bisection_limit": 64,
+  "multiplier_bracket_limit": 64,
+  "negative_sampling": "at most4 H and4 U source groups sorted by frozen source_group; first EqKey QA; first4 Base predictors",
+  "no_stage6_sidecar_fit": true,
+  "norm_relative_slack": 1e-05,
+  "old16_kappa": 0.7696741135364367,
+  "old16_threshold_lock": {
+    "calibration_rows": 317,
+    "calibration_sha256": "f136ce337854a69b5132b7111e88563a77f18fd91ae1dab3536a1e1a192e20c3",
+    "candidates": 149,
+    "constraints": [
+      {
+        "average": "micro",
+        "decrease": 0.0,
+        "family": "V1_context_wrapper",
+        "r0": 1.0,
+        "rc": 1.0
+      },
+      {
+        "average": "macro",
+        "decrease": 0.0,
+        "family": "V1_context_wrapper",
+        "r0": 1.0,
+        "rc": 1.0
+      }
+    ],
+    "feasible": 87,
+    "frozen_epoch": 1788868264.5102487,
+    "kappa": 0.7696741135364367,
+    "objective": "equal H/U edit-macro strict-base activation; no outcome/gold scoring",
+    "prefix": 16,
+    "r0_objective": 0.9790521978021978,
+    "rc_objective": 0.0,
+    "scope": "prefix-only complete original bank competition",
+    "status": "CALIBRATED",
+    "threshold_sha256": "0e1ea4ff0f38e9c314b9d403af11a23a212e1d23e3572466f30795ad1b76513d",
+    "tie_rule": "binary64 inclusive >=; nextafter breakpoints; minimum objective then smallest kappa"
+  },
+  "positive_sampling": "all native and original fit-positive complete W0 trajectories including EOS prediction",
+  "preparation_commit": "aa85875ec82997f6404ba27bfc45ac1c1102e2b1",
+  "rank": 4,
+  "ridge": "0.01 * max(weighted_N_squared_frobenius / n_columns, 1e-12)",
+  "sgd_steps": 0,
+  "stage6_public_commit": "f0d2fa95b7475a0630043a3ec4483c4002e3c3f3",
+  "stage7_public_commit": "c1be54e590d0a6c7179256d41006e3d497c71522",
+  "stage8_formula": "delta(mu)=-(A0 N) solve(RtR+(lambda0+mu)I,Rt); bound effective B0 delta Frobenius norm",
+  "status": "FROZEN_BEFORE_FITTING",
+  "svd_relative_tolerance": 1e-10,
+  "target_propagation": "NA; no dedicated scoring protocol",
+  "wall_hours_limit": 4
+}
