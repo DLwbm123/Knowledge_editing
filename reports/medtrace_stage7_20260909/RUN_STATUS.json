@@ -1,0 +1,138 @@
+{
+  "closed_form_solves": 46,
+  "coverage": [
+    {
+      "cohort": "OLD_STAGE3_COMMON7",
+      "edit": 27,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "OLD_STAGE3_COMMON7",
+      "edit": 35,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "OLD_STAGE3_COMMON7",
+      "edit": 66,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "OLD_STAGE3_COMMON7",
+      "edit": 143,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "OLD_STAGE3_COMMON7",
+      "edit": 168,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "OLD_STAGE3_COMMON7",
+      "edit": 172,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "OLD_STAGE3_COMMON7",
+      "edit": 270,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 101,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 102,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 103,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 104,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 105,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 106,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 107,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 108,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 109,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 110,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 111,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 112,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 113,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 114,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 115,
+      "status": "COMPLETE"
+    },
+    {
+      "cohort": "SLAKE_STAGE2_BANK16",
+      "edit": 116,
+      "status": "COMPLETE"
+    }
+  ],
+  "exit_codes": {
+    "first": 0,
+    "judge": 0,
+    "part0": 0,
+    "part1": 0,
+    "prepare_judge": 0,
+    "report": 0
+  },
+  "gpu_hours_upper_bound": 0.7501197691758473,
+  "judge_missing": 0,
+  "judge_new": 337,
+  "judge_required": 1754,
+  "judge_reused": 1417,
+  "judge_scored": 1754,
+  "new_sgd_training": 0,
+  "publication": "PUBLICATION_PENDING",
+  "status": "COMPUTE_COMPLETE",
+  "wall_seconds": 1647.933602809906
+}

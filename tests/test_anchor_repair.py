@@ -42,3 +42,25 @@ def test_repair_dense_and_edges():
             layer(x);raise RuntimeError('cleanup probe')
     except RuntimeError:pass
     torch.testing.assert_close(layer(x),before);hook.detach()
+
+
+def test_legacy_fit_binding(tmp_path):
+    import json
+    from types import SimpleNamespace
+    from scripts.medtrace.stage7 import input_batch,vf
+    batch=SimpleNamespace(image_sha256='image',raw_input_ids=torch.tensor([[1,2,3]]),
+        attention_mask=torch.ones(1,3,dtype=torch.long),key_token_index=2,image_token_start=0,image_token_end=1)
+    locks={'source_version':'frozen'}
+    payload=dict(image_tensor_sha256='image',target_free_prompt_tokens=[1,2,3],attention_mask=[1,1,1],
+        assistant_boundary_index=2,image_token_span=[0,1],**locks)
+    row=dict(question='q',image_path='image',reference='a',role='fit',label='negative',
+        eqkey=vf.sha256_json(payload),panel='matched',support_source=str(tmp_path/'source.json'))
+    event=dict(edit_record=dict(record_id='id',dataset='test',question='q',image_path='image',gold_answer='a',
+        official_rephrase='',relative_image_path='image',formal_sequence_position=0,question_type='test'))
+    (tmp_path/'source.json').write_text(json.dumps(dict(rows=[row],event=event,cache_locks={'matched':locks})))
+    runtime=SimpleNamespace(generation_config={},build_question_batch=lambda *a,**kw:batch)
+    assert input_batch(runtime,row) is batch
+    batch.raw_input_ids=torch.tensor([[1,2,4]])
+    try:input_batch(runtime,row)
+    except ValueError:pass
+    else:raise AssertionError('legacy binding must reject changed actual tokens')
