@@ -1,0 +1,67 @@
+{
+  "actual_generation_and_coordinator_commit": "55cbfb80c8bd53769202291bd876f89304677fc9",
+  "local_matching_source_commit": "6467aec",
+  "provenance_note": "Remote execution commit differs from local commit history; source copied from the local Stage6 implementation. Threshold and existing Stage5 execution identities remain distinct.",
+  "calibration_status": "NOT_PERFORMED_FIXED_NUMERICAL_TRANSFER",
+  "condition": "RC_FIXED_OLD16",
+  "gpu_hours_limit": 12,
+  "gpu_indices": [
+    0,
+    1
+  ],
+  "gpu_uuids": {
+    "0": "GPU-688ed629-7a46-b62c-e3e4-0940e1649b5f",
+    "1": "GPU-5fac6011-5432-229f-bb11-9ce9f104a334"
+  },
+  "kappa": 0.7696741135364367,
+  "methods": [
+    "W0",
+    "BE"
+  ],
+  "new_calibration_used": false,
+  "new_writer_training": 0,
+  "old_results_read_only": true,
+  "original_lock": {
+    "calibration_rows": 317,
+    "calibration_sha256": "f136ce337854a69b5132b7111e88563a77f18fd91ae1dab3536a1e1a192e20c3",
+    "candidates": 149,
+    "constraints": [
+      {
+        "average": "micro",
+        "decrease": 0.0,
+        "family": "V1_context_wrapper",
+        "r0": 1.0,
+        "rc": 1.0
+      },
+      {
+        "average": "macro",
+        "decrease": 0.0,
+        "family": "V1_context_wrapper",
+        "r0": 1.0,
+        "rc": 1.0
+      }
+    ],
+    "feasible": 87,
+    "frozen_epoch": 1788868264.5102487,
+    "kappa": 0.7696741135364367,
+    "objective": "equal H/U edit-macro strict-base activation; no outcome/gold scoring",
+    "prefix": 16,
+    "r0_objective": 0.9790521978021978,
+    "rc_objective": 0.0,
+    "scope": "prefix-only complete original bank competition",
+    "status": "CALIBRATED",
+    "threshold_sha256": "0e1ea4ff0f38e9c314b9d403af11a23a212e1d23e3572466f30795ad1b76513d",
+    "tie_rule": "binary64 inclusive >=; nextafter breakpoints; minimum objective then smallest kappa"
+  },
+  "score_implementation": "scripts/medtrace/stage4_scope.py:margin,accepted",
+  "source_cohort": "STAGE4_SLAKE16_PREFIX16",
+  "source_public_commit": "8c6c84eaf8c040c1408ebf956c76d1e3ae246839",
+  "source_sha256": "20e0cb920c9af15d9a929a5bf46646a28122b15fbebdefec8f4fd0ca803ac868",
+  "stage5_closeout_execution": "cb22fab",
+  "stage5_numerical_reporting": "17e4376",
+  "stage5_result_commit": "abf004385f3932602216c16667330071f0d205ad",
+  "stage5_writer_execution": "09cd564",
+  "stage6_preparation_commit": "1b100ac",
+  "threshold_source": "Stage4 private/bank/prefix16/THRESHOLD_LOCK.json",
+  "wall_hours_limit": 6
+}
