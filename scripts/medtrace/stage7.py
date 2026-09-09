@@ -16,9 +16,31 @@ import torch
 from methods.medtrace.anchor_repair import ExpandedExpert,CaptureHook,select_fit,repair
 from scripts.medtrace import finalize_stage4 as f4
 from scripts.medtrace.run_stage2 import vf,read,sw,same_output
-from scripts.medtrace.run_stage3_bank import input_batch,file_identity
+from scripts.medtrace.run_stage3_bank import input_batch as bank_input_batch,file_identity
 from scripts.medtrace.stage4_scope import accepted
 from scripts.medtrace.stage5_base_judge import stage4_pool
+
+
+def input_batch(runtime,row):
+    try:return bank_input_batch(runtime,row)
+    except ValueError:
+        # Older fit rows retain their original feature-cache EqKey schema.
+        # Verify that exact source and schema instead of rewriting the old key.
+        if not row.get('support_source') or row.get('panel') not in ('matched','original'):raise
+        source=read(Path(row['support_source']))
+        matches=[r for r in source['rows'] if r['eqkey']==row['eqkey'] and
+            all(r[k]==row[k] for k in ('question','image_path','reference','role','label'))]
+        if not matches:raise ValueError('legacy input not present in its bound source packet')
+        record=vf.EditorRecord.from_dict(source['event']['edit_record'])
+        batch=runtime.build_question_batch(record,question=row['question'],image_path=Path(row['image_path']))
+        attention=batch.attention_mask if batch.attention_mask is not None else torch.ones(batch.inputs_embeds.shape[:2],dtype=torch.long)
+        payload=dict(image_tensor_sha256=batch.image_sha256,attention_mask=attention[0].tolist(),
+            assistant_boundary_index=batch.key_token_index,image_token_span=[batch.image_token_start,batch.image_token_end],
+            **source['cache_locks'][row['panel']])
+        field='target_free_prompt_tokens' if row['panel']=='matched' else 'routing_input_ids'
+        payload[field]=batch.raw_input_ids[0].tolist()
+        if vf.sha256_json(payload)!=row['eqkey']:raise ValueError('legacy actual tokens/image/attention binding changed')
+        return batch
 
 
 def prepare(args):
