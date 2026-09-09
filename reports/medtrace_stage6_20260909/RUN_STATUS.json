@@ -1,0 +1,80 @@
+{
+  "exit_codes": {
+    "BE": 0,
+    "W0": 0,
+    "judge": 0,
+    "prepare_judge": 0,
+    "report": 0
+  },
+  "gpu_hours_upper_bound": 0.10284257822566563,
+  "judge_missing": 0,
+  "judge_new": 71,
+  "judge_required": 538,
+  "judge_reused": 467,
+  "new_writer_training": 0,
+  "publication": "PUBLICATION_PENDING",
+  "replays": [
+    {
+      "method": "W0",
+      "replays": [
+        {
+          "branch": "ON",
+          "edit": 201,
+          "status": "PASSED",
+          "track": "A"
+        },
+        {
+          "branch": "OFF",
+          "edit": 201,
+          "status": "PASSED",
+          "track": "A"
+        },
+        {
+          "branch": "ON",
+          "edit": 201,
+          "status": "PASSED",
+          "track": "B"
+        },
+        {
+          "branch": "OFF",
+          "edit": 201,
+          "status": "PASSED",
+          "track": "B"
+        }
+      ],
+      "status": "COMPLETE"
+    },
+    {
+      "method": "BE",
+      "replays": [
+        {
+          "branch": "ON",
+          "edit": 201,
+          "status": "PASSED",
+          "track": "A"
+        },
+        {
+          "branch": "OFF",
+          "edit": 201,
+          "status": "PASSED",
+          "track": "A"
+        },
+        {
+          "branch": "ON",
+          "edit": 201,
+          "status": "PASSED",
+          "track": "B"
+        },
+        {
+          "branch": "OFF",
+          "edit": 201,
+          "status": "PASSED",
+          "track": "B"
+        }
+      ],
+      "status": "COMPLETE"
+    }
+  ],
+  "status": "COMPUTE_COMPLETE",
+  "wall_seconds": 747.6993072032928
+}
