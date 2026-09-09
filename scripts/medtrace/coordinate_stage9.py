@@ -62,14 +62,14 @@ def coordinate(args):
     try:
         script=str(ROOT/'scripts/medtrace/stage9.py')
         launch('first',[sys.executable,script,'worker','--run-root',str(run),'--part','first'],2)
-        s.vf.atomic_json(run/'public/RUN_STATUS.json',dict(status='FIRST_REAL_EDIT_RUNNING',new_sgd_training=0,gpus=[0],publication='PENDING'))
+        s.vf.atomic_json(run/'public/RUN_STATUS.json',dict(status='FIRST_REAL_EDIT_RUNNING',additional_steps_per_condition=160,gpus=[2],publication='PENDING'))
         if not wait(['first'],6.5*3600):raise RuntimeError('first edit interface/constraint check needs attention; retain formal development result')
         first=next(t for t in s.read(run/'private/TASKS.json') if t['stage9_status']=='PENDING')
         for condition in ('F0','F1','F2'):
             if s.read(run/f"private/edits/e{first['order']:02d}/{condition}/result.json")['status']!='COMPLETE':raise RuntimeError('first edit incomplete')
         for part in ('0','1'):
             launch('part'+part,[sys.executable,script,'worker','--run-root',str(run),'--part',part],2+int(part))
-        s.vf.atomic_json(run/'public/RUN_STATUS.json',dict(status='REMAINING_EDITS_RUNNING',new_sgd_training=0,gpus=[0,2,3],publication='PENDING'))
+        s.vf.atomic_json(run/'public/RUN_STATUS.json',dict(status='REMAINING_EDITS_RUNNING',additional_steps_per_condition=160,gpus=[2,3],publication='PENDING'))
         wait(['part0','part1'],6.5*3600)
         # Replay mismatch invalidates only that writer's derived results. Do not
         # silently score a failed replay as verified; preserve other raw outputs.
