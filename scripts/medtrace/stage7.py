@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """One APR development experiment using frozen original fit/evaluation roles."""
 import argparse
-from collections import Counter
+from collections import Counter,defaultdict
 import copy
 import math
 from pathlib import Path
@@ -207,6 +207,19 @@ def report(args):
             e.update(candidate={v:k for k,v in aliases.items()}[e['candidate']],control={v:k for k,v in aliases.items()}[e['control']],mode=mode,control_mode=mode)
             effects.append(e)
     f4.csv_write(run/'public/PAIRED_EFFECTS.csv',effects)
+    baseline={(r['cohort'],r['mode'],r['edit'],r['eqkey']):r for r in rows if r['method']=='C0'}
+    changes=defaultdict(list)
+    for r in rows:
+        if r['method'] not in ('C1','C2'):continue
+        b=baseline.get((r['cohort'],r['mode'],r['edit'],r['eqkey']))
+        if not b or r['semantic'] is None or b['semantic'] is None:continue
+        changes[r['cohort'],r['method'],r['mode'],r['role'],r['stratum']].append(dict(
+            lost_correction=int(b['base_correct']==0 and b['semantic']==1 and r['semantic']==0),
+            avoided_damage=int(b['base_correct']==1 and b['semantic']==0 and r['semantic']==1),
+            introduced_damage=int(b['base_correct']==1 and b['semantic']==1 and r['semantic']==0),
+            gained_correction=int(b['base_correct']==0 and b['semantic']==0 and r['semantic']==1)))
+    f4.csv_write(run/'public/CORRECTION_TRADEOFF_COUNTS.csv',[dict(zip(('cohort','condition','mode','role','panel'),key),
+        inputs=len(g),**{k:sum(r[k] for r in g) for k in g[0]}) for key,g in changes.items()])
     vf.atomic_json(run/'private/DETAILS.json',rows)
     status=dict(status='COMPUTE_COMPLETE' if all(t['status'] in ('COMPLETE','UNSUPPORTED_NO_NEGATIVE_FIT') for t in ledger) and len(verdicts)==len(side['all_expected']) else 'PARTIAL',
         coverage=ledger,judge_required=len(side['all_expected']),judge_scored=len(verdicts),judge_missing=len(set(side['all_expected'])-verdicts.keys()),
