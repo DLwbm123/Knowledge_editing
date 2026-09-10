@@ -117,22 +117,23 @@ def worker(args):
                 saved=dict(binding=binding,logp=logp);s.sw.save(path,saved)
             assert not saved['logp'].requires_grad
             return kwargs,labels,mask,saved['logp']
-        for condition in ('F0','F1','F2'):
+        for condition in (('E1','E2') if config.get('anatomical_evidence') else ('F0','F1','F2')):
             budget();directory=run/f"private/edits/e{t['order']:02d}/{condition}"
             if (directory/'result.json').exists():continue
             vf.set_seed(state['task']['seed']) if hasattr(vf,'set_seed') else torch.manual_seed(state['task']['seed'])
             expert=vf.AsymmetricCPExpert(14336,4096,4).to(runtime.device);expert.load_state_dict(state['expert']);expert.requires_grad_(True)
             optimizer=optimizer_for(expert,runtime.model);hook=vf.MedTraceLayerHook(runtime.get_module(vf.LAYER),expert);hook.attach()
-            start=time.time();curve=[];startstep=0;forwards=0
+            start=time.time();curve=[];startstep=0;forwards=0;forward_tokens=0
+            evidence=torch.load(t['evidence_path'],map_location='cpu',weights_only=True) if config.get('anatomical_evidence') else None
             checkpoint=directory/'latest.pt'
             if checkpoint.exists():
                 resume=torch.load(checkpoint,map_location=runtime.device,weights_only=True)
                 assert resume['condition']==condition and resume['order']==t['order']
                 expert.load_state_dict(resume['expert']);optimizer.load_state_dict(resume['optimizer']);startstep=resume['step'];curve=resume['curve'];forwards=resume['forwards']
             def forward(b):
-                nonlocal forwards
+                nonlocal forwards,forward_tokens
                 hook.set_teacher_routing(b.labels);kwargs=b.forward_kwargs();out=runtime.model(**kwargs);forwards+=1
-                ce=out.loss
+                ce=out.loss;forward_tokens+=len(b.target_token_ids)
                 score=answer_score(out.logits,b.labels,b.attention_mask,runtime.adapter.tokenizer.eos_token_id,runtime.adapter.tokenizer.bos_token_id,runtime.adapter.tokenizer.pad_token_id)
                 if not torch.isfinite(ce+score):raise FloatingPointError('nonfinite answer loss')
                 return ce,score
@@ -152,14 +153,21 @@ def worker(args):
                         loss.backward();del loss,ce,correct
                         if u['logical_id'] not in teachers:teachers[u['logical_id']]=teacher(u,hook)
                         kwargs,labels,mask,logp=teachers[u['logical_id']];hook.set_teacher_routing(labels)
-                        logits=runtime.model(**kwargs).logits[mask];forwards+=1
+                        logits=runtime.model(**kwargs).logits[mask];forwards+=1;forward_tokens+=int(mask.sum())
                         kl=full_vocab_kl(logits,logp);klval=float(kl.detach());(.01*kl).backward();del logits,kl
+                    extra={}
+                    if evidence is not None:
+                        from methods.medtrace.anatomical_evidence import evidence_loss
+                        ei,ci,sign=t['evidence_schedule'][step-1];entry=evidence[ei]
+                        aux,extra=evidence_loss(runtime,record,entry,entry['controls'][ci],hook,1 if condition=='E1' else sign)
+                        (.1*aux).backward();del aux
+                        forwards+=2;forward_tokens+=extra['evidence_tokens']
                     norm=torch.nn.utils.clip_grad_norm_(expert.parameters(),1.)
                     if not torch.isfinite(norm):raise FloatingPointError('nonfinite gradient')
                     optimizer.step();expert.normalize_factors_(verify_dense=False)
                     if not all(torch.isfinite(p).all() for p in expert.parameters()):raise FloatingPointError('nonfinite parameters')
                     curve.append(dict(step=step,pos_ce=pos,H_ce=hval,U_kl=klval,pair_loss=pairval,grad_norm=float(norm),elapsed_seconds=time.time()-start,
-                        H_id=h['logical_id'],U_id=u['logical_id'],fit_id=order[(step-1)%len(order)]))
+                        H_id=h['logical_id'],U_id=u['logical_id'],fit_id=order[(step-1)%len(order)],forward_tokens=forward_tokens,**extra))
                     if step%20==0:
                         payload=dict(expert=expert.state_dict(),optimizer=optimizer.state_dict(),step=step,condition=condition,order=t['order'],curve=curve,forwards=forwards,seed=state['task']['seed'])
                         s.sw.save(checkpoint,payload)
@@ -172,6 +180,9 @@ def worker(args):
                 entries.append(dict(track='A',prefix=0,edit=t['event_index'],method=condition,
                     item=dict(item,forced=forced,fixed=forced if item['fixed_on'] else item['base']),target=record.target,
                     cohort_name='FACT_'+t['cohort'],common_support=False,system_valid=True))
+            if config.get('anatomical_evidence'):
+                from scripts.medtrace.stage10 import diagnostics
+                diagnostics(runtime,record,t,expert,directory)
             guard=runtime.base_guard.verify();assert guard['unchanged']
             vf.atomic_json(directory/'result.json',dict(status='COMPLETE',entries=entries,curve=curve,steps=160,
                 original_W0_seed=state['task']['seed'],forwards=forwards,base_guard=guard,parameters=sum(p.numel() for p in expert.parameters())))
