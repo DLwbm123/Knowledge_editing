@@ -103,4 +103,3 @@ if __name__=='__main__':
     p.add_argument('action',choices=('launch','coordinate'));p.add_argument('--run-root',type=Path,required=True)
     a=p.parse_args()
     (launch_chain if a.action=='launch' else coordinate)(a)
-

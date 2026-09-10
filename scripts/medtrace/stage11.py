@@ -68,7 +68,7 @@ def prepare(args):
         exposure='viewed development; patient UNKNOWN; held-out H within trained edits, not independent confirmation',
         official_T2G='NA unless original bound row present; constructed SLAKE paraphrases are not official T2G',
         first_answer_token_rank='NA; do not rerun for auxiliary diagnostic',RC='read-only inherited fixed routing; no calibration',
-        scope='No ROI loss, contrast, APR, new facts, new ranks or automatic next stage')))
+        scope='No ROI loss, contrast, APR, new facts, new ranks or automatic next stage'))
     for name in ('EVIDENCE_PAIRED_RESULTS.csv','PAIR_CORRECT_RESULTS.csv'):
         shutil.copyfile(old/'public'/name,run/'public'/('STAGE10_'+name))
     vf.atomic_json(run/'public/RUN_STATUS.json',dict(status='PREPARED',planned_edits=15,supported_edits=sum(t['stage11_status']=='PENDING' for t in tasks),publication='PENDING'))
