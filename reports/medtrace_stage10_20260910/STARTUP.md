@@ -1,0 +1,11 @@
+# Stage10 startup, not completed results
+
+Run `medtrace_stage10_20260910_r01`, source `752d817`. Stage9 remains unchanged. Supported evidence set fixed before new outputs:5 edits (102,107,109,110,113),6 fit-positive evidence instances from3 source images. E1/E2 add10 trajectories,160 updates each; E0 reuses exact Stage9 F1. Other10 previously supported Stage9 edits are EVIDENCE_UNSUPPORTED, not failed or trained under a replacement objective.
+
+Official mapping read from the author-linked SLAKE Hugging Face distribution (CC-BY-4.0 dataset card): Liver70, Left Kidney135, Right Kidney155, Spleen230. Existing image/QA/mask files remain unchanged. Masks map with the actual CLIP processor geometry, nearest-neighbor sampling; only square images supported. Selected source images were visually checked for text overlays. Controls have equal mask shape/area, no overlap, >=80% nonblack image pixels; this is a fixed image heuristic, not a clinical tissue segmentation claim. Fill rules match, but actual L2 perturbation energy need not match across regions.
+
+GPU2 first formal edit, then GPU2/3 independent remaining edits; GPU0 Judge. Free memory check preceded launch, with sufficient peak margin, no unrelated process changes. Output NFS mount and small read/write probe passed. Two focused checks passed (mask/no-op/request cleanup/loss direction and inherited answer/source check). Runtime also checks exact full preprocessed pixels before each auxiliary view. All checkpoints, QA, raw images/masks and diagnostic outputs stay private.
+
+Stage9 paired correctness and native failure decomposition were derived from cached complete outputs/Judge, not products of aggregate rates. Pair matching uses exact same-question relationships; no new q is synthesized. Four native failures in each of F1/F2 exactly match an H source answer, an observed output relation rather than a causal diagnosis.
+
+No continual monitoring or next-stage search created. Training, final scoring, comparative interpretation and publication remain pending. Diagnostic evaluation assets are isolated from fitting; only inspected annotation-bearing images enter auxiliary diagnostics, with other rows explicitly counted as unavailable.

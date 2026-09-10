@@ -1,0 +1,654 @@
+{
+  "license": "CC-BY-4.0 per author HF dataset card; no raw assets published",
+  "mapping_url": "https://huggingface.co/datasets/BoKelvin/SLAKE/resolve/main/mask.txt",
+  "official_url": "https://www.med-vqa.com/slake/",
+  "patient": "UNKNOWN",
+  "planned_edits": 15,
+  "supported_edits": 5,
+  "tasks": [
+    {
+      "edit": 101,
+      "evaluation_diagnostic_instances": 0,
+      "evaluation_diagnostic_missing": {},
+      "evidence_instances": 0,
+      "records": [
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "native",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "db92f477882f15d29aca1bbbc51b9b5256b1ceb0c7134decc2c693e9e509fc8b",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "fit",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "42b3865d356922483c66d482fdcd3f94e51fc955d8377894fccc836a155139e3",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "fit",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "aed6a16cd3783440e540ab6700733e803821c46098445bc06ffb8ee11f089a22",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "fit",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "adfddd399a4281d3952a6d6bd4cd5a94bf70f9af95f00117b3d521d348487351",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        }
+      ],
+      "status": "EVIDENCE_UNSUPPORTED"
+    },
+    {
+      "edit": 102,
+      "evaluation_diagnostic_instances": 1,
+      "evaluation_diagnostic_missing": {},
+      "evidence_instances": 1,
+      "records": [
+        {
+          "anatomy": "spleen",
+          "laterality": "UNKNOWN",
+          "role": "native",
+          "scope": "LOCAL_ANATOMICAL_VISIBILITY",
+          "source_identity": "2fbbff97f2b2f5d06ed837070f63b03e946814080b973acb97bd9262ef41771a",
+          "state": "No",
+          "status": "NO_AFFIRMATIVE_LOCAL_EVIDENCE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": "spleen",
+          "annotation_sha256": "1e4adcf05049346d08a951711352a526a2a69d252679c8d4055c74f14c045c86",
+          "class_mapping": "https://huggingface.co/datasets/BoKelvin/SLAKE/resolve/main/mask.txt",
+          "diagnostic_control_new": true,
+          "geometry": "square pad identity; actual CLIP resize/center-crop; ROI nearest-neighbor",
+          "image_sha256": "590fac1206aabe50eff734172dba7c9986b70843982351972bbb0de6fd09e80e",
+          "laterality": "UNKNOWN",
+          "nonpadding_fraction": 1.0,
+          "pixels_C": [
+            3530,
+            3530,
+            3530,
+            3530
+          ],
+          "pixels_R": 3530,
+          "region_type": "OFFICIAL_SEGMENTATION",
+          "role": "fit",
+          "scope": "LOCAL_ANATOMICAL_VISIBILITY",
+          "source_identity": "fb3f3b275c1bf5e31a9f634bce7680d8feee9fc141dee2c3d669422481efd8e3",
+          "state": "Yes",
+          "status": "SUPPORTED",
+          "time": "UNKNOWN",
+          "tissue_C": [
+            0.8549575209617615,
+            1.0,
+            0.8138810396194458,
+            0.9266288876533508
+          ],
+          "tissue_R": 1.0
+        }
+      ],
+      "status": "PENDING"
+    },
+    {
+      "edit": 103,
+      "evaluation_diagnostic_instances": 1,
+      "evaluation_diagnostic_missing": {},
+      "evidence_instances": 0,
+      "records": [
+        {
+          "anatomy": "kidney",
+          "laterality": "UNKNOWN",
+          "role": "native",
+          "scope": "LOCAL_ANATOMICAL_VISIBILITY",
+          "source_identity": "c7062f79a29863095a1f46137d935d4734a0824045e4940ee5af0b6802e22014",
+          "state": "No",
+          "status": "NO_AFFIRMATIVE_LOCAL_EVIDENCE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": "kidney",
+          "laterality": "UNKNOWN",
+          "role": "fit",
+          "scope": "LOCAL_ANATOMICAL_VISIBILITY",
+          "source_identity": "c13dcaa982d852b4d77e22de0303f783adc8ac16d17d253ebe36c78ada1e247f",
+          "state": "Yes",
+          "status": "ORGAN_NOT_ANNOTATED_NOT_FACT_ABSENT",
+          "time": "UNKNOWN"
+        }
+      ],
+      "status": "EVIDENCE_UNSUPPORTED"
+    },
+    {
+      "edit": 104,
+      "evaluation_diagnostic_instances": 0,
+      "evaluation_diagnostic_missing": {},
+      "evidence_instances": 0,
+      "records": [
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "native",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "d486182e39ff9dc67dc7442d2e19f7d44b616ad0f923c96b04be4fe60bd315b2",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "fit",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "42b3865d356922483c66d482fdcd3f94e51fc955d8377894fccc836a155139e3",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "fit",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "10f12263987cb09ce2ef99e4e8c10cb88497137dc0e5d345065bce198663cdf7",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        }
+      ],
+      "status": "EVIDENCE_UNSUPPORTED"
+    },
+    {
+      "edit": 105,
+      "evaluation_diagnostic_instances": 0,
+      "evaluation_diagnostic_missing": {},
+      "evidence_instances": 0,
+      "records": [
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "native",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "48299850134a058a8b602460d81ef1a4bd6fa01851b1a25a727771c2524e5f68",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "fit",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "10f12263987cb09ce2ef99e4e8c10cb88497137dc0e5d345065bce198663cdf7",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        }
+      ],
+      "status": "EVIDENCE_UNSUPPORTED"
+    },
+    {
+      "edit": 106,
+      "evaluation_diagnostic_instances": 0,
+      "evaluation_diagnostic_missing": {},
+      "evidence_instances": 0,
+      "records": [
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "native",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "14abe2a72bc0679fe4ce828a5c8ca858ad1abc47f4c33c9407406d2c149d53b7",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "fit",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "42b3865d356922483c66d482fdcd3f94e51fc955d8377894fccc836a155139e3",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "fit",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "10f12263987cb09ce2ef99e4e8c10cb88497137dc0e5d345065bce198663cdf7",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "fit",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "aed6a16cd3783440e540ab6700733e803821c46098445bc06ffb8ee11f089a22",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        }
+      ],
+      "status": "EVIDENCE_UNSUPPORTED"
+    },
+    {
+      "edit": 107,
+      "evaluation_diagnostic_instances": 0,
+      "evaluation_diagnostic_missing": {
+        "NO_SELECTED_IMAGE_OVERLAY_CHECK": 1
+      },
+      "evidence_instances": 1,
+      "records": [
+        {
+          "anatomy": "spleen",
+          "laterality": "UNKNOWN",
+          "role": "native",
+          "scope": "LOCAL_ANATOMICAL_VISIBILITY",
+          "source_identity": "52a81c89bfc3d230015fba2addb268b8e4af8bd0df92a2ecd010294eb82bcf77",
+          "state": "No",
+          "status": "NO_AFFIRMATIVE_LOCAL_EVIDENCE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": "spleen",
+          "annotation_sha256": "1e4adcf05049346d08a951711352a526a2a69d252679c8d4055c74f14c045c86",
+          "class_mapping": "https://huggingface.co/datasets/BoKelvin/SLAKE/resolve/main/mask.txt",
+          "diagnostic_control_new": true,
+          "geometry": "square pad identity; actual CLIP resize/center-crop; ROI nearest-neighbor",
+          "image_sha256": "590fac1206aabe50eff734172dba7c9986b70843982351972bbb0de6fd09e80e",
+          "laterality": "UNKNOWN",
+          "nonpadding_fraction": 1.0,
+          "pixels_C": [
+            3530,
+            3530,
+            3530,
+            3530
+          ],
+          "pixels_R": 3530,
+          "region_type": "OFFICIAL_SEGMENTATION",
+          "role": "fit",
+          "scope": "LOCAL_ANATOMICAL_VISIBILITY",
+          "source_identity": "fb3f3b275c1bf5e31a9f634bce7680d8feee9fc141dee2c3d669422481efd8e3",
+          "state": "Yes",
+          "status": "SUPPORTED",
+          "time": "UNKNOWN",
+          "tissue_C": [
+            0.8549575209617615,
+            1.0,
+            0.8138810396194458,
+            0.9266288876533508
+          ],
+          "tissue_R": 1.0
+        }
+      ],
+      "status": "PENDING"
+    },
+    {
+      "edit": 108,
+      "evaluation_diagnostic_instances": 0,
+      "evaluation_diagnostic_missing": {},
+      "evidence_instances": 0,
+      "records": [
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "native",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "5617ea824fcedc6ac82c4708b8d131a74352677c56954a93ddfc3b2f95523212",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "fit",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "04ad21f9ac109852950c8858ba456fdbad72c02ac6177c7d77d024404e64178f",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "fit",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "10f12263987cb09ce2ef99e4e8c10cb88497137dc0e5d345065bce198663cdf7",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "fit",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "adfddd399a4281d3952a6d6bd4cd5a94bf70f9af95f00117b3d521d348487351",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        }
+      ],
+      "status": "EVIDENCE_UNSUPPORTED"
+    },
+    {
+      "edit": 109,
+      "evaluation_diagnostic_instances": 0,
+      "evaluation_diagnostic_missing": {
+        "NO_SELECTED_IMAGE_OVERLAY_CHECK": 1
+      },
+      "evidence_instances": 2,
+      "records": [
+        {
+          "anatomy": "liver",
+          "laterality": "UNKNOWN",
+          "role": "native",
+          "scope": "LOCAL_ANATOMICAL_VISIBILITY",
+          "source_identity": "bf7aea5ebb62d0b761be90666b98ef99d4b0991d8f875440758fb37e9a147c91",
+          "state": "No",
+          "status": "NO_AFFIRMATIVE_LOCAL_EVIDENCE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": "liver",
+          "annotation_sha256": "1e4adcf05049346d08a951711352a526a2a69d252679c8d4055c74f14c045c86",
+          "class_mapping": "https://huggingface.co/datasets/BoKelvin/SLAKE/resolve/main/mask.txt",
+          "diagnostic_control_new": false,
+          "geometry": "square pad identity; actual CLIP resize/center-crop; ROI nearest-neighbor",
+          "image_sha256": "590fac1206aabe50eff734172dba7c9986b70843982351972bbb0de6fd09e80e",
+          "laterality": "UNKNOWN",
+          "nonpadding_fraction": 1.0,
+          "pixels_C": [
+            12724
+          ],
+          "pixels_R": 12724,
+          "region_type": "OFFICIAL_SEGMENTATION",
+          "role": "fit",
+          "scope": "LOCAL_ANATOMICAL_VISIBILITY",
+          "source_identity": "7236df8736ac751fdbe592303732488df1c9d481de0a646352cf25e22cffd725",
+          "state": "Yes",
+          "status": "SUPPORTED",
+          "time": "UNKNOWN",
+          "tissue_C": [
+            0.8709525465965271
+          ],
+          "tissue_R": 0.998978316783905
+        },
+        {
+          "anatomy": "liver",
+          "annotation_sha256": "cfd00ac2d0a23894e163af1ec6044761989866f50ca70762769379f5f883271a",
+          "class_mapping": "https://huggingface.co/datasets/BoKelvin/SLAKE/resolve/main/mask.txt",
+          "diagnostic_control_new": true,
+          "geometry": "square pad identity; actual CLIP resize/center-crop; ROI nearest-neighbor",
+          "image_sha256": "6cfa686982eef694d9374283288939f229353fb20711ee0ad67f6a92e7a39684",
+          "laterality": "UNKNOWN",
+          "nonpadding_fraction": 1.0,
+          "pixels_C": [
+            262,
+            262,
+            262,
+            262
+          ],
+          "pixels_R": 262,
+          "region_type": "OFFICIAL_SEGMENTATION",
+          "role": "fit",
+          "scope": "LOCAL_ANATOMICAL_VISIBILITY",
+          "source_identity": "979f574ea067270570a3591341f47d108c31a6a7597f4c379506601fc9e4630c",
+          "state": "Yes",
+          "status": "SUPPORTED",
+          "time": "UNKNOWN",
+          "tissue_C": [
+            0.9465649127960205,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "tissue_R": 1.0
+        }
+      ],
+      "status": "PENDING"
+    },
+    {
+      "edit": 110,
+      "evaluation_diagnostic_instances": 0,
+      "evaluation_diagnostic_missing": {
+        "NO_SELECTED_IMAGE_OVERLAY_CHECK": 1
+      },
+      "evidence_instances": 1,
+      "records": [
+        {
+          "anatomy": "kidney",
+          "laterality": "UNKNOWN",
+          "role": "native",
+          "scope": "LOCAL_ANATOMICAL_VISIBILITY",
+          "source_identity": "d504c83b2bc56f65323d19b7480849f2924a2ee157e58b86421d9f5b9fb3ff66",
+          "state": "No",
+          "status": "NO_AFFIRMATIVE_LOCAL_EVIDENCE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": "kidney",
+          "annotation_sha256": "60bb1d7c9c48e60408da431cbeff9d0f1e23e815a1fe9111cafa22bc668b33bb",
+          "class_mapping": "https://huggingface.co/datasets/BoKelvin/SLAKE/resolve/main/mask.txt",
+          "diagnostic_control_new": true,
+          "geometry": "square pad identity; actual CLIP resize/center-crop; ROI nearest-neighbor",
+          "image_sha256": "f56ae7c94179ef73f421283f98177b3f2b4003605ce96d018c34383eaee97af7",
+          "laterality": "UNKNOWN",
+          "nonpadding_fraction": 1.0,
+          "pixels_C": [
+            1573,
+            1573,
+            1573,
+            1573
+          ],
+          "pixels_R": 1573,
+          "region_type": "OFFICIAL_SEGMENTATION",
+          "role": "fit",
+          "scope": "LOCAL_ANATOMICAL_VISIBILITY",
+          "source_identity": "d6c7fc7cf19fde2567772342c26dd1096bd4d6210a5e4c00a9ba8ebfcd224de8",
+          "state": "Yes",
+          "status": "SUPPORTED",
+          "time": "UNKNOWN",
+          "tissue_C": [
+            0.9294341802597046,
+            0.9230769276618958,
+            0.9605848789215088,
+            0.8194532990455627
+          ],
+          "tissue_R": 1.0
+        }
+      ],
+      "status": "PENDING"
+    },
+    {
+      "edit": 111,
+      "evaluation_diagnostic_instances": 1,
+      "evaluation_diagnostic_missing": {},
+      "evidence_instances": 0,
+      "records": [
+        {
+          "anatomy": "kidney",
+          "laterality": "UNKNOWN",
+          "role": "native",
+          "scope": "LOCAL_ANATOMICAL_VISIBILITY",
+          "source_identity": "0ba0c68af78d4e004c590ebaf8f056b41a7efc9d2d26e53df925588512d94e97",
+          "state": "No",
+          "status": "NO_AFFIRMATIVE_LOCAL_EVIDENCE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": "kidney",
+          "laterality": "UNKNOWN",
+          "role": "fit",
+          "scope": "LOCAL_ANATOMICAL_VISIBILITY",
+          "source_identity": "c13dcaa982d852b4d77e22de0303f783adc8ac16d17d253ebe36c78ada1e247f",
+          "state": "Yes",
+          "status": "ORGAN_NOT_ANNOTATED_NOT_FACT_ABSENT",
+          "time": "UNKNOWN"
+        }
+      ],
+      "status": "EVIDENCE_UNSUPPORTED"
+    },
+    {
+      "edit": 112,
+      "evaluation_diagnostic_instances": 0,
+      "evaluation_diagnostic_missing": {},
+      "evidence_instances": 0,
+      "records": [
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "native",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "c65ee27eba4fe0c1de6cb1dbb138e0fe3639ae0f182a7e4565dbb508542a38ef",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "fit",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "ac7338693d346c2732163c893ff2cea7f56ab7478440db28c20cdae02c74af3b",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        }
+      ],
+      "status": "EVIDENCE_UNSUPPORTED"
+    },
+    {
+      "edit": 113,
+      "evaluation_diagnostic_instances": 1,
+      "evaluation_diagnostic_missing": {},
+      "evidence_instances": 1,
+      "records": [
+        {
+          "anatomy": "spleen",
+          "laterality": "UNKNOWN",
+          "role": "native",
+          "scope": "LOCAL_ANATOMICAL_VISIBILITY",
+          "source_identity": "c9e8b03e1f01b57366e2e373a10ca8ee4953be872308983f8965c673437387ab",
+          "state": "No",
+          "status": "NO_AFFIRMATIVE_LOCAL_EVIDENCE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": "spleen",
+          "annotation_sha256": "60bb1d7c9c48e60408da431cbeff9d0f1e23e815a1fe9111cafa22bc668b33bb",
+          "class_mapping": "https://huggingface.co/datasets/BoKelvin/SLAKE/resolve/main/mask.txt",
+          "diagnostic_control_new": true,
+          "geometry": "square pad identity; actual CLIP resize/center-crop; ROI nearest-neighbor",
+          "image_sha256": "f56ae7c94179ef73f421283f98177b3f2b4003605ce96d018c34383eaee97af7",
+          "laterality": "UNKNOWN",
+          "nonpadding_fraction": 1.0,
+          "pixels_C": [
+            2420,
+            2420,
+            2420,
+            2420
+          ],
+          "pixels_R": 2420,
+          "region_type": "OFFICIAL_SEGMENTATION",
+          "role": "fit",
+          "scope": "LOCAL_ANATOMICAL_VISIBILITY",
+          "source_identity": "a96fcd832f4756eacbb6f11a1ed9e3188ee636a76a37dc5eafb554c6223d8be6",
+          "state": "Yes",
+          "status": "SUPPORTED",
+          "time": "UNKNOWN",
+          "tissue_C": [
+            0.9871900677680969,
+            1.0,
+            0.8884297609329224,
+            0.8809917569160461
+          ],
+          "tissue_R": 1.0
+        }
+      ],
+      "status": "PENDING"
+    },
+    {
+      "edit": 114,
+      "evaluation_diagnostic_instances": 0,
+      "evaluation_diagnostic_missing": {
+        "NO_AFFIRMATIVE_LOCAL_EVIDENCE": 1
+      },
+      "evidence_instances": 0,
+      "records": [
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "native",
+          "scope": "COMPARATIVE_ANATOMY",
+          "source_identity": "16f8e8dcf079dbcb2c36e5598d8801aabb2a977d987ed9925da947304f676ef8",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "fit",
+          "scope": "COMPARATIVE_ANATOMY",
+          "source_identity": "f1a343d686b71adb49ba92f6181a108c5f011f427ff3d31db8032f5c8e29e554",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        }
+      ],
+      "status": "EVIDENCE_UNSUPPORTED"
+    },
+    {
+      "edit": 116,
+      "evaluation_diagnostic_instances": 0,
+      "evaluation_diagnostic_missing": {},
+      "evidence_instances": 0,
+      "records": [
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "native",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "84c70d9003d9dd85a5a1c7c85f680cdef215e39436812af1f7fff353d1b6fea1",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        },
+        {
+          "anatomy": null,
+          "laterality": "UNKNOWN",
+          "role": "fit",
+          "scope": "GLOBAL_ACQUISITION_OR_REGION",
+          "source_identity": "a70af22f56841401b582f3ea52595be6d878855af66750502523bb14d5997e79",
+          "state": "SOURCE_BOUND_PRIVATE",
+          "status": "NONLOCAL_OR_COMPARATIVE",
+          "time": "UNKNOWN"
+        }
+      ],
+      "status": "EVIDENCE_UNSUPPORTED"
+    }
+  ],
+  "version": "existing frozen image/QA unchanged; author mapping used only for existing local mask IDs"
+}

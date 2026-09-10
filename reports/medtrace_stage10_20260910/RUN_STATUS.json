@@ -1,0 +1,14 @@
+{
+  "completed_trajectories": 10,
+  "evidence_unsupported_trajectories": 20,
+  "judge_missing": 0,
+  "judge_new": 1,
+  "judge_recovery_seconds": 413.606308221817,
+  "judge_required": 387,
+  "judge_reused": 386,
+  "judge_scored": 387,
+  "publication": "PENDING",
+  "recovery": "GPU0 memory now sufficient; Judge only, no training/generation rerun",
+  "status": "COMPUTE_COMPLETE_SUPPORTED_SUBSET",
+  "wall_seconds": 3173.0387222766876
+}

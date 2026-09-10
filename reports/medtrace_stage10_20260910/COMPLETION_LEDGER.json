@@ -1,0 +1,152 @@
+[
+  {
+    "condition": "E1",
+    "edit": 101,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E2",
+    "edit": 101,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E1",
+    "edit": 102,
+    "status": "COMPLETE"
+  },
+  {
+    "condition": "E2",
+    "edit": 102,
+    "status": "COMPLETE"
+  },
+  {
+    "condition": "E1",
+    "edit": 103,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E2",
+    "edit": 103,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E1",
+    "edit": 104,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E2",
+    "edit": 104,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E1",
+    "edit": 105,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E2",
+    "edit": 105,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E1",
+    "edit": 106,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E2",
+    "edit": 106,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E1",
+    "edit": 107,
+    "status": "COMPLETE"
+  },
+  {
+    "condition": "E2",
+    "edit": 107,
+    "status": "COMPLETE"
+  },
+  {
+    "condition": "E1",
+    "edit": 108,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E2",
+    "edit": 108,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E1",
+    "edit": 109,
+    "status": "COMPLETE"
+  },
+  {
+    "condition": "E2",
+    "edit": 109,
+    "status": "COMPLETE"
+  },
+  {
+    "condition": "E1",
+    "edit": 110,
+    "status": "COMPLETE"
+  },
+  {
+    "condition": "E2",
+    "edit": 110,
+    "status": "COMPLETE"
+  },
+  {
+    "condition": "E1",
+    "edit": 111,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E2",
+    "edit": 111,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E1",
+    "edit": 112,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E2",
+    "edit": 112,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E1",
+    "edit": 113,
+    "status": "COMPLETE"
+  },
+  {
+    "condition": "E2",
+    "edit": 113,
+    "status": "COMPLETE"
+  },
+  {
+    "condition": "E1",
+    "edit": 114,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E2",
+    "edit": 114,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E1",
+    "edit": 116,
+    "status": "EVIDENCE_UNSUPPORTED"
+  },
+  {
+    "condition": "E2",
+    "edit": 116,
+    "status": "EVIDENCE_UNSUPPORTED"
+  }
+]

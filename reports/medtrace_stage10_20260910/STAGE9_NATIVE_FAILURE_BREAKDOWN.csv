@@ -1,0 +1,9 @@
+edit,condition,scope,classification,interpretation,source_groups
+102,F1,LOCAL_ANATOMICAL_VISIBILITY,EXACT_H_SOURCE_ANSWER_MATCH,output-level match only; not a causal explanation,1
+102,F2,LOCAL_ANATOMICAL_VISIBILITY,EXACT_H_SOURCE_ANSWER_MATCH,output-level match only; not a causal explanation,1
+103,F1,LOCAL_ANATOMICAL_VISIBILITY,EXACT_H_SOURCE_ANSWER_MATCH,output-level match only; not a causal explanation,1
+103,F2,LOCAL_ANATOMICAL_VISIBILITY,EXACT_H_SOURCE_ANSWER_MATCH,output-level match only; not a causal explanation,1
+107,F1,LOCAL_ANATOMICAL_VISIBILITY,EXACT_H_SOURCE_ANSWER_MATCH,output-level match only; not a causal explanation,1
+107,F2,LOCAL_ANATOMICAL_VISIBILITY,EXACT_H_SOURCE_ANSWER_MATCH,output-level match only; not a causal explanation,1
+111,F1,LOCAL_ANATOMICAL_VISIBILITY,EXACT_H_SOURCE_ANSWER_MATCH,output-level match only; not a causal explanation,1
+111,F2,LOCAL_ANATOMICAL_VISIBILITY,EXACT_H_SOURCE_ANSWER_MATCH,output-level match only; not a causal explanation,1

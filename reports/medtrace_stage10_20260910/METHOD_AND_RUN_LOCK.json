@@ -1,0 +1,31 @@
+{
+  "E1_sigma": 1,
+  "E2_sigma": "per-instance balanced presaved random sequence",
+  "ROI_geometry": "same square-pad CLIP resize/center crop; nearest-neighbor masks; non-square images rejected",
+  "base_schedule_seed": 20260910,
+  "common_objective": "unchanged Stage9 F1; independent original W0 clones",
+  "conditions": [
+    "E0_SOURCE_CE_REUSED",
+    "E1_TRUE_ANATOMICAL_EVIDENCE",
+    "E2_RANDOMIZED_RELATION_CONTROL"
+  ],
+  "control": "same-shape translations, grid16, disjoint, >=80 percent nonblack (>0.05) pixels; no observed text overlays in inspected sources; <=4 training controls",
+  "fill": "full preprocessed image per-channel spatial mean; same all-channel pixel locations",
+  "gpu_hours": 12,
+  "inference": "unchanged full image, mask-free FORCED_ON",
+  "judge_gpu": 0,
+  "loss": "Lsup+.1*(CE(without_C)+relu(.2-sigma*(score_C-score_R)))",
+  "parameters": 1476,
+  "publication": "PENDING",
+  "rank": 4,
+  "schedule_seed": 20260911,
+  "source_assets": "private images/QA/masks/checkpoints; only permitted hashes and counts public",
+  "source_commit": "752d817",
+  "stage9_public_commit": "4cfe33ecc81d91127b96aeeeef4c0b6d6ed15edd",
+  "steps": 160,
+  "wall_hours": 8,
+  "worker_gpus": [
+    2,
+    3
+  ]
+}
