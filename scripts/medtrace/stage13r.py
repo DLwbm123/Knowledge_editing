@@ -116,7 +116,7 @@ def generate(args):
                     item=dict(row=row,base=base,forced=forced,fixed=forced if on else base,fixed_on=on,route=route,
                         disabled_parity=True,disabled_evidence='exact input binding and Base disabled native replay; fresh Base key per query')
                     entries.append(dict(track='A',prefix=0,edit=i,method=name,item=item,target=record.target,
-                        cohort_name='STAGE13R_NEW_SOURCE',common_support=True,system_valid=True,diagnostic_step=None))
+                        cohort_name='STAGE13R_NEW_SOURCE',common_support=False,system_valid=True,diagnostic_step=None))
                     # At most eight actual natural R0/RC branch replays in the campaign.
                     if i==1 and name!='BE':
                         for mode in stage12.MODES:
