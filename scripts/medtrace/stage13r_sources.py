@@ -147,7 +147,7 @@ def assemble(pool, parts):
         if hfit and heval and ufit:
             packages.append(dict(native=native, review=review, H_fit=hfit[:1], H_evaluation=heval[:2],
                 U_fit=ufit[:1], U_evaluation=[r for r in evaluation if unrelated(r)][:4],
-                challenge=[r for r in evaluation if normalized(r['question']) == normalized(native['question']) and normalized(r['reference']) == normalized(native['reference'])][:1]))
+                challenge=[r for r in evaluation if normalized(r['question']) == normalized(native['question']) and normalized(r['reference']) == normalized(native['reference'])]))
     return packages
 
 
@@ -224,6 +224,29 @@ def main(args):
         raw_or_private_data_published=False, training='PENDING' if tasks else 'NOT_RUN', judge='PENDING' if tasks else 'NOT_RUN', publication='PENDING')
     write_new(run/'public/SOURCE_EXPANSION_SUMMARY.json', summary)
     print(json.dumps(summary), flush=True)
+
+
+def complete_challenges(run):
+    """Repair only the importer cap using already frozen evaluation roles, never outcomes.
+
+    Preserve original evaluation files. Training files/selection/roles are immutable;
+    expanded scoring files must be completed before any evaluation generation starts.
+    """
+    if (run/'private/scored').exists():raise RuntimeError('Evaluation has already begun; do not amend inputs')
+    overlay=read(run/'private/SOURCE_OVERLAY.json');pool=overlay['rows'];roles=overlay['image_roles']
+    changes=[]
+    for task in read(run/'private/TASKS.json'):
+        data=read(run/task['training']);native=data['rows'][0];rows=read(run/task['evaluation'])
+        same=[r for r in pool if roles[r['source_group']]=='evaluation' and normalized(r['question'])==normalized(native['question']) and normalized(r['reference'])==normalized(native['reference'])]
+        complete=[r for r in rows if r['role']!='challenge']
+        complete.extend(dict(r,logical_id='challenge-'+str(j),role='challenge',label='negative',negative_group='challenge',
+            support_origin='NEW_AUTHORIZED_TRAIN_OVERLAY',conflict_verified=False,fact_relation='same_question_other_image_same_source_answer') for j,r in enumerate(same))
+        write_new(run/('private/evaluation_complete/e%02d.json'%task['order']),complete)
+        changes.append(dict(edit=task['order'],original_challenges=sum(r['role']=='challenge' for r in rows),complete_challenges=len(same)))
+    write_new(run/'public/EVALUATION_IMPORT_COMPLETENESS_FIX.json',dict(status='COMPLETE_BEFORE_EVALUATION_GENERATION',epoch=time.time(),
+        reason='Importer incorrectly capped same-answer challenge at one; include all supported records within the pre-frozen evaluation partition',
+        train_queue_changed=False,training_files_changed=False,image_role_assignments_changed=False,source_pool_changed=False,model_outputs_used=False,
+        original_evaluation_files_preserved=True,rows=changes))
 
 
 if __name__ == '__main__':

@@ -85,7 +85,9 @@ def generate(args):
     for task in tasks:
         i=task['order'];out=run/('private/scored/e%02d.json'%i)
         if out.exists():continue
-        data=read(run/('private/edits/e%02d.json'%i));data['rows']+=read(run/task['evaluation']);old.bind_rows(runtime,data)
+        data=read(run/('private/edits/e%02d.json'%i))
+        scoring=run/('private/evaluation_complete/e%02d.json'%i)
+        data['rows']+=read(scoring if scoring.exists() else run/task['evaluation']);old.bind_rows(runtime,data)
         olditems=read(run/'private/tasks'/old.queue_task(i,'BE',i)['task_id']/'result_private.json')['outputs']
         editor=BalanceEditPaperSpecEditor(runtime);base_module=editor.wrapper.base;target=editor.target
         entries=[];start=time.time()
@@ -195,6 +197,18 @@ def report(args):
                 C_FACT_micro=sum(p['both_correct'] for p in a.values())/sum(p['pairs'] for p in a.values()) if a else None,
                 C_NO_H_micro=sum(p['both_correct'] for p in b.values())/sum(p['pairs'] for p in b.values()) if b else None,patients='UNKNOWN'))
     stage12.mixed_csv(run/'public/PAIR_EFFECTS.csv',effects)
+    tradeoffs=[]
+    for entry in entries:
+        row=entry['item']['row'];i=entry['edit'];name=entry['method'];key=row['eqkey']
+        forced=lookup[name,'FORCED_ON',i,key];rc=lookup[name,'RC_FIXED_OLD16',i,key]
+        if row['label']!='negative':continue
+        tradeoffs.append(dict(method=name,edit=i,role=row['role'],panel=forced['stratum'],
+            errors_avoided=int(forced['semantic']==0 and rc['semantic']==1),
+            corrections_lost=int(forced['semantic']==1 and rc['semantic']==0)))
+    grouped=defaultdict(list)
+    for r in tradeoffs:grouped[r['method'],r['role'],r['panel']].append(r)
+    stage12.mixed_csv(run/'public/RC_REJECTION_TRADEOFF.csv',[dict(method=k[0],role=k[1],panel=k[2],inputs=len(rs),
+        errors_avoided=sum(r['errors_avoided'] for r in rs),corrections_lost=sum(r['corrections_lost'] for r in rs)) for k,rs in grouped.items()])
     costs=[]
     for task in read(run/'private/TASKS.json'):
         i=task['order']
@@ -212,6 +226,19 @@ def report(args):
     status=dict(status='COMPUTE_COMPLETE' if all(r['status']=='COMPLETE' for r in ledger) else 'PARTIAL',actual_N=len(ledger),
         completed_writers=len(ledger)*3,judge_required=len(side['all_expected']),judge_scored=len(verdicts),judge_reused=side['reused'],judge_new=side['new'],judge_missing=0,publication='PENDING')
     vf.atomic_json(run/'public/RUN_STATUS.json',status)
+    source=read(run/'public/SOURCE_EXPANSION_SUMMARY.json')
+    main_rows=[e['item']['row'] for e in entries if e['method']=='C_FACT']
+    coverage=dict(edit_inputs=len(main_rows),unique_inputs=len({r['eqkey'] for r in main_rows}),
+        unique_images=len({r['source_group'] for r in main_rows}),unique_questions=len({r['question'] for r in main_rows}),
+        primary_H_pairs=sum(r.get('negative_group')=='H' and r['role']=='evaluation' for r in main_rows),
+        main_evaluation_images=len({r['source_group'] for r in main_rows if r['label']=='negative' and r['role'] in ('evaluation','challenge')}),
+        clinical_attributes=dict(Counter('BODY_REGION' if 'part of the body' in r['question'] else 'ORGAN_VISIBILITY' if 'contain' in r['question'] else 'LARGEST_VISIBLE_ORGAN' for r in main_rows if r['role']=='native')))
+    vf.atomic_json(run/'public/RUN_SUPPORT_COST.json',dict(status=status,source=source,coverage=coverage,costs=costs,
+        execution_sha=cfg['code_commit'],source_preparation_sha=cfg['source_preparation_commit'],
+        stage13_public_sha='bafbc431af9576af27a3aaf47e06f15d70184a01',stage12_public_sha='607df8440ecd9fd08d7b8b5c263928957dac9ce6',
+        result_sha='PENDING',public_sha='PENDING',source_time_scope='source_preparation_seconds is curator execution only; interactive engineering preparation not instrumented',
+        kappa=cfg['fixed_kappa'],steps=320,rank=4,schedule_seed=20260910,training_reference_roles=['native','fit'],
+        evaluator_started_after_training_process_completed=True,patients='UNKNOWN',same_answer_import_fix=read(run/'public/EVALUATION_IMPORT_COMPLETENESS_FIX.json') if (run/'public/EVALUATION_IMPORT_COMPLETENESS_FIX.json').exists() else None))
     lines=['# Stage13R frozen new-source comparison','',str(status),'',
         'Full original train expansion, not a repeat scan of the old875-row pool. See SOURCE_EXPANSION_SUMMARY.json for source revision and prospective roles.',
         'Unexecuted draft queues are not actual exposure. All existing reservations, evaluation-only identities, real development inputs and quality exclusions remain protected.',
