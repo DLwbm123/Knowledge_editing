@@ -1,0 +1,48 @@
+{
+  "epoch": 1789114023.3321378,
+  "image_role_assignments_changed": false,
+  "model_outputs_used": false,
+  "original_evaluation_files_preserved": true,
+  "reason": "Importer incorrectly capped same-answer challenge at one; include all supported records within the pre-frozen evaluation partition",
+  "rows": [
+    {
+      "complete_challenges": 3,
+      "edit": 1,
+      "original_challenges": 1
+    },
+    {
+      "complete_challenges": 3,
+      "edit": 2,
+      "original_challenges": 1
+    },
+    {
+      "complete_challenges": 3,
+      "edit": 3,
+      "original_challenges": 1
+    },
+    {
+      "complete_challenges": 0,
+      "edit": 4,
+      "original_challenges": 0
+    },
+    {
+      "complete_challenges": 0,
+      "edit": 5,
+      "original_challenges": 0
+    },
+    {
+      "complete_challenges": 0,
+      "edit": 6,
+      "original_challenges": 0
+    },
+    {
+      "complete_challenges": 3,
+      "edit": 7,
+      "original_challenges": 1
+    }
+  ],
+  "source_pool_changed": false,
+  "status": "COMPLETE_BEFORE_EVALUATION_GENERATION",
+  "train_queue_changed": false,
+  "training_files_changed": false
+}

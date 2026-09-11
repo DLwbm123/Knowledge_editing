@@ -1,0 +1,16 @@
+method,role,panel,inputs,errors_avoided,corrections_lost
+C_FACT,fit,H,7,0,0
+C_NO_H,fit,H,7,7,0
+BE,fit,H,7,7,0
+C_FACT,fit,U,7,0,0
+C_NO_H,fit,U,7,0,0
+BE,fit,U,7,7,0
+C_FACT,evaluation,H,9,0,2
+C_NO_H,evaluation,H,9,5,0
+BE,evaluation,H,9,5,0
+C_FACT,evaluation,U,28,1,1
+C_NO_H,evaluation,U,28,10,1
+BE,evaluation,U,28,21,0
+C_FACT,challenge,challenge,12,0,5
+C_NO_H,challenge,challenge,12,0,8
+BE,challenge,challenge,12,0,8

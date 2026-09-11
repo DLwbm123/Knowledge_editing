@@ -1,0 +1,20 @@
+{
+  "actual_N": 7,
+  "completed_writers": 21,
+  "exit_codes": {
+    "generate": 0,
+    "judge": 0,
+    "prepare_judge": 0,
+    "report": 0,
+    "train": 0
+  },
+  "gpu_hours_upper_bound": 0.9751372208197912,
+  "judge_missing": 0,
+  "judge_new": 114,
+  "judge_required": 214,
+  "judge_reused": 100,
+  "judge_scored": 214,
+  "publication": "PENDING",
+  "status": "COMPUTE_COMPLETE",
+  "wall_seconds": 3545.9433772563934
+}

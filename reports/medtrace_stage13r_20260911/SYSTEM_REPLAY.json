@@ -1,0 +1,43 @@
+{
+  "maximum": 8,
+  "route_keys": "fresh Base input features; original BE native anchors and fixed old RC",
+  "rows": [
+    {
+      "mode": "BE_ROUTE_R0",
+      "on": true,
+      "passed": true,
+      "writer": "C_FACT"
+    },
+    {
+      "mode": "RC_FIXED_OLD16",
+      "on": true,
+      "passed": true,
+      "writer": "C_FACT"
+    },
+    {
+      "mode": "BE_ROUTE_R0",
+      "on": true,
+      "passed": true,
+      "writer": "C_NO_H"
+    },
+    {
+      "mode": "RC_FIXED_OLD16",
+      "on": true,
+      "passed": true,
+      "writer": "C_NO_H"
+    },
+    {
+      "mode": "RC_FIXED_OLD16",
+      "on": false,
+      "passed": true,
+      "writer": "C_FACT"
+    },
+    {
+      "mode": "RC_FIXED_OLD16",
+      "on": false,
+      "passed": true,
+      "writer": "C_NO_H"
+    }
+  ],
+  "status": "PASSED"
+}

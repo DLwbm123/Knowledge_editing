@@ -1,0 +1,478 @@
+{
+  "costs": [
+    {
+      "edit": 1,
+      "phase": "NATIVE_CP",
+      "seconds": 25.3235291831661,
+      "steps": 120
+    },
+    {
+      "edit": 1,
+      "phase": "A2",
+      "seconds": 19.959057823987678,
+      "steps": 80
+    },
+    {
+      "edit": 1,
+      "forwards": 648,
+      "parameters": 1476,
+      "phase": "CP_W0",
+      "seconds": 89.76732827303931,
+      "steps": 320
+    },
+    {
+      "edit": 1,
+      "forwards": null,
+      "parameters": 58720256,
+      "phase": "BE",
+      "seconds": 27.263010415947065,
+      "steps": 50
+    },
+    {
+      "edit": 1,
+      "forwards": 1280,
+      "parameters": 73728,
+      "phase": "C_FACT",
+      "seconds": 156.9201784133911,
+      "steps": 320,
+      "training_tokens": 10240
+    },
+    {
+      "edit": 1,
+      "forwards": 960,
+      "parameters": 73728,
+      "phase": "C_NO_H",
+      "seconds": 111.39787602424622,
+      "steps": 320,
+      "training_tokens": 8640
+    },
+    {
+      "edit": 2,
+      "phase": "NATIVE_CP",
+      "seconds": 25.67152689001523,
+      "steps": 140
+    },
+    {
+      "edit": 2,
+      "phase": "A2",
+      "seconds": 19.440055216895416,
+      "steps": 80
+    },
+    {
+      "edit": 2,
+      "forwards": 648,
+      "parameters": 1476,
+      "phase": "CP_W0",
+      "seconds": 101.18872372386977,
+      "steps": 320
+    },
+    {
+      "edit": 2,
+      "forwards": null,
+      "parameters": 58720256,
+      "phase": "BE",
+      "seconds": 23.974351174896583,
+      "steps": 50
+    },
+    {
+      "edit": 2,
+      "forwards": 1280,
+      "parameters": 73728,
+      "phase": "C_FACT",
+      "seconds": 149.51675629615784,
+      "steps": 320,
+      "training_tokens": 10240
+    },
+    {
+      "edit": 2,
+      "forwards": 960,
+      "parameters": 73728,
+      "phase": "C_NO_H",
+      "seconds": 112.21567988395691,
+      "steps": 320,
+      "training_tokens": 8640
+    },
+    {
+      "edit": 3,
+      "phase": "NATIVE_CP",
+      "seconds": 23.831508863018826,
+      "steps": 120
+    },
+    {
+      "edit": 3,
+      "phase": "A2",
+      "seconds": 20.070815237937495,
+      "steps": 80
+    },
+    {
+      "edit": 3,
+      "forwards": 648,
+      "parameters": 1476,
+      "phase": "CP_W0",
+      "seconds": 100.11761529394425,
+      "steps": 320
+    },
+    {
+      "edit": 3,
+      "forwards": null,
+      "parameters": 58720256,
+      "phase": "BE",
+      "seconds": 23.014191773952916,
+      "steps": 50
+    },
+    {
+      "edit": 3,
+      "forwards": 1280,
+      "parameters": 73728,
+      "phase": "C_FACT",
+      "seconds": 148.9742329120636,
+      "steps": 320,
+      "training_tokens": 10240
+    },
+    {
+      "edit": 3,
+      "forwards": 960,
+      "parameters": 73728,
+      "phase": "C_NO_H",
+      "seconds": 110.4300377368927,
+      "steps": 320,
+      "training_tokens": 8640
+    },
+    {
+      "edit": 4,
+      "phase": "NATIVE_CP",
+      "seconds": 22.352566709043458,
+      "steps": 140
+    },
+    {
+      "edit": 4,
+      "phase": "A2",
+      "seconds": 19.484205789864063,
+      "steps": 80
+    },
+    {
+      "edit": 4,
+      "forwards": 648,
+      "parameters": 1476,
+      "phase": "CP_W0",
+      "seconds": 96.33622773783281,
+      "steps": 320
+    },
+    {
+      "edit": 4,
+      "forwards": null,
+      "parameters": 58720256,
+      "phase": "BE",
+      "seconds": 83.71786423795857,
+      "steps": 50
+    },
+    {
+      "edit": 4,
+      "forwards": 1280,
+      "parameters": 73728,
+      "phase": "C_FACT",
+      "seconds": 149.85019159317017,
+      "steps": 320,
+      "training_tokens": 10240
+    },
+    {
+      "edit": 4,
+      "forwards": 960,
+      "parameters": 73728,
+      "phase": "C_NO_H",
+      "seconds": 111.21288657188416,
+      "steps": 320,
+      "training_tokens": 9280
+    },
+    {
+      "edit": 5,
+      "phase": "NATIVE_CP",
+      "seconds": 23.50897261593491,
+      "steps": 120
+    },
+    {
+      "edit": 5,
+      "phase": "A2",
+      "seconds": 19.363601048942655,
+      "steps": 80
+    },
+    {
+      "edit": 5,
+      "forwards": 648,
+      "parameters": 1476,
+      "phase": "CP_W0",
+      "seconds": 98.6303103310056,
+      "steps": 320
+    },
+    {
+      "edit": 5,
+      "forwards": null,
+      "parameters": 58720256,
+      "phase": "BE",
+      "seconds": 22.146874635014683,
+      "steps": 50
+    },
+    {
+      "edit": 5,
+      "forwards": 1280,
+      "parameters": 73728,
+      "phase": "C_FACT",
+      "seconds": 147.2046971321106,
+      "steps": 320,
+      "training_tokens": 8960
+    },
+    {
+      "edit": 5,
+      "forwards": 960,
+      "parameters": 73728,
+      "phase": "C_NO_H",
+      "seconds": 109.97958970069885,
+      "steps": 320,
+      "training_tokens": 8000
+    },
+    {
+      "edit": 6,
+      "phase": "NATIVE_CP",
+      "seconds": 21.395493412856013,
+      "steps": 120
+    },
+    {
+      "edit": 6,
+      "phase": "A2",
+      "seconds": 19.18064024602063,
+      "steps": 80
+    },
+    {
+      "edit": 6,
+      "forwards": 648,
+      "parameters": 1476,
+      "phase": "CP_W0",
+      "seconds": 101.08749840618111,
+      "steps": 320
+    },
+    {
+      "edit": 6,
+      "forwards": null,
+      "parameters": 58720256,
+      "phase": "BE",
+      "seconds": 23.977289377944544,
+      "steps": 50
+    },
+    {
+      "edit": 6,
+      "forwards": 1280,
+      "parameters": 73728,
+      "phase": "C_FACT",
+      "seconds": 147.591237783432,
+      "steps": 320,
+      "training_tokens": 9280
+    },
+    {
+      "edit": 6,
+      "forwards": 960,
+      "parameters": 73728,
+      "phase": "C_NO_H",
+      "seconds": 111.98760771751404,
+      "steps": 320,
+      "training_tokens": 8000
+    },
+    {
+      "edit": 7,
+      "phase": "NATIVE_CP",
+      "seconds": 21.435329305939376,
+      "steps": 120
+    },
+    {
+      "edit": 7,
+      "phase": "A2",
+      "seconds": 19.56962511083111,
+      "steps": 80
+    },
+    {
+      "edit": 7,
+      "forwards": 648,
+      "parameters": 1476,
+      "phase": "CP_W0",
+      "seconds": 99.02320327796042,
+      "steps": 320
+    },
+    {
+      "edit": 7,
+      "forwards": null,
+      "parameters": 58720256,
+      "phase": "BE",
+      "seconds": 22.544223120901734,
+      "steps": 50
+    },
+    {
+      "edit": 7,
+      "forwards": 1280,
+      "parameters": 73728,
+      "phase": "C_FACT",
+      "seconds": 148.22552108764648,
+      "steps": 320,
+      "training_tokens": 10240
+    },
+    {
+      "edit": 7,
+      "forwards": 960,
+      "parameters": 73728,
+      "phase": "C_NO_H",
+      "seconds": 110.78168821334839,
+      "steps": 320,
+      "training_tokens": 8640
+    }
+  ],
+  "coverage": {
+    "clinical_attributes": {
+      "BODY_REGION": 5,
+      "LARGEST_VISIBLE_ORGAN": 1,
+      "ORGAN_VISIBILITY": 1
+    },
+    "edit_inputs": 126,
+    "main_evaluation_images": 4,
+    "primary_H_pairs": 9,
+    "unique_images": 13,
+    "unique_inputs": 78,
+    "unique_questions": 29
+  },
+  "evaluator_started_after_training_process_completed": true,
+  "execution_sha": "12da8f7b0f284740304c8401b540c7379a0c5af9",
+  "kappa": 0.7696741135364367,
+  "patients": "UNKNOWN",
+  "public_sha": "PENDING",
+  "rank": 4,
+  "result_sha": "PENDING",
+  "same_answer_import_fix": {
+    "epoch": 1789114023.3321378,
+    "image_role_assignments_changed": false,
+    "model_outputs_used": false,
+    "original_evaluation_files_preserved": true,
+    "reason": "Importer incorrectly capped same-answer challenge at one; include all supported records within the pre-frozen evaluation partition",
+    "rows": [
+      {
+        "complete_challenges": 3,
+        "edit": 1,
+        "original_challenges": 1
+      },
+      {
+        "complete_challenges": 3,
+        "edit": 2,
+        "original_challenges": 1
+      },
+      {
+        "complete_challenges": 3,
+        "edit": 3,
+        "original_challenges": 1
+      },
+      {
+        "complete_challenges": 0,
+        "edit": 4,
+        "original_challenges": 0
+      },
+      {
+        "complete_challenges": 0,
+        "edit": 5,
+        "original_challenges": 0
+      },
+      {
+        "complete_challenges": 0,
+        "edit": 6,
+        "original_challenges": 0
+      },
+      {
+        "complete_challenges": 3,
+        "edit": 7,
+        "original_challenges": 1
+      }
+    ],
+    "source_pool_changed": false,
+    "status": "COMPLETE_BEFORE_EVALUATION_GENERATION",
+    "train_queue_changed": false,
+    "training_files_changed": false
+  },
+  "schedule_seed": 20260910,
+  "source": {
+    "actual_N": 7,
+    "base_membership_pending": 0,
+    "complete_source_packages": 25,
+    "draft_handling": "Two never-executed PENDING/attempts0 draft queues are not actual development; actual earlier/later runs and all reserved/quality roles still excluded",
+    "fresh_english_images": 16,
+    "fresh_english_rows": 151,
+    "independence": "New native/main evaluation source images; unknown patients/pretraining exposure; same-image paraphrases are not image generalization",
+    "judge": "PENDING",
+    "new_main_evaluation_images": 3,
+    "new_training_images": 9,
+    "prospective_image_roles": {
+      "adaptation": 10,
+      "evaluation": 6
+    },
+    "protocol": "Frozen Stage13/Stage12 methods; native CP->A2->CP-W0->paired freeR4; original BalancEdit",
+    "provenance": {
+      "author": "https://www.med-vqa.com/slake/",
+      "downloaded": false,
+      "license": "CC-BY-4.0",
+      "local_train_matches_author_revision": true,
+      "published_data": "https://huggingface.co/datasets/BoKelvin/SLAKE",
+      "release": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9",
+      "train_git_blob": "afb9b3d634173aaccdb974f6b3d2754fb105c203",
+      "train_sha256": "7a9fb81f9d7bb145c3d7e9bc8d3b9016ba18b6539ea5031a53bae8fd3cd991c3"
+    },
+    "publication": "PENDING",
+    "raw_or_private_data_published": false,
+    "source_inventory": {
+      "SLAKE": {
+        "actual_development_images": 490,
+        "fresh_images": 16,
+        "languages": {
+          "en": 4919,
+          "zh": 4916
+        },
+        "missing_image_rows": 0,
+        "nonadditive_counts": true,
+        "raw_rows": 9835,
+        "reserved_or_quality_images": 392,
+        "train_images": 586,
+        "train_rows": 9835
+      },
+      "VQA-RAD": {
+        "actual_development_images": 155,
+        "fresh_images": 0,
+        "languages": {
+          "en": 1797
+        },
+        "missing_image_rows": 0,
+        "nonadditive_counts": true,
+        "raw_rows": 2248,
+        "reserved_or_quality_images": 221,
+        "train_images": 313,
+        "train_rows": 1797
+      }
+    },
+    "source_preparation_seconds": 12.984464168548584,
+    "source_review": "AGENT_SOURCE_CONSISTENCY_NOT_HUMAN_CLINICAL",
+    "status": "QUEUE_FROZEN",
+    "support_reuse": "Allowed but not needed for assembled fresh-source packages",
+    "training": "PENDING"
+  },
+  "source_preparation_sha": "75022408936cda2ae20be4f93486b2178bb03ad4",
+  "source_time_scope": "source_preparation_seconds is curator execution only; interactive engineering preparation not instrumented",
+  "stage12_public_sha": "607df8440ecd9fd08d7b8b5c263928957dac9ce6",
+  "stage13_public_sha": "bafbc431af9576af27a3aaf47e06f15d70184a01",
+  "status": {
+    "actual_N": 7,
+    "completed_writers": 21,
+    "judge_missing": 0,
+    "judge_new": 114,
+    "judge_required": 214,
+    "judge_reused": 100,
+    "judge_scored": 214,
+    "publication": "PENDING",
+    "status": "COMPUTE_COMPLETE"
+  },
+  "steps": 320,
+  "training_reference_roles": [
+    "native",
+    "fit"
+  ]
+}

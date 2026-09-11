@@ -1,0 +1,63 @@
+{
+  "actual_N": 7,
+  "base_membership_pending": 0,
+  "complete_source_packages": 25,
+  "draft_handling": "Two never-executed PENDING/attempts0 draft queues are not actual development; actual earlier/later runs and all reserved/quality roles still excluded",
+  "fresh_english_images": 16,
+  "fresh_english_rows": 151,
+  "independence": "New native/main evaluation source images; unknown patients/pretraining exposure; same-image paraphrases are not image generalization",
+  "judge": "PENDING",
+  "new_main_evaluation_images": 3,
+  "new_training_images": 9,
+  "prospective_image_roles": {
+    "adaptation": 10,
+    "evaluation": 6
+  },
+  "protocol": "Frozen Stage13/Stage12 methods; native CP->A2->CP-W0->paired freeR4; original BalancEdit",
+  "provenance": {
+    "author": "https://www.med-vqa.com/slake/",
+    "downloaded": false,
+    "license": "CC-BY-4.0",
+    "local_train_matches_author_revision": true,
+    "published_data": "https://huggingface.co/datasets/BoKelvin/SLAKE",
+    "release": "a9083ce6c34ac3ffb17671a605962924d8a8f9e9",
+    "train_git_blob": "afb9b3d634173aaccdb974f6b3d2754fb105c203",
+    "train_sha256": "7a9fb81f9d7bb145c3d7e9bc8d3b9016ba18b6539ea5031a53bae8fd3cd991c3"
+  },
+  "publication": "PENDING",
+  "raw_or_private_data_published": false,
+  "source_inventory": {
+    "SLAKE": {
+      "actual_development_images": 490,
+      "fresh_images": 16,
+      "languages": {
+        "en": 4919,
+        "zh": 4916
+      },
+      "missing_image_rows": 0,
+      "nonadditive_counts": true,
+      "raw_rows": 9835,
+      "reserved_or_quality_images": 392,
+      "train_images": 586,
+      "train_rows": 9835
+    },
+    "VQA-RAD": {
+      "actual_development_images": 155,
+      "fresh_images": 0,
+      "languages": {
+        "en": 1797
+      },
+      "missing_image_rows": 0,
+      "nonadditive_counts": true,
+      "raw_rows": 2248,
+      "reserved_or_quality_images": 221,
+      "train_images": 313,
+      "train_rows": 1797
+    }
+  },
+  "source_preparation_seconds": 12.984464168548584,
+  "source_review": "AGENT_SOURCE_CONSISTENCY_NOT_HUMAN_CLINICAL",
+  "status": "QUEUE_FROZEN",
+  "support_reuse": "Allowed but not needed for assembled fresh-source packages",
+  "training": "PENDING"
+}
