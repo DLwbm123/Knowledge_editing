@@ -1,0 +1,14 @@
+{
+  "status": "COMPUTE_COMPLETE_AND_PUBLICATION_VERIFIED",
+  "public_repository": "https://github.com/DLwbm123/Knowledge_editing-public",
+  "public_branch": "main",
+  "public_sha": "f22b56d6b9117d06784c4f355e30278c1397ba2e",
+  "research_branch": "medtrace-stage13r-20260911",
+  "research_result_sha": "17d6d563e858f1b202b1ff589541eef75be4813c",
+  "remote_branch_SHAs_verified": true,
+  "anonymous_report_HTTP": 200,
+  "anonymous_source_HTTP": 200,
+  "published_scope": "source snapshot, focused checks, aggregate metrics, paired outcomes and effects, source/cost/validation summaries",
+  "private_data_and_runtime_artifacts_excluded": true,
+  "retraining_or_rejudging_performed_for_publication": false
+}
