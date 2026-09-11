@@ -1,0 +1,97 @@
+cohort,subset,mode,role,metric,candidate,control,paired_edits,delta,ci_low,ci_high,comparison_identity,patients
+OLD15,FULL_COHORT,FORCED_ON,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,FULL_COHORT,FORCED_ON,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,15,0.9555555555555556,0.8888888888888888,1.0,original fixed comparison reused,UNKNOWN
+OLD15,FULL_COHORT,FORCED_ON,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,FULL_COHORT,FORCED_ON,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,14,0.5357142857142857,0.32142857142857145,0.75,original fixed comparison reused,UNKNOWN
+OLD15,FULL_COHORT,BE_ROUTE_R0,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,FULL_COHORT,BE_ROUTE_R0,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,15,0.9333333333333333,0.8222222222222223,1.0,original fixed comparison reused,UNKNOWN
+OLD15,FULL_COHORT,BE_ROUTE_R0,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,FULL_COHORT,BE_ROUTE_R0,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,14,0.5,0.25,0.75,original fixed comparison reused,UNKNOWN
+OLD15,FULL_COHORT,RC_FIXED_OLD16,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,FULL_COHORT,RC_FIXED_OLD16,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,15,0.0,0.0,0.0,original fixed comparison reused,UNKNOWN
+OLD15,FULL_COHORT,RC_FIXED_OLD16,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,FULL_COHORT,RC_FIXED_OLD16,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,14,0.0,0.0,0.0,original fixed comparison reused,UNKNOWN
+OLD15,COMMON_SUPPORTED,FORCED_ON,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,COMMON_SUPPORTED,FORCED_ON,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+OLD15,COMMON_SUPPORTED,FORCED_ON,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,COMMON_SUPPORTED,FORCED_ON,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+OLD15,COMMON_SUPPORTED,BE_ROUTE_R0,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,COMMON_SUPPORTED,BE_ROUTE_R0,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+OLD15,COMMON_SUPPORTED,BE_ROUTE_R0,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,COMMON_SUPPORTED,BE_ROUTE_R0,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+OLD15,COMMON_SUPPORTED,RC_FIXED_OLD16,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,COMMON_SUPPORTED,RC_FIXED_OLD16,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+OLD15,COMMON_SUPPORTED,RC_FIXED_OLD16,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,COMMON_SUPPORTED,RC_FIXED_OLD16,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+OLD15,SAME_H_IMAGE,FORCED_ON,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,SAME_H_IMAGE,FORCED_ON,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+OLD15,SAME_H_IMAGE,FORCED_ON,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,SAME_H_IMAGE,FORCED_ON,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+OLD15,SAME_H_IMAGE,BE_ROUTE_R0,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,SAME_H_IMAGE,BE_ROUTE_R0,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+OLD15,SAME_H_IMAGE,BE_ROUTE_R0,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,SAME_H_IMAGE,BE_ROUTE_R0,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+OLD15,SAME_H_IMAGE,RC_FIXED_OLD16,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,SAME_H_IMAGE,RC_FIXED_OLD16,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+OLD15,SAME_H_IMAGE,RC_FIXED_OLD16,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,SAME_H_IMAGE,RC_FIXED_OLD16,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+OLD15,DIFFERENT_TRAIN_IMAGE,FORCED_ON,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,DIFFERENT_TRAIN_IMAGE,FORCED_ON,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+OLD15,DIFFERENT_TRAIN_IMAGE,FORCED_ON,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,DIFFERENT_TRAIN_IMAGE,FORCED_ON,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+OLD15,DIFFERENT_TRAIN_IMAGE,BE_ROUTE_R0,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,DIFFERENT_TRAIN_IMAGE,BE_ROUTE_R0,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+OLD15,DIFFERENT_TRAIN_IMAGE,BE_ROUTE_R0,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,DIFFERENT_TRAIN_IMAGE,BE_ROUTE_R0,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+OLD15,DIFFERENT_TRAIN_IMAGE,RC_FIXED_OLD16,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,DIFFERENT_TRAIN_IMAGE,RC_FIXED_OLD16,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+OLD15,DIFFERENT_TRAIN_IMAGE,RC_FIXED_OLD16,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+OLD15,DIFFERENT_TRAIN_IMAGE,RC_FIXED_OLD16,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+NEW7,FULL_COHORT,FORCED_ON,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.8571428571428571,0.5714285714285714,1.0,post-publication supplemental,UNKNOWN
+NEW7,FULL_COHORT,FORCED_ON,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.8571428571428571,0.5714285714285714,1.0,original fixed comparison reused,UNKNOWN
+NEW7,FULL_COHORT,FORCED_ON,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.8571428571428571,0.5714285714285714,1.0,post-publication supplemental,UNKNOWN
+NEW7,FULL_COHORT,FORCED_ON,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.8571428571428571,0.5714285714285714,1.0,original fixed comparison reused,UNKNOWN
+NEW7,FULL_COHORT,BE_ROUTE_R0,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.7142857142857143,0.42857142857142855,1.0,post-publication supplemental,UNKNOWN
+NEW7,FULL_COHORT,BE_ROUTE_R0,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.7142857142857143,0.42857142857142855,1.0,original fixed comparison reused,UNKNOWN
+NEW7,FULL_COHORT,BE_ROUTE_R0,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.7142857142857143,0.42857142857142855,1.0,post-publication supplemental,UNKNOWN
+NEW7,FULL_COHORT,BE_ROUTE_R0,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.7142857142857143,0.42857142857142855,1.0,original fixed comparison reused,UNKNOWN
+NEW7,FULL_COHORT,RC_FIXED_OLD16,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.0,0.0,0.0,post-publication supplemental,UNKNOWN
+NEW7,FULL_COHORT,RC_FIXED_OLD16,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.0,0.0,0.0,original fixed comparison reused,UNKNOWN
+NEW7,FULL_COHORT,RC_FIXED_OLD16,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.0,0.0,0.0,post-publication supplemental,UNKNOWN
+NEW7,FULL_COHORT,RC_FIXED_OLD16,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.0,0.0,0.0,original fixed comparison reused,UNKNOWN
+NEW7,COMMON_SUPPORTED,FORCED_ON,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.8571428571428571,0.5714285714285714,1.0,post-publication supplemental,UNKNOWN
+NEW7,COMMON_SUPPORTED,FORCED_ON,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.8571428571428571,0.5714285714285714,1.0,original fixed comparison reused,UNKNOWN
+NEW7,COMMON_SUPPORTED,FORCED_ON,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.8571428571428571,0.5714285714285714,1.0,post-publication supplemental,UNKNOWN
+NEW7,COMMON_SUPPORTED,FORCED_ON,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.8571428571428571,0.5714285714285714,1.0,original fixed comparison reused,UNKNOWN
+NEW7,COMMON_SUPPORTED,BE_ROUTE_R0,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.7142857142857143,0.42857142857142855,1.0,post-publication supplemental,UNKNOWN
+NEW7,COMMON_SUPPORTED,BE_ROUTE_R0,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.7142857142857143,0.42857142857142855,1.0,original fixed comparison reused,UNKNOWN
+NEW7,COMMON_SUPPORTED,BE_ROUTE_R0,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.7142857142857143,0.42857142857142855,1.0,post-publication supplemental,UNKNOWN
+NEW7,COMMON_SUPPORTED,BE_ROUTE_R0,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.7142857142857143,0.42857142857142855,1.0,original fixed comparison reused,UNKNOWN
+NEW7,COMMON_SUPPORTED,RC_FIXED_OLD16,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.0,0.0,0.0,post-publication supplemental,UNKNOWN
+NEW7,COMMON_SUPPORTED,RC_FIXED_OLD16,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.0,0.0,0.0,original fixed comparison reused,UNKNOWN
+NEW7,COMMON_SUPPORTED,RC_FIXED_OLD16,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.0,0.0,0.0,post-publication supplemental,UNKNOWN
+NEW7,COMMON_SUPPORTED,RC_FIXED_OLD16,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.0,0.0,0.0,original fixed comparison reused,UNKNOWN
+NEW7,SAME_H_IMAGE,FORCED_ON,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.8571428571428571,0.5714285714285714,1.0,post-publication supplemental,UNKNOWN
+NEW7,SAME_H_IMAGE,FORCED_ON,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.8571428571428571,0.5714285714285714,1.0,original fixed comparison reused,UNKNOWN
+NEW7,SAME_H_IMAGE,FORCED_ON,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.8571428571428571,0.5714285714285714,1.0,post-publication supplemental,UNKNOWN
+NEW7,SAME_H_IMAGE,FORCED_ON,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.8571428571428571,0.5714285714285714,1.0,original fixed comparison reused,UNKNOWN
+NEW7,SAME_H_IMAGE,BE_ROUTE_R0,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.7142857142857143,0.42857142857142855,1.0,post-publication supplemental,UNKNOWN
+NEW7,SAME_H_IMAGE,BE_ROUTE_R0,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.7142857142857143,0.42857142857142855,1.0,original fixed comparison reused,UNKNOWN
+NEW7,SAME_H_IMAGE,BE_ROUTE_R0,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.7142857142857143,0.42857142857142855,1.0,post-publication supplemental,UNKNOWN
+NEW7,SAME_H_IMAGE,BE_ROUTE_R0,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.7142857142857143,0.42857142857142855,1.0,original fixed comparison reused,UNKNOWN
+NEW7,SAME_H_IMAGE,RC_FIXED_OLD16,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.0,0.0,0.0,post-publication supplemental,UNKNOWN
+NEW7,SAME_H_IMAGE,RC_FIXED_OLD16,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.0,0.0,0.0,original fixed comparison reused,UNKNOWN
+NEW7,SAME_H_IMAGE,RC_FIXED_OLD16,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,7,0.0,0.0,0.0,post-publication supplemental,UNKNOWN
+NEW7,SAME_H_IMAGE,RC_FIXED_OLD16,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,7,0.0,0.0,0.0,original fixed comparison reused,UNKNOWN
+NEW7,DIFFERENT_TRAIN_IMAGE,FORCED_ON,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+NEW7,DIFFERENT_TRAIN_IMAGE,FORCED_ON,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+NEW7,DIFFERENT_TRAIN_IMAGE,FORCED_ON,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+NEW7,DIFFERENT_TRAIN_IMAGE,FORCED_ON,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+NEW7,DIFFERENT_TRAIN_IMAGE,BE_ROUTE_R0,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+NEW7,DIFFERENT_TRAIN_IMAGE,BE_ROUTE_R0,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+NEW7,DIFFERENT_TRAIN_IMAGE,BE_ROUTE_R0,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+NEW7,DIFFERENT_TRAIN_IMAGE,BE_ROUTE_R0,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+NEW7,DIFFERENT_TRAIN_IMAGE,RC_FIXED_OLD16,fit,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+NEW7,DIFFERENT_TRAIN_IMAGE,RC_FIXED_OLD16,fit,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN
+NEW7,DIFFERENT_TRAIN_IMAGE,RC_FIXED_OLD16,evaluation,PairCorrect_edit_macro,C_FACT,C_EXTRA_QA,0,,,,post-publication supplemental,UNKNOWN
+NEW7,DIFFERENT_TRAIN_IMAGE,RC_FIXED_OLD16,evaluation,PairCorrect_edit_macro,C_FACT,C_NO_H,0,,,,original fixed comparison reused,UNKNOWN

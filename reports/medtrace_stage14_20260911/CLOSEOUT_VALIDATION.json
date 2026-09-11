@@ -1,0 +1,20 @@
+{
+  "status": "COMPUTE_COMPLETE",
+  "completed_new_trajectories": 7,
+  "new_generated_edit_input_associations": 126,
+  "evaluation_input_sets_match_all_three_historical_writers": true,
+  "own_edit_W0_native_fit_U_schedules_preserved": true,
+  "steps_per_new_trajectory": 320,
+  "FP32_parameters_per_new_trajectory": 73728,
+  "student_forwards_per_new_trajectory": 1280,
+  "base_guards_unchanged": true,
+  "judge_scored": 1416,
+  "judge_missing": 0,
+  "natural_replays_passed": 4,
+  "training_execution_sha": "a3b85bc89406cc2c7ce2af0ed1e851244e4d945b",
+  "report_recovery_sha": "fb94ccd190ebc46bce351032b0dc59b53dae9be5",
+  "report_only_recovery_passed": true,
+  "no_training_generation_or_judge_rerun": true,
+  "historical_reports_retained": true,
+  "verification_scope": "existing endpoint metadata, all new versus historical input sets, inherited schedules, Judge tuple ancestry and actual CPU report completion; no new full-model hash sweep or historical experiment rerun"
+}

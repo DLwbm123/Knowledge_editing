@@ -1,0 +1,8 @@
+{
+  "actual_source_freeze_count": 7,
+  "historical_bound_inputs": 2184,
+  "historical_context_bound_tuples": 1398,
+  "historical_training_or_generation_repeated": false,
+  "rank_source_and_pair_tests_passed": 2,
+  "status": "PASSED"
+}

@@ -1,0 +1,31 @@
+{
+  "maximum_actual_replays": 4,
+  "outputs": "DERIVED from frozen Base/route and new forced output",
+  "rows": [
+    {
+      "mode": "BE_ROUTE_R0",
+      "on": true,
+      "passed": true,
+      "writer": "C_EXTRA_QA"
+    },
+    {
+      "mode": "RC_FIXED_OLD16",
+      "on": true,
+      "passed": true,
+      "writer": "C_EXTRA_QA"
+    },
+    {
+      "mode": "RC_FIXED_OLD16",
+      "on": false,
+      "passed": true,
+      "writer": "C_EXTRA_QA"
+    },
+    {
+      "mode": "BE_ROUTE_R0",
+      "on": false,
+      "passed": true,
+      "writer": "C_EXTRA_QA"
+    }
+  ],
+  "status": "PASSED"
+}

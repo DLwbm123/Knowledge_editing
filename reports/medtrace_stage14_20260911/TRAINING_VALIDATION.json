@@ -1,0 +1,69 @@
+{
+  "rows": [
+    {
+      "G_forwards": 320,
+      "cohort": "NEW7",
+      "edit": 1,
+      "parameters": 73728,
+      "parent_native_fit_U_schedule_identical": true,
+      "steps": 320,
+      "student_forwards": 1280
+    },
+    {
+      "G_forwards": 320,
+      "cohort": "NEW7",
+      "edit": 2,
+      "parameters": 73728,
+      "parent_native_fit_U_schedule_identical": true,
+      "steps": 320,
+      "student_forwards": 1280
+    },
+    {
+      "G_forwards": 320,
+      "cohort": "NEW7",
+      "edit": 3,
+      "parameters": 73728,
+      "parent_native_fit_U_schedule_identical": true,
+      "steps": 320,
+      "student_forwards": 1280
+    },
+    {
+      "G_forwards": 320,
+      "cohort": "NEW7",
+      "edit": 4,
+      "parameters": 73728,
+      "parent_native_fit_U_schedule_identical": true,
+      "steps": 320,
+      "student_forwards": 1280
+    },
+    {
+      "G_forwards": 320,
+      "cohort": "NEW7",
+      "edit": 5,
+      "parameters": 73728,
+      "parent_native_fit_U_schedule_identical": true,
+      "steps": 320,
+      "student_forwards": 1280
+    },
+    {
+      "G_forwards": 320,
+      "cohort": "NEW7",
+      "edit": 6,
+      "parameters": 73728,
+      "parent_native_fit_U_schedule_identical": true,
+      "steps": 320,
+      "student_forwards": 1280
+    },
+    {
+      "G_forwards": 320,
+      "cohort": "NEW7",
+      "edit": 7,
+      "parameters": 73728,
+      "parent_native_fit_U_schedule_identical": true,
+      "steps": 320,
+      "student_forwards": 1280
+    }
+  ],
+  "status": "PASSED",
+  "training_only_reference_roles": true
+}

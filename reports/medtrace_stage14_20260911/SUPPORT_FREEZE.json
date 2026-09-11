@@ -1,0 +1,329 @@
+{
+  "actual_new_trajectories": 7,
+  "cohorts": {
+    "NEW7": 7,
+    "OLD15": 15
+  },
+  "evaluation_image_exclusion_includes_calibration_and_positive_paraphrase_images": true,
+  "old_results_retained": true,
+  "review_level": "agent original-source consistency; no human clinical certification",
+  "rows": [
+    {
+      "cohort": "OLD15",
+      "edit": 101,
+      "order": 7,
+      "reason": "NO_LEGAL_TRAIN_IMAGE",
+      "selected_G_QA": 0,
+      "selected_H_QA": 3,
+      "slots": [],
+      "status": "UNSUPPORTED",
+      "tier": "UNSUPPORTED"
+    },
+    {
+      "cohort": "OLD15",
+      "edit": 102,
+      "order": 8,
+      "reason": "NO_LEGAL_TRAIN_IMAGE",
+      "selected_G_QA": 0,
+      "selected_H_QA": 1,
+      "slots": [],
+      "status": "UNSUPPORTED",
+      "tier": "UNSUPPORTED"
+    },
+    {
+      "cohort": "OLD15",
+      "edit": 103,
+      "order": 9,
+      "reason": "NO_LEGAL_TRAIN_IMAGE",
+      "selected_G_QA": 0,
+      "selected_H_QA": 1,
+      "slots": [],
+      "status": "UNSUPPORTED",
+      "tier": "UNSUPPORTED"
+    },
+    {
+      "cohort": "OLD15",
+      "edit": 104,
+      "order": 10,
+      "reason": "NO_LEGAL_TRAIN_IMAGE",
+      "selected_G_QA": 0,
+      "selected_H_QA": 2,
+      "slots": [],
+      "status": "UNSUPPORTED",
+      "tier": "UNSUPPORTED"
+    },
+    {
+      "cohort": "OLD15",
+      "edit": 105,
+      "order": 11,
+      "reason": "NO_LEGAL_TRAIN_IMAGE",
+      "selected_G_QA": 0,
+      "selected_H_QA": 1,
+      "slots": [],
+      "status": "UNSUPPORTED",
+      "tier": "UNSUPPORTED"
+    },
+    {
+      "cohort": "OLD15",
+      "edit": 106,
+      "order": 12,
+      "reason": "NO_LEGAL_TRAIN_IMAGE",
+      "selected_G_QA": 0,
+      "selected_H_QA": 3,
+      "slots": [],
+      "status": "UNSUPPORTED",
+      "tier": "UNSUPPORTED"
+    },
+    {
+      "cohort": "OLD15",
+      "edit": 107,
+      "order": 13,
+      "reason": "NO_LEGAL_TRAIN_IMAGE",
+      "selected_G_QA": 0,
+      "selected_H_QA": 1,
+      "slots": [],
+      "status": "UNSUPPORTED",
+      "tier": "UNSUPPORTED"
+    },
+    {
+      "cohort": "OLD15",
+      "edit": 108,
+      "order": 14,
+      "reason": "NO_LEGAL_TRAIN_IMAGE",
+      "selected_G_QA": 0,
+      "selected_H_QA": 3,
+      "slots": [],
+      "status": "UNSUPPORTED",
+      "tier": "UNSUPPORTED"
+    },
+    {
+      "cohort": "OLD15",
+      "edit": 109,
+      "order": 15,
+      "reason": "NO_LEGAL_TRAIN_IMAGE",
+      "selected_G_QA": 0,
+      "selected_H_QA": 2,
+      "slots": [],
+      "status": "UNSUPPORTED",
+      "tier": "UNSUPPORTED"
+    },
+    {
+      "cohort": "OLD15",
+      "edit": 110,
+      "order": 16,
+      "reason": "NO_LEGAL_TRAIN_IMAGE",
+      "selected_G_QA": 0,
+      "selected_H_QA": 1,
+      "slots": [],
+      "status": "UNSUPPORTED",
+      "tier": "UNSUPPORTED"
+    },
+    {
+      "cohort": "OLD15",
+      "edit": 111,
+      "order": 17,
+      "reason": "NO_LEGAL_TRAIN_IMAGE",
+      "selected_G_QA": 0,
+      "selected_H_QA": 1,
+      "slots": [],
+      "status": "UNSUPPORTED",
+      "tier": "UNSUPPORTED"
+    },
+    {
+      "cohort": "OLD15",
+      "edit": 112,
+      "order": 18,
+      "reason": "NO_LEGAL_TRAIN_IMAGE",
+      "selected_G_QA": 0,
+      "selected_H_QA": 1,
+      "slots": [],
+      "status": "UNSUPPORTED",
+      "tier": "UNSUPPORTED"
+    },
+    {
+      "cohort": "OLD15",
+      "edit": 113,
+      "order": 19,
+      "reason": "NO_LEGAL_TRAIN_IMAGE",
+      "selected_G_QA": 0,
+      "selected_H_QA": 1,
+      "slots": [],
+      "status": "UNSUPPORTED",
+      "tier": "UNSUPPORTED"
+    },
+    {
+      "cohort": "OLD15",
+      "edit": 114,
+      "order": 20,
+      "reason": "NO_LEGAL_TRAIN_IMAGE",
+      "selected_G_QA": 0,
+      "selected_H_QA": 1,
+      "slots": [],
+      "status": "UNSUPPORTED",
+      "tier": "UNSUPPORTED"
+    },
+    {
+      "cohort": "OLD15",
+      "edit": 116,
+      "order": 22,
+      "reason": "NO_LEGAL_TRAIN_IMAGE",
+      "selected_G_QA": 0,
+      "selected_H_QA": 1,
+      "slots": [],
+      "status": "UNSUPPORTED",
+      "tier": "UNSUPPORTED"
+    },
+    {
+      "cohort": "NEW7",
+      "edit": 1,
+      "order": 1001,
+      "reason": null,
+      "selected_G_QA": 1,
+      "selected_H_QA": 1,
+      "slots": [
+        {
+          "G_answer_tokens": 2,
+          "G_answer_type": "OPEN",
+          "G_attribute": "largest_visible_organ",
+          "H_answer_tokens": 4,
+          "H_answer_type": "OPEN",
+          "H_attribute": "body_region",
+          "tier": "SAME_H_IMAGE"
+        }
+      ],
+      "status": "SUPPORTED",
+      "tier": "SAME_H_IMAGE"
+    },
+    {
+      "cohort": "NEW7",
+      "edit": 2,
+      "order": 1002,
+      "reason": null,
+      "selected_G_QA": 1,
+      "selected_H_QA": 1,
+      "slots": [
+        {
+          "G_answer_tokens": 2,
+          "G_answer_type": "OPEN",
+          "G_attribute": "largest_visible_organ",
+          "H_answer_tokens": 4,
+          "H_answer_type": "OPEN",
+          "H_attribute": "body_region",
+          "tier": "SAME_H_IMAGE"
+        }
+      ],
+      "status": "SUPPORTED",
+      "tier": "SAME_H_IMAGE"
+    },
+    {
+      "cohort": "NEW7",
+      "edit": 3,
+      "order": 1003,
+      "reason": null,
+      "selected_G_QA": 1,
+      "selected_H_QA": 1,
+      "slots": [
+        {
+          "G_answer_tokens": 2,
+          "G_answer_type": "OPEN",
+          "G_attribute": "largest_visible_organ",
+          "H_answer_tokens": 4,
+          "H_answer_type": "OPEN",
+          "H_attribute": "body_region",
+          "tier": "SAME_H_IMAGE"
+        }
+      ],
+      "status": "SUPPORTED",
+      "tier": "SAME_H_IMAGE"
+    },
+    {
+      "cohort": "NEW7",
+      "edit": 4,
+      "order": 1004,
+      "reason": null,
+      "selected_G_QA": 1,
+      "selected_H_QA": 1,
+      "slots": [
+        {
+          "G_answer_tokens": 3,
+          "G_answer_type": "OPEN",
+          "G_attribute": "body_region",
+          "H_answer_tokens": 2,
+          "H_answer_type": "OPEN",
+          "H_attribute": "largest_visible_organ",
+          "tier": "SAME_H_IMAGE"
+        }
+      ],
+      "status": "SUPPORTED",
+      "tier": "SAME_H_IMAGE"
+    },
+    {
+      "cohort": "NEW7",
+      "edit": 5,
+      "order": 1005,
+      "reason": null,
+      "selected_G_QA": 1,
+      "selected_H_QA": 1,
+      "slots": [
+        {
+          "G_answer_tokens": 2,
+          "G_answer_type": "YES_NO",
+          "G_attribute": "presence:liver",
+          "H_answer_tokens": 2,
+          "H_answer_type": "YES_NO",
+          "H_attribute": "presence:spleen",
+          "tier": "SAME_H_IMAGE"
+        }
+      ],
+      "status": "SUPPORTED",
+      "tier": "SAME_H_IMAGE"
+    },
+    {
+      "cohort": "NEW7",
+      "edit": 6,
+      "order": 1006,
+      "reason": null,
+      "selected_G_QA": 1,
+      "selected_H_QA": 1,
+      "slots": [
+        {
+          "G_answer_tokens": 2,
+          "G_answer_type": "OPEN",
+          "G_attribute": "largest_visible_organ",
+          "H_answer_tokens": 3,
+          "H_answer_type": "OPEN",
+          "H_attribute": "body_region",
+          "tier": "SAME_H_IMAGE"
+        }
+      ],
+      "status": "SUPPORTED",
+      "tier": "SAME_H_IMAGE"
+    },
+    {
+      "cohort": "NEW7",
+      "edit": 7,
+      "order": 1007,
+      "reason": null,
+      "selected_G_QA": 1,
+      "selected_H_QA": 1,
+      "slots": [
+        {
+          "G_answer_tokens": 2,
+          "G_answer_type": "OPEN",
+          "G_attribute": "largest_visible_organ",
+          "H_answer_tokens": 4,
+          "H_answer_type": "OPEN",
+          "H_attribute": "body_region",
+          "tier": "SAME_H_IMAGE"
+        }
+      ],
+      "status": "SUPPORTED",
+      "tier": "SAME_H_IMAGE"
+    }
+  ],
+  "selection": "same H image, answer type, token distance, deterministic source order with inherited seed tie break",
+  "source_QAs_reviewed": 19,
+  "source_images_reviewed": 2,
+  "source_review_seconds": 1.242703914642334,
+  "token_match_measure": "original answer tokenizer length plus EOS; actual training token counts reported separately"
+}
