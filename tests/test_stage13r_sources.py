@@ -21,3 +21,21 @@ def test_source_identity_and_prospective_roles():
     packages = assemble(pool, {'a':'adaptation', 'b':'adaptation', 'c':'evaluation', 'd':'adaptation'})
     assert len(packages) == 1
     assert packages[0]['H_evaluation'][0]['source_group'] == 'c'
+
+
+def test_existing_worker_input_boundary_and_rank():
+    import torch
+    from scripts.medtrace.stage13r import strict_training
+    from scripts.medtrace.stage11_worker import make_expert
+    from methods.medtrace.core import AsymmetricCPExpert
+    data = dict(event=dict(probes=[]), rows=[dict(role='native'), dict(role='fit', negative_group='H'), dict(role='fit', negative_group='U')])
+    strict_training(data)
+    data['rows'].append(dict(role='evaluation', reference='must not enter trainer'))
+    try: strict_training(data)
+    except AssertionError: pass
+    else: raise AssertionError('evaluation answer accepted by training adapter')
+    cp = AsymmetricCPExpert(16, 16, 4)
+    a, b = (make_expert(cp, name, 17) for name in ('C_FACT','C_NO_H'))
+    assert a.rank == b.rank == 4 and a is not b
+    x = torch.randn(3, 16)
+    assert torch.allclose(a.residual(x), b.residual(x))
