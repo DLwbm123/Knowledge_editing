@@ -1,0 +1,21 @@
+{
+  "gpu_hours": 0.5722829812102848,
+  "judge_missing": 0,
+  "judge_new": 55,
+  "judge_required": 1244,
+  "judge_reused": 1189,
+  "planned_training": 15,
+  "publication": "PENDING",
+  "recovery": {
+    "generation_repeated": false,
+    "initial_report_exit": 1,
+    "judge_repeated": false,
+    "recovered_report_exit": 0,
+    "report_only": true,
+    "report_repair_commit": "aa328ee",
+    "training_repeated": false
+  },
+  "status": "COMPUTE_COMPLETE",
+  "system_replay": "PASSED",
+  "training_completed": 15
+}
