@@ -18,6 +18,11 @@ WRITERS=('C_FACT','C_NO_H','BE')
 MODES=('BE_ROUTE_R0','RC_FIXED_OLD16')
 
 
+def mixed_csv(path,rows):
+    fields=dict.fromkeys(k for row in rows for k in row)
+    f4.csv_write(path,[{k:row.get(k) for k in fields} for row in rows])
+
+
 def deploy(entry,mode,kappa):
     item=dict(entry['item']);on=bool(item['route']['activated']) if mode==MODES[0] else accepted(item['route'],kappa)
     item.update(fixed_on=on,fixed=item['forced'] if on else item['base'])
@@ -138,7 +143,7 @@ def report(args):
         delta=[groups['C_FACT'][e]['pair_correct']-groups['C_NO_H'][e]['pair_correct'] for e in sorted(common)]
         if delta:
             lo,hi=f4.bootstrap(delta);writer.append(dict(row_kind='PAIR_EDIT_EFFECT',panel=panel,candidate='C_FACT',control='C_NO_H',delta=mean(delta),ci_low=lo,ci_high=hi,paired_edits=len(delta)))
-    f4.csv_write(run/'public/WRITER_ABLATION.csv',writer)
+    mixed_csv(run/'public/WRITER_ABLATION.csv',writer)
     system=[r for r in details if r['mode'] in MODES or r['method']=='BASE']
     # Baselines are compared on their actual common input support, no substituted targets.
     supports={m:{(r['edit'],r['eqkey']) for r in system if r['method']==m} for m in WRITERS}
@@ -159,7 +164,7 @@ def report(args):
                     on_count=sum(y['on']==1 for _,y in paired),returned_base=sum(y['on']==0 for _,y in paired),avoided_errors=avoided,lost_corrections=lost,
                     net_correct_change=avoided-lost,positive_wrong_rejection=sum(y['on']==0 and x['semantic']==1 and y['semantic']==0 and y['strict_role']=='EDIT_TARGET' for x,y in paired)))
     replay_path=run/'private/SYSTEM_REPLAY.json';replays=read(replay_path) if replay_path.exists() else dict(status='PENDING')
-    f4.csv_write(run/'public/SINGLE_SYSTEM_RESULTS.csv',[dict(r,replay_status=replays['status']) for r in system_tables])
+    mixed_csv(run/'public/SINGLE_SYSTEM_RESULTS.csv',[dict(r,replay_status=replays['status']) for r in system_tables])
     missing=len(set(side['all_expected'])-verdicts.keys());completed=sum(r['status']=='COMPLETE' for r in ledger)
     status=dict(status='COMPUTE_COMPLETE' if completed==15 and not missing and replays['status']=='PASSED' else 'PARTIAL',training_completed=completed,
         planned_training=15,judge_required=len(side['all_expected']),judge_missing=missing,judge_new=side['new'],judge_reused=side['reused'],system_replay=replays['status'],publication='PENDING')
