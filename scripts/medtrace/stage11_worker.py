@@ -12,17 +12,19 @@ CONDITIONS=('J0_CP_R4','J1_FREE_R4','J2_FREE_R16')
 
 
 def make_expert(cp,condition,seed):
-    return cp if condition==CONDITIONS[0] else LowRankExpert(cp,seed,rank=4 if condition==CONDITIONS[1] else 16)
+    return cp if condition==CONDITIONS[0] else LowRankExpert(cp,seed,rank=4 if condition in (CONDITIONS[1],'C_NO_H') else 16)
 
 
 def worker(args):
     run=args.run_root;cfg=read(run/'private/CAMPAIGN_CONFIG.json')
+    no_h=cfg.get('kind')=='MEDTRACE_STAGE12_V2'
+    endpoints=(320,) if no_h else (160,320)
     tasks=[t for t in read(run/'private/TASKS.json') if t['stage11_status']=='PENDING']
     runtime=vf.load_real_runtime(argparse.Namespace(cpu_gate=Path(cfg['runtime']['cpu_gate'])))
     layer=runtime.get_module(vf.LAYER);dout,din=layer.weight.shape
     assert not runtime.model.training and not any(p.requires_grad for p in runtime.model.parameters())
     def budget():
-        if (run/'STOP').exists() or time.time()-cfg['campaign_epoch']>6.5*3600:raise TimeoutError('training and generation budget')
+        if (run/'STOP').exists() or time.time()-cfg['campaign_epoch']>(3 if no_h else 6.5)*3600:raise TimeoutError('training and generation budget')
     for index,t in enumerate(tasks):
         if index%args.parts!=int(args.part):continue
         rows={r['logical_id']:r for r in t['data']['rows']};native=rows[t['native_id']]
@@ -52,7 +54,7 @@ def worker(args):
                 with torch.no_grad():logp=runtime.model(**kwargs).logits[mask].float().log_softmax(-1).cpu()
                 cached=dict(binding=binding,logp=logp);s.sw.save(path,cached)
             return kwargs,labels,mask,cached['logp']
-        for condition in CONDITIONS:
+        for condition in (('C_NO_H',) if no_h else CONDITIONS):
             directory=run/('private/edits/e%02d'%t['order'])/condition
             if (directory/'result.json').exists():continue
             budget();seed=state['task']['seed']
@@ -62,7 +64,7 @@ def worker(args):
             optimizer=optimizer_for(expert,runtime.model)
             check={};start=time.time();curve=[];startstep=0;tokens=0;forwards=0;generation_seconds=0.
             # Check actual native and H activation transfer, and ordinary generation.
-            if condition!=CONDITIONS[0] and not (directory/'latest.pt').exists():
+            if not no_h and condition!=CONDITIONS[0] and not (directory/'latest.pt').exists():
                 errors=[]
                 def compare(_module,inputs,_output):
                     with torch.no_grad():
@@ -102,6 +104,9 @@ def worker(args):
                             cohort_name='JOINT_'+t['cohort'],common_support=False,system_valid=True))
                     guard=runtime.base_guard.verify();assert guard['unchanged']
                     vf.atomic_json(directory/('endpoint%04d.json'%step),dict(status='COMPLETE',entries=entries,step=step,base_guard=guard))
+                    if no_h and index==0:
+                        from scripts.medtrace.stage12 import replay
+                        replay(runtime,run,t,expert,entries)
                 finally:expert.requires_grad_(True);hook.attach()
                 generation_seconds+=time.time()-began
             try:
@@ -109,7 +114,9 @@ def worker(args):
                     budget();optimizer.zero_grad(set_to_none=True);h=schedule['H'][step-1];u=schedule['U'][step-1]
                     ce=forward(native,record.target);nv=float(ce.detach());(.5*ce).backward();del ce
                     ce=forward(rows[order[(step-1)%len(order)]],record.target);pv=float(ce.detach());(.5*ce).backward();del ce
-                    ce=forward(h,h['reference']);hv=float(ce.detach());ce.backward();del ce
+                    hv=0.
+                    if not no_h:
+                        ce=forward(h,h['reference']);hv=float(ce.detach());ce.backward();del ce
                     if u['logical_id'] not in teachers:teachers[u['logical_id']]=teacher(u,hook)
                     kwargs,labels,mask,logp=teachers[u['logical_id']];hook.set_teacher_routing(labels)
                     logits=runtime.model(**kwargs).logits[mask];forwards+=1;tokens+=int(mask.sum())
@@ -125,14 +132,14 @@ def worker(args):
                             torch_rng=torch.get_rng_state(),cuda_rng=torch.cuda.get_rng_state(),python_rng=random.getstate())
                         s.sw.save(checkpoint,payload)
                         print('TRAIN',t['order'],condition,step,flush=True)
-                        if step in (160,320):
+                        if step in endpoints:
                             point=directory/('step%04d.pt'%step);s.sw.save(point,payload)
                             # Reload through the same deployed writer before generating.
                             expert.load_state_dict(torch.load(point,map_location=runtime.device,weights_only=True)['expert'])
                             endpoint(step)
                             torch.set_rng_state(payload['torch_rng']);torch.cuda.set_rng_state(payload['cuda_rng']);random.setstate(payload['python_rng'])
                 # A stopped process can have saved step320 before endpoint generation.
-                for step in (160,320):
+                for step in endpoints:
                     if not (directory/('endpoint%04d.json'%step)).exists():
                         saved=torch.load(directory/('step%04d.pt'%step),map_location=runtime.device,weights_only=True);expert.load_state_dict(saved['expert']);endpoint(step)
                 optbytes=sum(v.numel()*v.element_size() for state_ in optimizer.state.values() for v in state_.values() if torch.is_tensor(v))
@@ -140,7 +147,8 @@ def worker(args):
                     fp32_bytes=sum(p.numel()*p.element_size() for p in expert.parameters()),optimizer_tensor_bytes=optbytes,
                     checkpoint_bytes=(directory/'step0320.pt').stat().st_size,d_in=din,d_out=dout,wall_seconds=time.time()-start,
                     generation_seconds=generation_seconds,forwards=forwards,training_tokens=tokens,initial_check=check,
-                    initialization='original W0; J0 restart due to missing historical RNG',first_answer_token_rank='NA'))
+                    initialization='original W0; no H supervision' if no_h else 'original W0; J0 restart due to missing historical RNG',first_answer_token_rank='NA',
+                    peak_allocated_bytes=torch.cuda.max_memory_allocated(),peak_reserved_bytes=torch.cuda.max_memory_reserved()))
             finally:hook.detach()
             print('DONE',t['order'],condition,flush=True)
             del expert,cp,optimizer
