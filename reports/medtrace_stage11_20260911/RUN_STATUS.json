@@ -1,0 +1,22 @@
+{
+  "completed_final_endpoints": 45,
+  "completed_step_endpoints": 90,
+  "exit_codes": {
+    "judge": 0,
+    "part0": 0,
+    "part1": 0,
+    "prepare_judge": 0,
+    "report": 0
+  },
+  "gpu_hours_upper_bound": 2.562901257938809,
+  "judge_missing": 0,
+  "judge_new": 154,
+  "judge_required": 1171,
+  "judge_reused": 1017,
+  "judge_scored": 1171,
+  "planned_final_endpoints": 45,
+  "publication": "PENDING",
+  "status": "COMPUTE_COMPLETE_SUPPORTED_SUBSET",
+  "supported_final_endpoints": 45,
+  "wall_seconds": 4715.823153972626
+}

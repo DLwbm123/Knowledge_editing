@@ -1,0 +1,55 @@
+{
+  "J0_reuse": "NO strict continuation: historical checkpoint has optimizer but no RNG states; restart320 from W0",
+  "RC": "read-only inherited fixed routing; no calibration",
+  "actual_parameters": "per-endpoint COSTS.csv",
+  "anticipated_parameters": [
+    1476,
+    73728,
+    294912
+  ],
+  "conditions": [
+    "J0_CP_R4",
+    "J1_FREE_R4",
+    "J2_FREE_R16"
+  ],
+  "execution_sha": "25698311ad8f735304bf5c4cb117049ea6e24002",
+  "exposure": "viewed development; patient UNKNOWN; held-out H within trained edits, not independent confirmation",
+  "first_answer_token_rank": "NA; do not rerun for auxiliary diagnostic",
+  "gpu_hours": 16,
+  "initial_function": "original per-edit CP W0 step320; lossless free-rank conversion",
+  "judge_gpu": 0,
+  "layer": "model.layers.21.mlp.down_proj",
+  "loss": "0.5 native CE + 0.5 original fit CE + H source CE + 0.01 full-vocabulary token-mean Base||student KL",
+  "maximum_new_optimizer_steps": 14400,
+  "normalization": "CP factor norms absorbed by rho; free A row norms absorbed by B; not equal optimizer geometry",
+  "official_T2G": "NA unless original bound row present; constructed SLAKE paraphrases are not official T2G",
+  "optimizer": {
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "clip_grad_norm": 1,
+    "eps": 1e-08,
+    "input_lr": 0.0001,
+    "name": "Adam",
+    "output_lr": 0.001,
+    "weight_decay": 0
+  },
+  "primary_step": 320,
+  "publication": "PENDING",
+  "research_result_sha": "PENDING",
+  "schedule_seed": 20260910,
+  "scope": "No ROI loss, contrast, APR, new facts, new ranks or automatic next stage",
+  "seed": "original per-edit W0 seed",
+  "stage10_public_sha": "b84a0f35c6d8b6b4f8f8c475e48ef1e3ab3d2ef3",
+  "steps": [
+    160,
+    320
+  ],
+  "training_generation_deadline_hours": 6.5,
+  "wall_hours": 8,
+  "worker_gpus": [
+    0,
+    1
+  ]
+}

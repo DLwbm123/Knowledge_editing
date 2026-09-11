@@ -1,0 +1,632 @@
+[
+  {
+    "condition": "J0_CP_R4",
+    "edit": 101,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 101,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 101,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 101,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 101,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 101,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 102,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 102,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 102,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 102,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 102,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 102,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 103,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 103,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 103,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 103,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 103,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 103,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 104,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 104,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 104,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 104,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 104,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 104,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 105,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 105,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 105,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 105,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 105,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 105,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 106,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 106,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 106,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 106,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 106,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 106,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 107,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 107,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 107,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 107,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 107,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 107,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 108,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 108,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 108,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 108,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 108,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 108,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 109,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 109,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 109,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 109,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 109,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 109,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 110,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 110,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 110,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 110,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 110,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 110,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 111,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 111,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 111,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 111,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 111,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 111,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 112,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 112,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 112,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 112,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 112,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 112,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 113,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 113,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 113,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 113,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 113,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 113,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 114,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 114,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 114,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 114,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 114,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 114,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 116,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J0_CP_R4",
+    "edit": 116,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 116,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J1_FREE_R4",
+    "edit": 116,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 116,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 160
+  },
+  {
+    "condition": "J2_FREE_R16",
+    "edit": 116,
+    "final_metadata": true,
+    "status": "COMPLETE",
+    "step": 320
+  }
+]
