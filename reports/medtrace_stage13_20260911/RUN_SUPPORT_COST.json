@@ -1,0 +1,2278 @@
+{
+  "actual_N": 0,
+  "authorization": "USER_STAGE13_GPU3",
+  "base_wrong_rows": 424,
+  "candidate_scope": "Previously authorized and role-cleared source pool from Stage2; preserve its explicit sealed/formal/source-test exclusions. Not an exhaustive claim about all public datasets.",
+  "conclusion": "Independent new-edit evaluation was not implemented; this is a source-availability boundary, not negative method evidence. Old15 not substituted; no automatic next stage.",
+  "exclusion_logic": "Source image disjointness is necessary and fails for every admitted image before native selection; no arbitrary first32 sampling. Base-only exposure is not an exclusion.",
+  "execution_sha": "9db633237d7a60337c81e23143aa00f59848addb",
+  "fixed_system": "C_FACT+BE_ROUTE+RC_FIXED_OLD16; kappa0.7696741135364367, not recalibrated",
+  "fixed_writer": "Stage12 C_FACT free rank4, original CP/A2/W0 initialization lineage,320 steps",
+  "fresh_images": 0,
+  "generation": "NOT_RUN",
+  "gpu_hours": 0,
+  "gpu_limit_hours": 16,
+  "gpu_used": false,
+  "judge": "NOT_RUN",
+  "later_stages": "Stage2 and Stage5 alone exhaust the admitted pool; additional development exposure can only exclude more, so no full Stage0-12 artifact rescan is needed.",
+  "native_fact_group_selection": "NOT_REACHED; no unexposed source image remains",
+  "patient_id": "UNKNOWN",
+  "preparation_seconds": 0.1614222526550293,
+  "primary_writer_metric": "H-evaluation PairCorrect edit macro, with native correctness; all NA because N=0",
+  "publication": "PENDING",
+  "remediation": [
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-001"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 1,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 8,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-002"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 1,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-003"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-004"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-005"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 0,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-006"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 8,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 9,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-007"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 15,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-008"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 8,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 9,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-009"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 4,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 12,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-010"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 14,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-011"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 13,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-012"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 1,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 10,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-013"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 13,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-014"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 4,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 14,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-015"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 8,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 14,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-016"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 7,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 16,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-017"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 6,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 13,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-018"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 4,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 10,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-019"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 8,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 19,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-020"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 11,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-021"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 6,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 12,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-022"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 10,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-023"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 9,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-024"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 1,
+      "dataset": "SLAKE",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 6,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-025"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 6,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-026"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 6,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 8,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-027"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-028"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 4,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-029"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 6,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-030"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-031"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 10,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-032"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 6,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-033"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-034"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 3,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-035"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 6,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-036"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-037"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-038"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 9,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 10,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-039"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 0,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-040"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 3,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-041"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 3,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-042"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 4,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 8,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-043"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 3,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-044"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-045"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-046"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-047"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 10,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-048"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-049"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 1,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 3,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-050"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-051"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 0,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-052"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 8,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-053"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 0,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 5,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-054"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 6,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-055"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-056"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 4,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 6,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-057"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 6,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 10,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-058"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-059"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 4,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 5,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-060"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-061"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-062"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 1,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 3,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-063"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 6,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-064"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 0,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-065"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-066"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 8,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-067"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 3,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-068"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 10,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-069"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 3,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-070"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-071"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 3,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-072"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 4,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-073"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 3,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-074"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 10,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-075"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-076"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 6,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-077"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 6,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 10,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-078"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 3,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-079"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 3,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-080"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 1,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-081"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-082"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-083"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 1,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 3,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-084"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 3,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-085"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-086"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-087"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 6,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-088"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-089"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-090"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-091"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 4,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 10,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-092"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-093"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-094"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-095"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 4,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-096"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 7,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-097"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 1,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 3,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-098"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 6,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-099"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 4,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-100"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-101"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 9,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-102"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 4,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-103"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-104"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-105"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-106"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 8,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 10,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-107"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 10,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-108"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-109"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 1,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 3,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-110"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 8,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-111"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 2,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 6,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-112"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 7,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage2"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-113"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 3,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-114"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-115"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 5,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-116"
+    },
+    {
+      "action": "REPLACE_WITH_GENUINELY_UNEXPOSED_AUTHORIZED_EPISODE; cannot repair independence by rewriting old questions",
+      "base_wrong_rows": 3,
+      "dataset": "VQA-RAD",
+      "development_stages": [
+        "Stage5"
+      ],
+      "excluded_reason": "ALREADY_USED_MEDTRACE_DEVELOPMENT_IMAGE",
+      "qa_rows": 7,
+      "required_material_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "source_group": "source-group-117"
+    }
+  ],
+  "required_materials": {
+    "1": "New authorized native image/source QA outside all Stage0-12 development images and native fact-equivalence groups; fixed target and original Base-wrong eligibility.",
+    "2": "Native fit paraphrases meeting original CP/A2/W0 initialization contract; use existing source alternatives or authorized answer-preserving derivation with review provenance.",
+    "3": "At least one same-proposition conflicting H-fit source QA on another image whose existing role permits training.",
+    "4": "At least one same-proposition conflicting H-evaluation QA on a different image, excluded from every method training image set.",
+    "5": "Original required U-fit support plus role-separated U-evaluation and locked distinct positive-evaluation text families; keep available same-answer contexts.",
+    "6": "Freeze explicit source IDs, per-edit deterministic seeds and separate training/evaluation-answer files before student execution; no sealed QUAL/test role reassignment."
+  },
+  "source_budget_minutes": 90,
+  "source_images": 117,
+  "source_images_by_dataset": {
+    "SLAKE": 25,
+    "VQA-RAD": 92
+  },
+  "source_rows": 875,
+  "source_rows_by_dataset": {
+    "SLAKE": 272,
+    "VQA-RAD": 603
+  },
+  "stage12_public_sha": "607df8440ecd9fd08d7b8b5c263928957dac9ce6",
+  "status": "SOURCE_AUDIT_COMPLETE__NEW_EDIT_EVALUATION_NOT_IMPLEMENTED",
+  "target_N": 32,
+  "training": "NOT_RUN_NO_ELIGIBLE_EPISODES",
+  "verified_completed_development": {
+    "Stage2_edits": 16,
+    "Stage2_images": 62,
+    "Stage5_edits": 32,
+    "Stage5_images": 55
+  },
+  "wall_limit_hours": 8
+}
