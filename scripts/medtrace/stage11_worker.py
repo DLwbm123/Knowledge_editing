@@ -12,34 +12,49 @@ CONDITIONS=('J0_CP_R4','J1_FREE_R4','J2_FREE_R16')
 
 
 def make_expert(cp,condition,seed):
-    return cp if condition==CONDITIONS[0] else LowRankExpert(cp,seed,rank=4 if condition in (CONDITIONS[1],'C_FACT','C_NO_H') else 16)
+    ranks={'J0_CP_R4':4,'J1_FREE_R4':4,'J2_FREE_R16':16,'C_FACT':4,'C_NO_H':4,'C_EXTRA_QA':4}
+    if condition not in ranks:raise ValueError('unknown writer condition: '+condition)
+    return cp if condition==CONDITIONS[0] else LowRankExpert(cp,seed,rank=ranks[condition])
 
 
 def worker(args):
     run=args.run_root;cfg=read(run/'private/CAMPAIGN_CONFIG.json')
     no_h=cfg.get('kind')=='MEDTRACE_STAGE12_V2'
     new_sources=cfg.get('kind')=='MEDTRACE_STAGE13R'
-    endpoints=(320,) if no_h or new_sources else (160,320)
+    extra_qa=cfg.get('kind')=='MEDTRACE_STAGE14'
+    endpoints=(320,) if no_h or new_sources or extra_qa else (160,320)
     tasks=[t for t in read(run/'private/TASKS.json') if t['stage11_status']=='PENDING']
     runtime=vf.load_real_runtime(argparse.Namespace(cpu_gate=Path(cfg['runtime']['cpu_gate'])))
     layer=runtime.get_module(vf.LAYER);dout,din=layer.weight.shape
     assert not runtime.model.training and not any(p.requires_grad for p in runtime.model.parameters())
     def budget():
+        if extra_qa:
+            if (run/'STOP').exists() or time.time()-cfg['campaign_epoch']>cfg['train_seconds']:raise TimeoutError('training and generation budget')
+            return
         if (run/'STOP').exists() or time.time()-cfg['campaign_epoch']>(3 if no_h and not new_sources else 6.5)*3600:raise TimeoutError('training and generation budget')
     for index,t in enumerate(tasks):
         if index%args.parts!=int(args.part):continue
         rows={r['logical_id']:r for r in t['data']['rows']};native=rows[t['native_id']]
-        if new_sources:
+        if extra_qa:
+            from scripts.medtrace.run_stage2 import bind_rows
+            bind_rows(runtime,t['data'])
+            vf.atomic_json(run/('private/bound_training/e%02d.json'%t['order']),t['data'])
+        if new_sources or extra_qa:
             assert all(r['role'] in ('native','fit') for r in rows.values()), 'new-source training must not receive evaluation answers'
         state=torch.load(t['checkpoint'],map_location='cpu',weights_only=True);assert state['step']==320
         old=read(Path(cfg['stage8_run'])/('private/edits/e%02d/result.json'%t['order']))
         olditems={e['item']['row']['logical_id']:e['item'] for e in old['entries'] if e['method']=='B0' and e['item']['row']['logical_id'] not in t['quarantined_ids']}
-        if new_sources:
-            assert set(olditems)==set(rows) and all(v['row']['role'] in ('native','fit') for v in olditems.values())
+        if new_sources or extra_qa:
+            assert set(olditems)==set(rows)-set(t.get('g_ids',[])) and all(v['row']['role'] in ('native','fit') for v in olditems.values())
         assert runtime.base_guard.verify()['after_sha256']==old['base_guard']['after_sha256']
         record=vf.EditorRecord.from_dict(t['data']['event']['edit_record'])
         schedule={g:balanced_schedule({rows[i]['source_group']:[rows[i]] for i in t[key]},320,20260910) for g,key in (('H','h_ids'),('U','u_ids'))}
         order=t['fit_positive_ids'].copy();random.Random(20260910).shuffle(order)
+        if extra_qa:
+            assert len(t['schedule'])==320 and len(t['g_ids'])<=len(t['h_ids'])
+            for step,parent in enumerate(t['schedule']):
+                assert parent==dict(step=step+1,fit_id=order[step%len(order)],H_id=schedule['H'][step]['logical_id'],U_id=schedule['U'][step]['logical_id'])
+            assert not {rows[i]['eqkey'] for i in t['g_ids']}&{rows[i]['eqkey'] for i in t['u_ids']}
         batches={};teachers={}
         def batch(row,answer):
             key=(row['logical_id'],answer)
@@ -51,7 +66,7 @@ def worker(args):
         def teacher(row,hook):
             hook.clear_request_routing()
             kwargs,labels,mask,binding=s.sw.teacher_batch(runtime,row,olditems[row['logical_id']]['base']['raw_token_ids'])
-            previous=Path(cfg['stage9_run'])/('private/teacher/e%02d'%t['order'])/(row['logical_id']+'.pt')
+            previous=Path(t.get('teacher_root',cfg['stage9_run']))/('private/teacher/e%02d'%t.get('teacher_order',t['order']))/(row['logical_id']+'.pt')
             path=previous if previous.exists() else run/('private/teacher/e%02d'%t['order'])/(row['logical_id']+'.pt')
             if path.exists():
                 cached=torch.load(path,map_location='cpu',weights_only=True);assert cached['binding']==binding
@@ -59,7 +74,7 @@ def worker(args):
                 with torch.no_grad():logp=runtime.model(**kwargs).logits[mask].float().log_softmax(-1).cpu()
                 cached=dict(binding=binding,logp=logp);s.sw.save(path,cached)
             return kwargs,labels,mask,cached['logp']
-        for condition in (('C_FACT','C_NO_H') if new_sources else ('C_NO_H',) if no_h else CONDITIONS):
+        for condition in (('C_EXTRA_QA',) if extra_qa else ('C_FACT','C_NO_H') if new_sources else ('C_NO_H',) if no_h else CONDITIONS):
             if new_sources:no_h=condition=='C_NO_H'
             directory=run/('private/edits/e%02d'%t['order'])/condition
             if (directory/'result.json').exists():continue
@@ -67,6 +82,8 @@ def worker(args):
             vf.set_seed(seed) if hasattr(vf,'set_seed') else torch.manual_seed(seed)
             cp=vf.AsymmetricCPExpert(din,dout,4).to(runtime.device);cp.load_state_dict(state['expert'])
             expert=make_expert(cp,condition,seed).to(runtime.device);expert.requires_grad_(True)
+            if extra_qa:
+                assert seed==t['seed'] and expert.rank==4 and sum(p.numel() for p in expert.parameters())==73728
             optimizer=optimizer_for(expert,runtime.model)
             check={};start=time.time();curve=[];startstep=0;tokens=0;forwards=0;generation_seconds=0.
             # Check actual native and H activation transfer, and ordinary generation.
@@ -118,11 +135,12 @@ def worker(args):
             try:
                 for step in range(startstep+1,321):
                     budget();optimizer.zero_grad(set_to_none=True);h=schedule['H'][step-1];u=schedule['U'][step-1]
+                    auxiliary=rows[t['H_to_G'][h['logical_id']]] if extra_qa else h
                     ce=forward(native,record.target);nv=float(ce.detach());(.5*ce).backward();del ce
                     ce=forward(rows[order[(step-1)%len(order)]],record.target);pv=float(ce.detach());(.5*ce).backward();del ce
                     hv=0.
                     if not no_h:
-                        ce=forward(h,h['reference']);hv=float(ce.detach());ce.backward();del ce
+                        ce=forward(auxiliary,auxiliary['reference']);hv=float(ce.detach());ce.backward();del ce
                     if u['logical_id'] not in teachers:teachers[u['logical_id']]=teacher(u,hook)
                     kwargs,labels,mask,logp=teachers[u['logical_id']];hook.set_teacher_routing(labels)
                     logits=runtime.model(**kwargs).logits[mask];forwards+=1;tokens+=int(mask.sum())
@@ -133,6 +151,8 @@ def worker(args):
                     assert all(torch.isfinite(p).all() for p in expert.parameters())
                     curve.append(dict(step=step,native_ce=nv,fit_positive_ce=pv,H_ce=hv,U_kl=uv,grad_norm=float(norm),
                         elapsed_seconds=time.time()-start,cumulative_training_tokens=tokens,H_id=h['logical_id'],U_id=u['logical_id'],fit_id=order[(step-1)%len(order)]))
+                    if extra_qa:
+                        curve[-1]['G_id']=auxiliary['logical_id'];curve[-1]['G_ce']=curve[-1].pop('H_ce')
                     if step%20==0:
                         payload=dict(expert=expert.state_dict(),optimizer=optimizer.state_dict(),step=step,condition=condition,order=t['order'],curve=curve,tokens=tokens,forwards=forwards,
                             torch_rng=torch.get_rng_state(),cuda_rng=torch.cuda.get_rng_state(),python_rng=random.getstate())
@@ -153,7 +173,7 @@ def worker(args):
                     fp32_bytes=sum(p.numel()*p.element_size() for p in expert.parameters()),optimizer_tensor_bytes=optbytes,
                     checkpoint_bytes=(directory/'step0320.pt').stat().st_size,d_in=din,d_out=dout,wall_seconds=time.time()-start,
                     generation_seconds=generation_seconds,forwards=forwards,training_tokens=tokens,initial_check=check,
-                    initialization='original W0; no H supervision' if no_h else 'original W0; J0 restart due to missing historical RNG',first_answer_token_rank='NA',
+                    initialization='same own-edit original CP-W0; freeR4; G replaces H slots' if extra_qa else 'original W0; no H supervision' if no_h else 'original W0; J0 restart due to missing historical RNG',first_answer_token_rank='NA',
                     peak_allocated_bytes=torch.cuda.max_memory_allocated(),peak_reserved_bytes=torch.cuda.max_memory_reserved()))
             finally:hook.detach()
             print('DONE',t['order'],condition,flush=True)
