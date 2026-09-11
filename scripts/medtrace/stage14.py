@@ -232,7 +232,7 @@ def report(args):
     for name,source,files in [('stage12',Path(cfg['stage12_run']),('WRITER_ABLATION.csv','SINGLE_SYSTEM_RESULTS.csv')),
                               ('stage13r',Path(cfg['stage13r_run']),('PAIR_OUTCOMES.csv','PAIR_EFFECTS.csv','NEW_EDIT_WRITER_RESULTS.csv','NEW_EDIT_SYSTEM_RESULTS.csv','COSTS.csv'))]:
         dest=run/'public/original_full_panels'/name;dest.mkdir(parents=True,exist_ok=True)
-        for file in files:shutil.copy2(source/'public'/file,dest/file)
+        for file in files:shutil.copyfile(source/'public'/file,dest/file)
     replay=read(run/'public/SYSTEM_REPLAY.json');assert replay['status']=='PASSED' and len(replay['rows'])<=4
     status=dict(status='COMPUTE_COMPLETE' if all(r['status']=='COMPLETE' for r in ledger) else 'PARTIAL',planned_new_trajectories=freeze['actual_new_trajectories'],
         completed_new_trajectories=len(newcost),unsupported_old=15-len([r for r in newcost if r['cohort']=='OLD15']),
